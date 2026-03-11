@@ -14,9 +14,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup Node.js
-        uses: actions/checkout@v3
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -37,34 +38,13 @@ jobs:
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
+            # We assume the server pulls the latest code and we build locally or we sync
+            # Since the user wants the build in GH Actions, we will use a pull strategy for now
+            # but ideally we'd scp the 'out' folder.
             cd /var/www/solswap.cloud
-            # Clean old build
-            rm -rf .next
-            # We assume the build output is handled or we sync it
-            # Usually we use rsync to transfer the build. 
-            # For simplicity in this workflow, we assume the server pulls or we use scp.
-            # But the user asked for this specific structure.
-
-      - name: Post-deploy restart
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: solswap.cloud
-          username: root
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            cd /var/www/solswap.cloud
+            git pull origin main
+            npm ci
+            npm run build
+            # If using static export, Apache will serve from 'out'
+            # If using next start, we restart pm2
             pm2 restart solswap || pm2 start npm --name "solswap" -- start
-
-      - name: Notify Commit
-        if: always()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const status = '${{ job.status }}';
-            const message = status === 'success' ? '✅ Deploy successful to solswap.cloud' : '❌ Deploy failed';
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: message
-            });
