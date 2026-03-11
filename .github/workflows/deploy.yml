@@ -11,16 +11,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --ignore-scripts --legacy-peer-deps
 
       - name: Build project
         run: npm run build
@@ -32,19 +31,14 @@ jobs:
           NEXT_PUBLIC_SITE_URL: https://solswap.cloud
 
       - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@v0.1.10
+        uses: appleboy/ssh-action@v1.2.0
         with:
-          host: solswap.cloud
-          username: root
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # We assume the server pulls the latest code and we build locally or we sync
-            # Since the user wants the build in GH Actions, we will use a pull strategy for now
-            # but ideally we'd scp the 'out' folder.
             cd /var/www/solswap.cloud
             git pull origin main
-            npm ci
+            npm install --ignore-scripts --legacy-peer-deps
             npm run build
-            # If using static export, Apache will serve from 'out'
-            # If using next start, we restart pm2
             pm2 restart solswap || pm2 start npm --name "solswap" -- start
