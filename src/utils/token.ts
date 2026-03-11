@@ -41,12 +41,12 @@ export const getMintSymbol = ({ mint, transformSol }: { mint: ApiV3Token; transf
 
 export const getMintName = ({ mint }: { mint: ApiV3Token }) => mint.name || mint.address.slice(0, 12)
 
-export const SOLSWAP_TOKEN_TOKEN_INFO = {
+export const RAY_TOKEN_INFO = {
   chainId: 101,
   address: '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R',
   programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
   logoURI: 'https://img-v1.solswap.cloud/icon/4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R.png',
-  symbol: 'SOLSWAP_TOKEN',
+  symbol: 'RAY',
   name: 'SolSwap',
   decimals: 6,
   tags: [],

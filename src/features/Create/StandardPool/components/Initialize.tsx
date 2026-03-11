@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { PublicKey } from '@solana/web3.js'
 import {
   ApiV3Token,
-  SOLSWAP_TOKENMint,
+  RAYMint,
   TokenInfo,
   solToWSolToken,
   ApiCpmmConfigInfo,
@@ -45,7 +45,7 @@ export default function Initialize({ isAmmV4 }: { isAmmV4: boolean }) {
   const { t } = useTranslation()
   const tokenMap = useTokenStore((s) => s.tokenMap)
   const [inputMint, setInputMint] = useState<string>(PublicKey.default.toBase58())
-  const [outputMint, setOutputMint] = useState<string>(SOLSWAP_TOKENMint.toBase58())
+  const [outputMint, setOutputMint] = useState<string>(RAYMint.toBase58())
   const [baseToken, quoteToken] = [tokenMap.get(inputMint), tokenMap.get(outputMint)]
 
   const [createPoolAct, newCreatedPool] = useLiquidityStore((s) => [s.createPoolAct, s.newCreatedPool], shallow)

@@ -13,17 +13,17 @@ import useTokenPrice from '@/hooks/token/useTokenPrice'
 import Decimal from 'decimal.js'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/store'
-import { SOLSWAP_TOKENMint } from '@raydium-io/raydium-sdk-v2'
+import { RAYMint } from '@raydium-io/raydium-sdk-v2'
 import { PublicKey } from '@solana/web3.js'
 
 export enum AssetType {
   STANDARD = 'Standard',
   CONCENTRATED = 'Concentrated',
-  STAKEDSOLSWAP_TOKEN = 'STAKEDSOLSWAP_TOKEN',
+  STAKEDRAY = 'STAKEDRAY',
   ALL = 'All'
 }
 
-const SOLSWAP_TOKENMintStr = SOLSWAP_TOKENMint.toBase58()
+const RAYMintStr = RAYMint.toBase58()
 export default function SectionOverview() {
   const { t } = useTranslation()
   const isMobile = useAppStore((s) => s.isMobile)
@@ -42,9 +42,9 @@ export default function SectionOverview() {
   const productiveBalance = totalClmmPosition.add(totalStandardPosition).toString()
 
   const { activeStakePools } = useFetchStakePools({})
-  const stakingFarm = activeStakePools.find((p) => p.lpMint.address === SOLSWAP_TOKENMintStr)
+  const stakingFarm = activeStakePools.find((p) => p.lpMint.address === RAYMintStr)
   const { lpBasedData } = useFarmPositions({})
-  const v1Vault = lpBasedData.get(SOLSWAP_TOKENMintStr)?.data.find((d) => d.version === 'V1' && !new Decimal(d.lpAmount).isZero())
+  const v1Vault = lpBasedData.get(RAYMintStr)?.data.find((d) => d.version === 'V1' && !new Decimal(d.lpAmount).isZero())
   const v1FarmBalance = useFetchFarmBalance({
     shouldFetch: !!(v1Vault && new Decimal(v1Vault.lpAmount).gt(0)),
     farmInfo: stakingFarm,
@@ -58,8 +58,8 @@ export default function SectionOverview() {
 
   const stakedRayBalance = {
     key: 'Staked Ray',
-    value: new Decimal(stakingRay.deposited || 0).mul(tokenPrices[SOLSWAP_TOKENMintStr]?.value || 0).toString(),
-    type: AssetType.STAKEDSOLSWAP_TOKEN,
+    value: new Decimal(stakingRay.deposited || 0).mul(tokenPrices[RAYMintStr]?.value || 0).toString(),
+    type: AssetType.STAKEDRAY,
     percentage: 100
   }
 
@@ -104,10 +104,10 @@ export default function SectionOverview() {
               type: AssetType.STANDARD
             },
             {
-              key: 'Staked SOLSWAP_TOKEN',
+              key: 'Staked RAY',
               value: stakedRayBalance.value,
               percentage: 100,
-              type: AssetType.STAKEDSOLSWAP_TOKEN
+              type: AssetType.STAKEDRAY
             }
           ]}
           tokenAssets={tokenAssetsNew}

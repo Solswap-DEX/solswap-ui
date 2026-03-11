@@ -504,7 +504,7 @@ function MessageStripExample() {
       <CalloutMessageSlip
         status="warning"
         title="Migrate to new pools"
-        desc="We are upgrading the SOLSWAP_TOKEN-SOL, SOLSWAP_TOKEN-SRM, SOLSWAP_TOKEN-USDC and SOLSWAP_TOKEN-ETH pools to a new contract. Please migrate to the new pools to keep earning rewards."
+        desc="We are upgrading the RAY-SOL, RAY-SRM, RAY-USDC and RAY-ETH pools to a new contract. Please migrate to the new pools to keep earning rewards."
         icon={<Farm />}
         actionNode={
           <>
@@ -581,7 +581,7 @@ function ToastExample() {
             title: 'Swap completed!',
             description: (
               <Box>
-                You swapped <span style={{ fontWeight: 700 }}>123,113,123.82 SOLSWAP_TOKEN</span> for{' '}
+                You swapped <span style={{ fontWeight: 700 }}>123,113,123.82 RAY</span> for{' '}
                 <span style={{ fontWeight: 700 }}>11,113,123.82 SOL.</span>
               </Box>
             ),
@@ -621,7 +621,7 @@ function ToastExample() {
             title: 'Swap confirmed!',
             description: (
               <Box>
-                Swap <span style={{ fontWeight: 700 }}>113,123.82 SOLSWAP_TOKEN</span> for <span style={{ fontWeight: 700 }}>123.82 SOL.</span>
+                Swap <span style={{ fontWeight: 700 }}>113,123.82 RAY</span> for <span style={{ fontWeight: 700 }}>123.82 SOL.</span>
               </Box>
             ),
             detail: (

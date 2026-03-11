@@ -16,7 +16,7 @@ import { colors } from '@/theme/cssVariables'
 import { genCSS2GridTemplateColumns, genCSS3GridTemplateColumns } from '@/theme/detailConfig'
 import { WEEK_SECONDS } from '@/utils/date'
 import { routeBack, setUrlQuery } from '@/utils/routeTools'
-import { SOLSWAP_TOKEN_TOKEN_INFO } from '@/utils/token'
+import { RAY_TOKEN_INFO } from '@/utils/token'
 import { PublicKey } from '@solana/web3.js'
 import Decimal from 'decimal.js'
 import { useTranslation, Trans } from 'react-i18next'
@@ -64,7 +64,7 @@ export default function CreateFarm() {
   const [selectedPool, setSelectedPool] = useState<ApiV3PoolInfoItem | undefined>()
 
   // -------- step 2 --------
-  const [rewardInfos, setRewardInfos] = useState<NewRewardInfo[]>([{ id: uuidv4(), token: SOLSWAP_TOKEN_TOKEN_INFO, isValid: false }])
+  const [rewardInfos, setRewardInfos] = useState<NewRewardInfo[]>([{ id: uuidv4(), token: RAY_TOKEN_INFO, isValid: false }])
 
   const { isOpen: isSending, onOpen: onSending, onClose: offSending } = useDisclosure()
   // -------- tx dialog --------

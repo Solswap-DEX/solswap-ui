@@ -39,7 +39,7 @@ export default function SectionMyPositions() {
       label: t('portfolio.section_positions_tab_standard')
     },
     {
-      value: 'staked SOLSWAP_TOKEN',
+      value: 'staked RAY',
       label: t('portfolio.section_positions_tab_staking')
     }
   ]

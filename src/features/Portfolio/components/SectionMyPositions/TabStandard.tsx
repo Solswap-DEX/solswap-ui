@@ -1,4 +1,4 @@
-import { SOLSWAP_TOKENMint } from '@raydium-io/raydium-sdk-v2'
+import { RAYMint } from '@raydium-io/raydium-sdk-v2'
 import { Flex, Text, Link, Button, Skeleton } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import StandardPoolRowItem from './components/Standard/StandardPoolRowItem'
@@ -40,7 +40,7 @@ export default function MyPositionTabStandard({
   const { noneZeroLpMintList } = useFetchAccLpMint({})
   const { cpmmLockBalanceInfo } = useLockCpmmBalance({})
   const farmPositionList = Array.from(lpBasedData.entries()).filter(
-    ([lpMint, position]) => position.hasAmount && lpMint !== SOLSWAP_TOKENMint.toString()
+    ([lpMint, position]) => position.hasAmount && lpMint !== RAYMint.toString()
   )
   const lpOnlyList = noneZeroLpMintList.filter(
     (d) => !(lpBasedData.has(d!.address.toString()) && lpBasedData.get(d!.address.toString())?.hasAmount)

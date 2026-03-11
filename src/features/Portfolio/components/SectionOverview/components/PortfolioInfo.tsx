@@ -153,7 +153,7 @@ export default function PortfolioInfo({
                           { value: AssetType.ALL, label: t('portfolio.section_department_tab_all') },
                           { value: AssetType.CONCENTRATED, label: t('portfolio.section_department_tab_clmm') },
                           { value: AssetType.STANDARD, label: t('portfolio.section_department_tab_standard') },
-                          { value: AssetType.STAKEDSOLSWAP_TOKEN, label: t('portfolio.section_department_tab_staked_ray') }
+                          { value: AssetType.STAKEDRAY, label: t('portfolio.section_department_tab_staked_ray') }
                         ]}
                         value={currentType}
                         onChange={(t) => onTypeChange?.(t)}
@@ -275,7 +275,7 @@ export default function PortfolioInfo({
                         { value: AssetType.ALL, label: t('portfolio.section_department_tab_all') },
                         { value: AssetType.CONCENTRATED, label: t('portfolio.section_department_tab_clmm') },
                         { value: AssetType.STANDARD, label: t('portfolio.section_department_tab_standard') },
-                        { value: AssetType.STAKEDSOLSWAP_TOKEN, label: t('portfolio.section_department_tab_staked_ray') }
+                        { value: AssetType.STAKEDRAY, label: t('portfolio.section_department_tab_staked_ray') }
                       ]}
                       value={currentType}
                       onChange={(t) => onTypeChange(t as AssetType)}

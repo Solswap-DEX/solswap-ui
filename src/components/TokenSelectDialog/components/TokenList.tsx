@@ -26,7 +26,7 @@ const perPage = 30
 
 const USDCMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 const SOLMint = PublicKey.default.toString()
-const SOLSWAP_TOKENMint = '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R'
+const RAYMint = '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R'
 const USDTMint = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
 
 export interface TokenListHandles {
@@ -99,7 +99,7 @@ export default forwardRef<
     }
     const sortedTokenList = sortItems(tokenList, {
       sortRules: [
-        // { value: (i) => (i.address === SOLMint || i.address === SOLSWAP_TOKENMint ? i.address : null) },
+        // { value: (i) => (i.address === SOLMint || i.address === RAYMint ? i.address : null) },
         { value: (i) => (i.tags.includes('unknown') ? null : i.symbol.length), compareFn }
       ]
     })
@@ -149,11 +149,11 @@ export default forwardRef<
 
   const USDC = useMemo(() => orgTokenMap.get(USDCMint), [orgTokenMap])
   const SOL = useMemo(() => orgTokenMap.get(SOLMint), [orgTokenMap])
-  const SOLSWAP_TOKEN = useMemo(() => orgTokenMap.get(SOLSWAP_TOKENMint), [orgTokenMap])
+  const RAY = useMemo(() => orgTokenMap.get(RAYMint), [orgTokenMap])
   const USDT = useMemo(() => orgTokenMap.get(USDTMint), [orgTokenMap])
 
   const [usdcDisabled, solDisabled, rayDisabled, usdtDisabled] = filterFn
-    ? [!USDC || !filterFn(USDC), !SOL || !filterFn(SOL), !SOLSWAP_TOKEN || !filterFn(SOLSWAP_TOKEN), !USDT || !filterFn(USDT)]
+    ? [!USDC || !filterFn(USDC), !SOL || !filterFn(SOL), !RAY || !filterFn(RAY), !USDT || !filterFn(USDT)]
     : [false, false, false, false]
 
   const renderTokenItem = useCallback(
@@ -200,7 +200,7 @@ export default forwardRef<
         <SimpleGrid gridTemplateColumns={'repeat(auto-fill, minmax(80px, 1fr))'} gap={3}>
           <PopularTokenCell token={USDC} onClick={(token) => onChooseToken(token)} disabled={usdcDisabled} />
           <PopularTokenCell token={SOL} onClick={(token) => onChooseToken(token)} disabled={solDisabled} />
-          <PopularTokenCell token={SOLSWAP_TOKEN} onClick={(token) => onChooseToken(token)} disabled={rayDisabled} />
+          <PopularTokenCell token={RAY} onClick={(token) => onChooseToken(token)} disabled={rayDisabled} />
           <PopularTokenCell token={USDT} onClick={(token) => onChooseToken(token)} disabled={usdtDisabled} />
         </SimpleGrid>
       </Box>

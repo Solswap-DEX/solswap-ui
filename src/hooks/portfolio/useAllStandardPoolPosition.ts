@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { SOLSWAP_TOKENMint, ApiV3Token } from '@raydium-io/raydium-sdk-v2'
+import { RAYMint, ApiV3Token } from '@raydium-io/raydium-sdk-v2'
 
 import { useTokenAccountStore, useTokenStore } from '@/store'
 import useFarmPositions from '@/hooks/portfolio/farm/useFarmPositions'
@@ -15,7 +15,7 @@ export default function useAllStandardPoolPosition<T>({ type }: { type?: T }) {
   const { lpBasedData } = useFarmPositions({})
   const allLpInfo = new Map(
     Array.from(lpBasedData.values())
-      .filter((d) => d.hasAmount && d.lpMint !== SOLSWAP_TOKENMint.toString())
+      .filter((d) => d.hasAmount && d.lpMint !== RAYMint.toString())
       .map((data) => {
         return [
           data.lpMint,

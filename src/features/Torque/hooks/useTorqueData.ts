@@ -7,7 +7,7 @@ import dayjs from 'dayjs'
 import { useToast } from '@chakra-ui/react'
 import { useTokenStore } from '@/store/useTokenStore'
 
-const SOLSWAP_TOKENDIUM_PROJECT_ID = process.env.NEXT_PUBLIC_TORQUE_PROJECT_ID || 'cm9w3m8xr01trju1f3lbsy3jn'
+const RAYDIUM_PROJECT_ID = process.env.NEXT_PUBLIC_TORQUE_PROJECT_ID || 'cm9w3m8xr01trju1f3lbsy3jn'
 
 /**
  * Fetch offers and conversions for wallet
@@ -61,7 +61,7 @@ export function useTorqueData({ wallet }: { wallet: Wallet | null | undefined })
         const interval = setInterval(async () => {
           if (!wallet?.adapter.publicKey) return
 
-          const updatedConversions = await fetchConversionsByWallet(wallet.adapter.publicKey.toString(), SOLSWAP_TOKENDIUM_PROJECT_ID)
+          const updatedConversions = await fetchConversionsByWallet(wallet.adapter.publicKey.toString(), RAYDIUM_PROJECT_ID)
           const updatedCrank = updatedConversions.find((conversion) => conversion.offer.id === offerId)?.cranks[0]
 
           if (updatedCrank?.status === 'DONE') {
@@ -118,8 +118,8 @@ export function useTorqueData({ wallet }: { wallet: Wallet | null | undefined })
 
     try {
       const [rawOffers, conversions] = await Promise.all([
-        fetchOffersByWallet(walletAddress, SOLSWAP_TOKENDIUM_PROJECT_ID),
-        fetchConversionsByWallet(walletAddress, SOLSWAP_TOKENDIUM_PROJECT_ID)
+        fetchOffersByWallet(walletAddress, RAYDIUM_PROJECT_ID),
+        fetchConversionsByWallet(walletAddress, RAYDIUM_PROJECT_ID)
       ])
 
       const offersWithConversions: TorqueOffer[] = rawOffers
@@ -139,8 +139,8 @@ export function useTorqueData({ wallet }: { wallet: Wallet | null | undefined })
 
           // Get the token details
           const rewardToken = typeof distributor.tokenAddress === 'string' ? tokenMap.get(distributor.tokenAddress) : undefined
-          // The fallback is currently set to SOLSWAP_TOKEN just in case the token is not found as we have not been to verify the token fetch works
-          const rewardDenomination = distributor.emissionType === 'SOL' ? 'SOL' : rewardToken?.symbol ?? 'SOLSWAP_TOKEN'
+          // The fallback is currently set to RAY just in case the token is not found as we have not been to verify the token fetch works
+          const rewardDenomination = distributor.emissionType === 'SOL' ? 'SOL' : rewardToken?.symbol ?? 'RAY'
 
           // Calculate the offer status
           const startTime = dayjs(offer.startTime)

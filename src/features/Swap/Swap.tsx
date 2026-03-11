@@ -1,5 +1,5 @@
 import { Box, Grid, GridItem, HStack, Text, VStack, useClipboard } from '@chakra-ui/react'
-import { SOLSWAP_TOKENMint, SOLMint } from '@raydium-io/raydium-sdk-v2'
+import { RAYMint, SOLMint } from '@raydium-io/raydium-sdk-v2'
 import { PublicKey } from '@solana/web3.js'
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -34,7 +34,7 @@ import useRefreshEpochInfo from '@/hooks/app/useRefreshEpochInfo'
 export default function Swap() {
   // const { inputMint: cacheInput, outputMint: cacheOutput } = getSwapPairCache()
   const [inputMint, setInputMint] = useState<string>(PublicKey.default.toBase58())
-  const [outputMint, setOutputMint] = useState<string>(SOLSWAP_TOKENMint.toBase58())
+  const [outputMint, setOutputMint] = useState<string>(RAYMint.toBase58())
   const [isPCChartShown, setIsPCChartShown] = useState<boolean>(true)
   const [isMobileChartShown, setIsMobileChartShown] = useState<boolean>(false)
   const [isChartLeft, setIsChartLeft] = useState<boolean>(true)

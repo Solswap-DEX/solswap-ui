@@ -27,7 +27,7 @@ export default function DisclaimerPage() {
               mobile user-interfaces that allow for interaction with the SolSwap Protocol.
             </Text>
             <Text fontSize={{ base: 'sm', md: 'md' }} lineHeight={1.625}>
-              THIS INTERFACE AND THE SOLSWAP_TOKENDIUM PROTOCOL ARE PROVIDED “AS IS”, AT YOUR OWN RISK, AND WITHOUT WARRANTIES OF ANY KIND. The
+              THIS INTERFACE AND THE RAYDIUM PROTOCOL ARE PROVIDED “AS IS”, AT YOUR OWN RISK, AND WITHOUT WARRANTIES OF ANY KIND. The
               SolSwap Holding Foundation does not provide, own, or control the SolSwap Protocol or any transactions conducted on the
               protocol or via related smart contracts. By using or accessing this Interface or the SolSwap Protocol and related smart
               contracts, you agree that no developer or entity involved in creating, deploying or maintaining this Interface or the SolSwap
