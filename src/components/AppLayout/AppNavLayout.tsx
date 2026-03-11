@@ -121,7 +121,7 @@ function AppNavLayout({
               }}
             />
             <Menu size="lg">
-              <MenuButton fontSize={'md'} px={2} py={2}>
+              <MenuButton fontSize={'sm'} px={1.5} py={1.5}>
                 <Flex
                   align="center"
                   gap={0.5}
@@ -203,9 +203,9 @@ function RouteLink({
     >
       <Flex
         textColor={isActive ? colors.textSecondary : colors.textTertiary}
-        fontSize={['sm', 'sm', 'md']}
-        px={2}
-        py={2}
+        fontSize={['xs', 'xs', 'sm']}
+        px={1.5}
+        py={1.5}
         rounded="xl"
         transition="200ms"
         whiteSpace="nowrap"

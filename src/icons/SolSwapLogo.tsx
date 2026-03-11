@@ -7,9 +7,9 @@ export default function SolSwapLogo(props: SvgIcon) {
     <img
       src="/logo.png"
       alt="SolSwap"
-      width={160}
-      height={40}
-      style={{ objectFit: 'contain', height: '40px', width: 'auto' }}
+      width={120}
+      height={30}
+      style={{ objectFit: 'contain', height: '30px', width: 'auto' }}
     />
   )
 }

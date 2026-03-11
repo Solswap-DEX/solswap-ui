@@ -85,7 +85,7 @@ export default function SolWallet() {
           {t('button.connect')}
         </Button>
       ) : (
-        <Button isLoading={connecting} loadingText="Connecting.." onClick={handleOpen}>
+        <Button fontSize="sm" size="sm" px={3} isLoading={connecting} loadingText="Connecting.." onClick={handleOpen}>
           {t('button.connect_wallet')}
         </Button>
       )}
