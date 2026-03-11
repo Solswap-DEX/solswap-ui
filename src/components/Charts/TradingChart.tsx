@@ -78,10 +78,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({ poolAddress }) => {
     });
 
     chartRef.current = chart;
-    //@ts-ignore
-    candlestickSeriesRef.current = candlestickSeries;
-    //@ts-ignore
-    volumeSeriesRef.current = volumeSeries;
+    candlestickSeriesRef.current = candlestickSeries as any;
+    volumeSeriesRef.current = volumeSeries as any;
 
     // Add Indicators
     const ma20Series = chart.addLineSeries({
