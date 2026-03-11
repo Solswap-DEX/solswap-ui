@@ -57,3 +57,10 @@ declare module 'axios' {
     authTokenCheck?: boolean
   }
 }
+
+declare module 'react-i18next' {
+  interface CustomTypeOptions {
+    returnNull: false
+    returnObjects: false
+  }
+}
