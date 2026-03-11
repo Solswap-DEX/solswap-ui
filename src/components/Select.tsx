@@ -29,7 +29,7 @@ type SelectorItemObj<T> = {
 export type SelectorItem<T = any> = SelectorItemObj<T> | T
 
 function isSelectorItemObj<T>(item: SelectorItem<T>): item is SelectorItemObj<T> {
-  return isObject(item) && 'value' in item
+  return isObject(item) && 'value' in (item as object)
 }
 
 function getIcon(

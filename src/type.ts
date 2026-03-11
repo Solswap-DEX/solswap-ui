@@ -1,6 +1,6 @@
-import { SolSwapApiBatchRequestParams } from '@raydium-io/raydium-sdk-v2'
+import { RaydiumApiBatchRequestParams } from '@raydium-io/raydium-sdk-v2'
 
-export type SSRData = Omit<SolSwapApiBatchRequestParams, 'api'>
+export type SSRData = Omit<RaydiumApiBatchRequestParams, 'api'>
 export type ValueOf<T> = T[keyof T]
 
 interface SolanaFeeInfo {

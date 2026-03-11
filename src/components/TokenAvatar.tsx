@@ -34,7 +34,7 @@ const sizeMap = {
   lg: '48px',
   '2xl': '80px'
 }
-// @ts-expect-error enum
+// @ts-ignore enum
 const parseSize = (size: TokenAvatarSize) => sizeMap[size]
 
 export default forwardRef(function TokenAvatar(

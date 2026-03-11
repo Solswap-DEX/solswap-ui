@@ -1,14 +1,14 @@
 import dynamic from 'next/dynamic'
-const Wormhole = dynamic(() => import('@/features/Wormhole'))
+const Bridge = dynamic(() => import('@/features/Bridge/BridgeWidget').then(mod => ({ default: mod.BridgeWidget })))
 
-function Bridge() {
-  return <Wormhole />
+function BridgePage() {
+  return <Bridge />
 }
 
-export default Bridge
+export default BridgePage
 
 export async function getStaticProps() {
   return {
-    props: { title: 'Wormhole' }
+    props: { title: 'Bridge' }
   }
 }

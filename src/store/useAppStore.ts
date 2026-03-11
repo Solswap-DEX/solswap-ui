@@ -1,7 +1,7 @@
 import { Connection, PublicKey, Transaction, VersionedTransaction, EpochInfo, clusterApiUrl, Commitment } from '@solana/web3.js'
 import {
-  SolSwap,
-  SolSwapLoadParams,
+  Raydium,
+  RaydiumLoadParams,
   API_URLS,
   API_URL_CONFIG,
   ProgramIdConfig,
@@ -72,7 +72,7 @@ interface RpcItem {
 }
 
 interface AppState {
-  raydium?: SolSwap
+  raydium?: Raydium
   connection?: Connection
   signAllTransactions?: (<T extends Transaction | VersionedTransaction>(transaction: T[]) => Promise<T[]>) | undefined
   publicKey?: PublicKey
@@ -116,7 +116,7 @@ interface AppState {
 
   getPriorityFee: () => string | undefined
   getEpochInfo: () => Promise<EpochInfo | undefined>
-  initSolSwapAct: (payload: SolSwapLoadParams) => Promise<SolSwap | undefined>
+  initSolSwapAct: (payload: RaydiumLoadParams) => Promise<Raydium | undefined>
   fetchChainTimeAct: () => void
   fetchRpcsAct: () => Promise<void>
   fetchBlockSlotCountAct: () => Promise<void>
@@ -182,7 +182,7 @@ export const useAppStore = createStore<AppState>(
       set({ initialing: true }, false, action)
       const isDev = window.location.host === 'localhost:3002'
 
-      const raydium = await SolSwap.load({
+      const raydium = await Raydium.load({
         ...payload,
         connection,
         urlConfigs: {
