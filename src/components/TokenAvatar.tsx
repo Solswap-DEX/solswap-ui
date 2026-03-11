@@ -34,8 +34,7 @@ const sizeMap = {
   lg: '48px',
   '2xl': '80px'
 }
-// @ts-ignore enum
-const parseSize = (size: TokenAvatarSize) => sizeMap[size]
+const parseSize = (size: TokenAvatarSize) => (sizeMap as Record<string, string>)[size]
 
 export default forwardRef(function TokenAvatar(
   { token: originalToken, tokenMint, icon, size = 'md', name, bgBlur, haveHTMLTitle, ...restProps }: TokenAvatarProps,
