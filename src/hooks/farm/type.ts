@@ -5,7 +5,7 @@ import {
   FormatFarmInfoOutV6,
   RewardInfoV345,
   RewardInfoV6
-} from '@solswap.cloud/raydium-sdk-v2'
+} from '@raydium-io/raydium-sdk-v2'
 import { FarmDecodeData } from './farmUtils'
 export enum FarmType {
   SolSwap = 'SolSwap',

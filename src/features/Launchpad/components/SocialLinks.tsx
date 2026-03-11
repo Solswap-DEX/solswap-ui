@@ -10,7 +10,7 @@ import { useDialogsStore } from '@/store'
 import { DialogTypes } from '@/constants/dialogs'
 import { getMintWatchList, setMintWatchList } from '../utils'
 import { useEvent } from '@/hooks/useEvent'
-import { LaunchpadPoolInitParam } from '@solswap.cloud/raydium-sdk-v2'
+import { LaunchpadPoolInitParam } from '@raydium-io/raydium-sdk-v2'
 
 export const SocialLinks = memo(
   ({

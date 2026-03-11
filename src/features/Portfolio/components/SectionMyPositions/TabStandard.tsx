@@ -1,4 +1,4 @@
-import { SOLSWAP_TOKENMint } from '@solswap.cloud/raydium-sdk-v2'
+import { SOLSWAP_TOKENMint } from '@raydium-io/raydium-sdk-v2'
 import { Flex, Text, Link, Button, Skeleton } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import StandardPoolRowItem from './components/Standard/StandardPoolRowItem'

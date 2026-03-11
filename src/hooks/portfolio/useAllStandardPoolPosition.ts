@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { SOLSWAP_TOKENMint, ApiV3Token } from '@solswap.cloud/raydium-sdk-v2'
+import { SOLSWAP_TOKENMint, ApiV3Token } from '@raydium-io/raydium-sdk-v2'
 
 import { useTokenAccountStore, useTokenStore } from '@/store'
 import useFarmPositions from '@/hooks/portfolio/farm/useFarmPositions'

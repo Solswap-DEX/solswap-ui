@@ -1,4 +1,4 @@
-import { SolSwapApiBatchRequestParams } from '@solswap.cloud/raydium-sdk-v2'
+import { SolSwapApiBatchRequestParams } from '@raydium-io/raydium-sdk-v2'
 
 export type SSRData = Omit<SolSwapApiBatchRequestParams, 'api'>
 export type ValueOf<T> = T[keyof T]

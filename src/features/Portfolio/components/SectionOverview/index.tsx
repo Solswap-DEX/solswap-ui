@@ -13,7 +13,7 @@ import useTokenPrice from '@/hooks/token/useTokenPrice'
 import Decimal from 'decimal.js'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/store'
-import { SOLSWAP_TOKENMint } from '@solswap.cloud/raydium-sdk-v2'
+import { SOLSWAP_TOKENMint } from '@raydium-io/raydium-sdk-v2'
 import { PublicKey } from '@solana/web3.js'
 
 export enum AssetType {
