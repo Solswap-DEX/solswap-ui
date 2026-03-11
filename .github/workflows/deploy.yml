@@ -39,7 +39,12 @@ jobs:
 
       - name: Deploy static files to server
         run: |
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            out/ \
-            ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/var/www/solswap.cloud/public_html/
+          # Create a tar of the out directory and transfer via SSH
+          cd out
+          tar czf /tmp/solswap-build.tar.gz .
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            /tmp/solswap-build.tar.gz \
+            ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/solswap-build.tar.gz
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.USERNAME }}@${{ secrets.HOST }} \
+            "rm -rf /var/www/solswap.cloud/public_html/* && tar xzf /tmp/solswap-build.tar.gz -C /var/www/solswap.cloud/public_html/ && rm /tmp/solswap-build.tar.gz && echo 'Deploy successful'"
