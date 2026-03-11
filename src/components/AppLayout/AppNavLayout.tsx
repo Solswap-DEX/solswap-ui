@@ -101,7 +101,7 @@ function AppNavLayout({
 
         {/* nav routes */}
         <Desktop>
-          <HStack flexGrow={1} justify="start" overflow={['auto', 'visible']} gap={[15, 0, 15]}>
+          <HStack flexGrow={1} flexShrink={1} justify="start" overflow={['auto', 'visible']} gap={[15, 0, 15]}>
             <RouteLink href="/swap" isActive={pathname === '/swap'} title={t('swap.title')} />
             <RouteLink href="/liquidity-pools" isActive={pathname.includes('/liquidity')} title={t('liquidity.title')} />
             <RouteLink href="/portfolio" isActive={pathname === '/portfolio'} title={t('portfolio.title')} />
@@ -136,7 +136,7 @@ function AppNavLayout({
         </Desktop>
 
         {/* wallet button */}
-        <Flex gap={[0.5, 2]} align="center">
+        <Flex gap={[0.5, 2]} align="center" flexShrink={0}>
           <TorqueButton />
           <PriorityButton />
           <SettingsMenu />
