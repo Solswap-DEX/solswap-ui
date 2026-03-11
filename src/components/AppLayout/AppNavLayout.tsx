@@ -65,8 +65,8 @@ function AppNavLayout({
         className="navbar"
         flex="none"
         height={['64px', '80px']}
-        px={['20px', '20px', '20px']}
-        gap={['4px', 0, 0, '16px']}
+        px={['12px', '12px', '12px']}
+        gap={['4px', 0, 0, '10px']}
         alignItems="center"
         justifyContent="space-between"
         overflow="visible"
@@ -121,7 +121,7 @@ function AppNavLayout({
               }}
             />
             <Menu size="lg">
-              <MenuButton fontSize={'lg'} px={2} py={2}>
+              <MenuButton fontSize={'md'} px={2} py={2}>
                 <Flex
                   align="center"
                   gap={0.5}
@@ -203,7 +203,7 @@ function RouteLink({
     >
       <Flex
         textColor={isActive ? colors.textSecondary : colors.textTertiary}
-        fontSize={['md', 'md', 'lg']}
+        fontSize={['sm', 'sm', 'md']}
         px={2}
         py={2}
         rounded="xl"
