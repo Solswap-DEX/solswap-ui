@@ -9,10 +9,10 @@ interface TradingChartProps {
 }
 
 export const TradingChart: React.FC<TradingChartProps> = ({ poolAddress }) => {
-  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<any>(null);
-  const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'>>(null);
-  const volumeSeriesRef = useRef<ISeriesApi<'Histogram'>>(null);
+  const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
 
