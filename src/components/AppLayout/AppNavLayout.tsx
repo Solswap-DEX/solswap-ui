@@ -65,8 +65,8 @@ function AppNavLayout({
         className="navbar"
         flex="none"
         height={['64px', '80px']}
-        px={['20px', 0, '38px']}
-        gap={['4px', 0, 0, 'max(32px, 3vw)']}
+        px={['20px', '20px', '20px']}
+        gap={['4px', 0, 0, '16px']}
         alignItems="center"
         justifyContent="space-between"
         overflow="visible"
@@ -102,7 +102,7 @@ function AppNavLayout({
 
         {/* nav routes */}
         <Desktop>
-          <HStack flexGrow={1} flexShrink={1} justify="start" overflow={['auto', 'visible']} gap={[15, 0, 15]}>
+          <HStack flexGrow={1} flexShrink={1} justify="start" overflow={['auto', 'visible']} gap={0}>
             <RouteLink href="/swap" isActive={pathname === '/swap'} title={t('swap.title')} />
             <RouteLink href="/liquidity-pools" isActive={pathname.includes('/liquidity')} title={t('liquidity.title')} />
             <RouteLink href="/portfolio" isActive={pathname === '/portfolio'} title={t('portfolio.title')} />
@@ -121,7 +121,7 @@ function AppNavLayout({
               }}
             />
             <Menu size="lg">
-              <MenuButton fontSize={'lg'} px={4} py={2}>
+              <MenuButton fontSize={'lg'} px={2} py={2}>
                 <Flex
                   align="center"
                   gap={0.5}
@@ -137,7 +137,7 @@ function AppNavLayout({
         </Desktop>
 
         {/* wallet button */}
-        <Flex gap={[0.5, 2]} align="center" flexShrink={0}>
+        <Flex gap={[0.5, 1]} align="center" flexShrink={0}>
           <TorqueButton />
           <PriorityButton />
           <SettingsMenu />
@@ -204,10 +204,11 @@ function RouteLink({
       <Flex
         textColor={isActive ? colors.textSecondary : colors.textTertiary}
         fontSize={['md', 'md', 'lg']}
-        px={4}
+        px={2}
         py={2}
         rounded="xl"
         transition="200ms"
+        whiteSpace="nowrap"
         _hover={{ bg: colors.backgroundLight, color: colors.textSecondary }}
         alignItems="center"
         sx={sx}
