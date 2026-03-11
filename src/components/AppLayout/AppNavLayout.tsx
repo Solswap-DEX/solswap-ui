@@ -66,9 +66,10 @@ function AppNavLayout({
         flex="none"
         height={['64px', '80px']}
         px={['20px', 0, '38px']}
-        gap={['4px', 0, 0, 'max(64px, 6.1vw)']}
+        gap={['4px', 0, 0, 'max(32px, 3vw)']}
         alignItems="center"
         justifyContent="space-between"
+        overflow="visible"
       >
         {/* logo */}
         <Desktop>

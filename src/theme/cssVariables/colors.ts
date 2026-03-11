@@ -17,8 +17,8 @@ export const darkColors: Record<keyof typeof colors, string> = {
 
   // text
   textPrimary: '#FFFFFF',
-  textSecondary: '#8B8FA8',
-  textTertiary: '#8B8FA8CC',
+  textSecondary: '#00C896',
+  textTertiary: '#00C896AA',
   textRevertPrimary: '#0C0D14',
 
   textLink: '#00D1CF',
