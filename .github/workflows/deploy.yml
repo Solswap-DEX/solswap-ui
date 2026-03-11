@@ -30,15 +30,16 @@ jobs:
           NEXT_PUBLIC_HELIUS_RPC_URL: ${{ secrets.NEXT_PUBLIC_HELIUS_RPC_URL }}
           NEXT_PUBLIC_SITE_URL: https://solswap.cloud
 
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /var/www/solswap.cloud
-            git pull origin main
-            npm install --ignore-scripts --legacy-peer-deps
-            npm run build
-            pm2 restart solswap || pm2 start npm --name "solswap" -- start
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy static files to server
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            out/ \
+            ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/var/www/solswap.cloud/public_html/
