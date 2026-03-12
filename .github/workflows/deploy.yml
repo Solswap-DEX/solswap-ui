@@ -30,7 +30,17 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to AWS via SSH
+      - name: Deploy to AWS via SSH (rsync)
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-rlgoDzvc -i --delete"
+          SOURCE: ".next/"
+          REMOTE_HOST: ${{ secrets.HOST }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          TARGET: "/var/www/solswap.cloud/.next/"
+
+      - name: Restart PM2
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.HOST }}
@@ -38,7 +48,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/solswap.cloud
-            git pull origin main
+            # Ensure dependencies are installed (this is quick if already there)
             npm install --legacy-peer-deps --production
             pm2 restart solswap || pm2 start npm --name "solswap" -- start
             echo "Deploy completed at $(date)"
