@@ -36,25 +36,16 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy .next to AWS via SCP
+      - name: Deploy static export (out) to AWS via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ".next"
+          source: "out"
           target: "/var/www/solswap.cloud/"
 
-      - name: Deploy .env to AWS via SCP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ".env.production"
-          target: "/var/www/solswap.cloud/"
-
-      - name: Restart PM2
+      - name: Sync Static Files and Reload Apache
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.HOST }}
@@ -62,13 +53,24 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/solswap.cloud
-            # Ensure dependencies are installed
-            npm install --legacy-peer-deps --production
-            pm2 restart solswap || pm2 start npm --name "solswap" -- start
-            echo "Deploy completed at $(date)"
+            # Move the new export to the public_html folder
+            # We use rsync-like behavior with cp -r if rsync is missing, 
+            # or just overwrite.
+            rm -rf public_html_old
+            mv public_html public_html_old || true
+            mkdir public_html
+            cp -r out/* public_html/
+            
+            # Clean up out folder
+            rm -rf out
+            
+            # Graceful reload of Apache to ensure everything is fresh
+            # (Though static files usually don't need a reload, it's good practice)
+            sudo systemctl reload apache2 || true
+            echo "Deploy to public_html completed at $(date)"
 
       - name: Health Check
         run: |
-          sleep 15
+          sleep 10
           curl -f https://solswap.cloud || exit 1
           echo "solswap.cloud is responding correctly"
