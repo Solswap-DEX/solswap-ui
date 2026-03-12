@@ -17,7 +17,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Create .env.production
         run: |
@@ -39,7 +39,7 @@ jobs:
           script: |
             cd /var/www/solswap.cloud
             git pull origin main
-            npm ci --production
+            npm install --legacy-peer-deps --production
             pm2 restart solswap || pm2 start npm --name "solswap" -- start
             echo "Deploy completed at $(date)"
 
