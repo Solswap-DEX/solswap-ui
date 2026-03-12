@@ -33,9 +33,9 @@ jobs:
       - name: Deploy to AWS via SSH
         uses: appleboy/ssh-action@v1
         with:
-          host: solswap.cloud
-          username: root
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/solswap.cloud
             git pull origin main
