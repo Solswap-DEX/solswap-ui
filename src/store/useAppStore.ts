@@ -176,8 +176,11 @@ export const useAppStore = createStore<AppState>(
     ...appInitState,
     initSolSwapAct: async (payload) => {
       const action = { type: 'initSolSwapAct' }
-      const { initialing, urlConfigs, rpcNodeUrl, jupTokenType, displayTokenSettings } = get()
-      if (initialing || !rpcNodeUrl) return
+      const { initialing, urlConfigs, rpcNodeUrl: storeRpc, jupTokenType, displayTokenSettings } = get()
+      if (initialing) return
+      
+      const fallbackRpc = "https://api.mainnet-beta.solana.com"
+      const rpcNodeUrl = storeRpc || fallbackRpc
       const connection = payload.connection || new Connection(rpcNodeUrl)
       set({ initialing: true }, false, action)
       const isDev = window.location.host === 'localhost:3002'

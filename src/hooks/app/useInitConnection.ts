@@ -5,6 +5,7 @@ import { TxVersion, validateAndParsePublicKey, txToBase64 } from '@raydium-io/ra
 import { useAppStore, defaultEndpoint } from '@/store/useAppStore'
 import usePrevious from '@/hooks/usePrevious'
 import shallow from 'zustand/shallow'
+import { useTokenStore } from '@/store/useTokenStore'
 import { isLocal } from '@/utils/common'
 import { getDevOnlyStorage } from '@/utils/localStorage'
 import { SSRData } from '../../type'
@@ -141,7 +142,7 @@ function useInitConnection(props: SSRData) {
 
   // init raydium sdk or update connection action
   useEffect(() => {
-    if (!connection || connection.rpcEndpoint === defaultEndpoint) return
+    if (!connection) return
 
     useAppStore.setState({ connection, signAllTransactions }, false, { type: 'useInitConnection' } as any)
     // raydium sdk initialization can be done with connection only, if url or rpc changed, re-init
@@ -192,6 +193,10 @@ function useInitConnection(props: SSRData) {
       if (wallet) localStorage.setItem(WALLET_STORAGE_KEY, `"${wallet?.adapter.name}"`)
     }
   }, [publicKey, connected, wallet?.adapter.name])
+
+  useEffect(() => {
+    useTokenStore.getState().loadTokensAct()
+  }, [])
 }
 
 export default useInitConnection
