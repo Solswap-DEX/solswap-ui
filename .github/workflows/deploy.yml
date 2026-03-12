@@ -30,13 +30,22 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to AWS via SCP
+      - name: Deploy .next to AWS via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ".next,.env.production"
+          source: ".next"
+          target: "/var/www/solswap.cloud/"
+
+      - name: Deploy .env to AWS via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: ".env.production"
           target: "/var/www/solswap.cloud/"
 
       - name: Restart PM2
