@@ -1,50 +1,50 @@
-name: Deploy SolSwap UI
+name: Deploy SolSwap
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 18
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install --ignore-scripts --legacy-peer-deps
+        run: npm ci
 
-      - name: Build project
+      - name: Create .env.production
+        run: |
+          echo "NEXT_PUBLIC_RPC_URL=${{ secrets.RPC_URL }}" >> .env.production
+          echo "NEXT_PUBLIC_BIRDEYE_API_KEY=${{ secrets.BIRDEYE_API_KEY }}" >> .env.production
+          echo "NEXT_PUBLIC_ONRAMPER_API_KEY=${{ secrets.ONRAMPER_API_KEY }}" >> .env.production
+          echo "NEXT_PUBLIC_GLITCHTIP_DSN=${{ secrets.GLITCHTIP_DSN }}" >> .env.production
+          echo "NEXT_PUBLIC_SITE_URL=https://solswap.cloud" >> .env.production
+
+      - name: Build
         run: npm run build
-        env:
-          NEXT_PUBLIC_ONRAMPER_API_KEY: ${{ secrets.NEXT_PUBLIC_ONRAMPER_API_KEY }}
-          NEXT_PUBLIC_GLITCHTIP_DSN: ${{ secrets.NEXT_PUBLIC_GLITCHTIP_DSN }}
-          NEXT_PUBLIC_BIRDEYE_API_KEY: ${{ secrets.NEXT_PUBLIC_BIRDEYE_API_KEY }}
-          NEXT_PUBLIC_HELIUS_RPC_URL: ${{ secrets.NEXT_PUBLIC_HELIUS_RPC_URL }}
-          NEXT_PUBLIC_SITE_URL: https://solswap.cloud
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+      - name: Deploy to AWS via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: solswap.cloud
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /var/www/solswap.cloud
+            git pull origin main
+            npm ci --production
+            pm2 restart solswap || pm2 start npm --name "solswap" -- start
+            echo "Deploy completed at $(date)"
 
-      - name: Deploy static files to server
+      - name: Health Check
         run: |
-          # Create a tar of the out directory and transfer via SSH
-          cd out
-          tar czf /tmp/solswap-build.tar.gz .
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            /tmp/solswap-build.tar.gz \
-            ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/solswap-build.tar.gz
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            ${{ secrets.USERNAME }}@${{ secrets.HOST }} \
-            "rm -rf /var/www/solswap.cloud/public_html/* && tar xzf /tmp/solswap-build.tar.gz -C /var/www/solswap.cloud/public_html/ && rm /tmp/solswap-build.tar.gz && echo 'Deploy successful'"
+          sleep 15
+          curl -f https://solswap.cloud || exit 1
+          echo "solswap.cloud is responding correctly"

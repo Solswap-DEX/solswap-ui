@@ -21,17 +21,9 @@ const i18nConfig = {
   //   caches: ['localStorage', 'cookie']
   // },
   resources: {
-    en: { translation: en },
-    'zh-TW': { translation: zhTW },
-    'zh-CN': { translation: zhCN },
-    jp: { translation: jp },
-    ko: { translation: ko },
-    es: { translation: es },
-    fr: { translation: fr },
-    ru: { translation: ru },
-    pt: { translation: pt },
-    tr: { translation: tr }
+    en: { translation: en }
   },
+  lng: 'en',
   fallbackLng: 'en'
 }
 

@@ -1,19 +1,11 @@
-import { useCallback } from 'react'
-import { Box, Button } from '@chakra-ui/react'
-import { Wallet, useWallet } from '@solana/wallet-adapter-react'
-import { useWalletModal } from '@solana/wallet-adapter-react-ui'
-import { useEvent } from '@/hooks/useEvent'
-import SelectWalletModal from './SelectWalletModal'
-import { colors } from '@/theme/cssVariables'
-import { useTranslation } from 'react-i18next'
-import { MoonpayBuy } from '@/components/Moonpay'
-import MoonPayIcon from '@/icons/misc/MoonPayIcon'
-import { WALLET_STORAGE_KEY } from '@/hooks/app/useInitConnection'
+import { OnramperWidget } from '@/features/Onramper/OnramperWidget'
+import { Modal, ModalOverlay, ModalContent, ModalCloseButton, ModalBody, useDisclosure as useChakraDisclosure } from '@chakra-ui/react'
 
 export default function WalletOnramp() {
   const { wallets, select, connected, connecting } = useWallet()
   const { t } = useTranslation()
   const { setVisible, visible } = useWalletModal()
+  const { isOpen, onOpen, onClose } = useChakraDisclosure()
 
   const handleClose = useCallback(() => setVisible(false), [setVisible])
   const handleOpen = useCallback(() => setVisible(true), [setVisible])
@@ -22,7 +14,6 @@ export default function WalletOnramp() {
     select(wallet.adapter.name)
     handleClose()
     setTimeout(() => {
-      // remove before connected
       localStorage.removeItem(WALLET_STORAGE_KEY)
     }, 0)
   })
@@ -30,8 +21,7 @@ export default function WalletOnramp() {
   if (connected)
     return (
       <>
-        <MoonpayBuy>
-          <Box className="p-mp__submit" maxW="320px" w="100%" m="auto">
+        <Box className="p-mp__submit" maxW="320px" w="100%" m="auto">
             <Button
               width="full"
               variant="solid"
@@ -41,12 +31,20 @@ export default function WalletOnramp() {
               borderRadius="50em"
               border="2px solid transparent"
               color={colors.text02}
-              leftIcon={<MoonPayIcon width="16px" height="16px" color={colors.text02} />}
+              onClick={onOpen}
             >
-              {t('button.deposit')}
+              Buy Crypto
             </Button>
-          </Box>
-        </MoonpayBuy>
+        </Box>
+        <Modal isOpen={isOpen} onClose={onClose} isCentered size="xl">
+            <ModalOverlay />
+            <ModalContent bg="transparent" boxShadow="none">
+                <ModalCloseButton color="white" zIndex={10} />
+                <ModalBody p={0}>
+                    <OnramperWidget />
+                </ModalBody>
+            </ModalContent>
+        </Modal>
       </>
     )
   return (

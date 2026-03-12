@@ -92,55 +92,30 @@ export const getStorageToken = (mint: string): TokenInfo | undefined => {
 export const useTokenStore = createStore<TokenStore>(
   (set, get) => ({
     ...initTokenSate,
-    loadTokensAct: (forceUpdate?: boolean, jupTokenType?: JupTokenType) => {
-      const raydium = useAppStore.getState().raydium
-      if (!raydium) return
+    loadTokensAct: async (forceUpdate?: boolean) => {
+      const { TOKEN_LIST_URL } = await import('@/config/tokenList')
       const action = { type: 'loadTokensAct' }
-      const type = jupTokenType || JupTokenType.Strict
+      
+      try {
+        const res = await fetch(TOKEN_LIST_URL)
+        const tokenList = (await res.json()) as TokenInfo[]
+        const tokenMap = new Map<string, TokenInfo>()
+        const officialMints = new Set<string>()
 
-      useAppStore.setState({ jupTokenType: type }, false, action)
-
-      const update = !!forceUpdate || useAppStore.getState().jupTokenType !== type
-      raydium.token.load({ forceUpdate: update, type }).then(() => {
-        get().extraLoadedTokenList.forEach((t) => {
-          const existed = raydium.token.tokenMap.has(t.address)
-          if (!existed) {
-            raydium.token.tokenList.push(t)
-            raydium.token.tokenMap.set(t.address, t)
-            raydium.token.mintGroup.official.add(t.address)
-          }
+        tokenList.forEach((token) => {
+          tokenMap.set(token.address, token)
+          officialMints.add(token.address)
         })
-        const tokenMap = new Map(Array.from(raydium.token.tokenMap))
-        const tokenList = (JSON.parse(JSON.stringify(raydium.token.tokenList)) as TokenInfo[])
-          .filter((t) => {
-            if (blackJupMintSet.has(t.address)) {
-              tokenMap.delete(t.address)
-              raydium.token.tokenMap.delete(t.address)
-              raydium.token.mintGroup.jup.delete(t.address)
-              return false
-            }
-            return true
-          })
-          .map((t) => {
-            if (t.type === 'jupiter') {
-              const newInfo = { ...t, logoURI: t.logoURI ? `https://wsrv.nl/?fit=cover&w=48&h=48&url=${t.logoURI}` : t.logoURI }
-              tokenMap.set(t.address, newInfo)
-              return newInfo
-            }
-            return t
-          })
-        set(
-          {
-            tokenList,
-            tokenMap,
-            mintGroup: raydium.token.mintGroup,
-            whiteListMap: new Set(Array.from(raydium.token.whiteListMap))
-          },
-          false,
-          action
-        )
-        get().setDisplayTokenListAct()
-      })
+
+        set({
+          tokenList,
+          tokenMap,
+          mintGroup: { official: officialMints, jup: new Set() },
+          displayTokenList: tokenList
+        }, false, action)
+      } catch (error) {
+        console.error('Failed to load Jupiter token list:', error)
+      }
     },
 
     setDisplayTokenListAct: () => {
