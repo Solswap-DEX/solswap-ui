@@ -66,7 +66,7 @@ function AppNavLayout({
         flex="none"
         height={['64px', '80px']}
         px={['12px', '12px', '12px']}
-        gap={['4px', 0, 0, '10px']}
+        gap={['4px', 0, 0, '15px']}
         alignItems="center"
         justifyContent="space-between"
         overflow="visible"
