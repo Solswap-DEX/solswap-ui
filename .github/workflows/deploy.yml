@@ -36,7 +36,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ".next"
+          source: ".next,.env.production"
           target: "/var/www/solswap.cloud/"
 
       - name: Restart PM2
