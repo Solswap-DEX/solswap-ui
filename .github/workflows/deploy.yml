@@ -30,15 +30,14 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to AWS via SSH (rsync)
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          ARGS: "-rlgoDzvc -i --delete"
-          SOURCE: ".next/"
-          REMOTE_HOST: ${{ secrets.HOST }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: "/var/www/solswap.cloud/.next/"
+      - name: Deploy to AWS via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: ".next"
+          target: "/var/www/solswap.cloud/"
 
       - name: Restart PM2
         uses: appleboy/ssh-action@v1
@@ -48,7 +47,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/solswap.cloud
-            # Ensure dependencies are installed (this is quick if already there)
+            # Ensure dependencies are installed
             npm install --legacy-peer-deps --production
             pm2 restart solswap || pm2 start npm --name "solswap" -- start
             echo "Deploy completed at $(date)"
