@@ -21,8 +21,14 @@ jobs:
 
       - name: Create .env.production
         run: |
-          echo "NEXT_PUBLIC_RPC_URL=${{ secrets.RPC_URL }}" >> .env.production
-          echo "NEXT_PUBLIC_BIRDEYE_API_KEY=${{ secrets.BIRDEYE_API_KEY }}" >> .env.production
+          RPC_URL="${{ secrets.RPC_URL }}"
+          if [ -z "$RPC_URL" ]; then RPC_URL="https://api.mainnet-beta.solana.com"; fi
+          echo "NEXT_PUBLIC_RPC_URL=$RPC_URL" >> .env.production
+          
+          BIRDEYE_API_KEY="${{ secrets.BIRDEYE_API_KEY }}"
+          # No public fallback for Birdeye, but we'll set it anyway
+          echo "NEXT_PUBLIC_BIRDEYE_API_KEY=$BIRDEYE_API_KEY" >> .env.production
+          
           echo "NEXT_PUBLIC_ONRAMPER_API_KEY=${{ secrets.ONRAMPER_API_KEY }}" >> .env.production
           echo "NEXT_PUBLIC_GLITCHTIP_DSN=${{ secrets.GLITCHTIP_DSN }}" >> .env.production
           echo "NEXT_PUBLIC_SITE_URL=https://solswap.cloud" >> .env.production
