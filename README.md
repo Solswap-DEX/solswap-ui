@@ -1,5 +1,28 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Revenue Monitoring
+Fee wallet transactions:
+https://solscan.io/account/5KUA4a4qFusTvJeSquKsBSEPvhiVedvaj8hE8pVp2vmz
+
+## Rollback Plan
+
+### Full rollback (if deploy breaks the site):
+```bash
+git revert eb14519
+git push origin main
+# GitHub Actions will auto-deploy the reverted version
+```
+
+### Quick fix (if only platformFee causes swap failures):
+1. Go to github.com/Solswap-DEX/solswap-ui/settings/secrets/actions
+2. Edit secret FEE_BPS → set value to 0
+3. Push any small change to main to trigger redeploy
+4. The referrer 1% will keep working — only platform fee disabled
+
+### Emergency disable all fees:
+1. Set FEE_BPS = 0 in GitHub Secrets
+2. Set REFERRER_WALLET = "" in GitHub Secrets
+3. Push to trigger redeploy
 ## Getting Started
 
 First, run the development server:
