@@ -25,7 +25,7 @@ import { retry, isProdEnv } from '@/utils/common'
 import { compare } from 'compare-versions'
 
 export const defaultNetWork = WalletAdapterNetwork.Mainnet // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
-export const defaultEndpoint = clusterApiUrl(defaultNetWork) // You can also provide a custom RPC endpoint
+export const defaultEndpoint = "https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244" // Helius RPC for reliable mainnet access
 export const APR_MODE_KEY = '_r_apr_'
 export const EXPLORER_KEY = '_r_explorer_'
 export const supportedExplorers = [
@@ -179,7 +179,7 @@ export const useAppStore = createStore<AppState>(
       const { initialing, urlConfigs, rpcNodeUrl: storeRpc, jupTokenType, displayTokenSettings } = get()
       if (initialing) return
       
-      const fallbackRpc = "https://api.mainnet-beta.solana.com"
+      const fallbackRpc = "https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244"
       const rpcNodeUrl = storeRpc || fallbackRpc
       const connection = payload.connection || new Connection(rpcNodeUrl)
       set({ initialing: true }, false, action)
