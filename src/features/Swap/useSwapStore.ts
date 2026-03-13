@@ -18,6 +18,7 @@ import { getDefaultToastData, handleMultiTxToast, transformProcessData } from '@
 import { handleMultiTxRetry } from '@/hooks/toast/retryTx'
 import { isSwapSlippageError } from '@/utils/tx/swapError'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { REVENUE_CONFIG } from '@/config/revenueConfig'
 
 const getSwapComputePrice = async () => {
   const transactionFee = useAppStore.getState().getPriorityFee()
@@ -127,7 +128,8 @@ export const useSwapStore = createStore<SwapStore>(
             wrapSol: isInputSol,
             unwrapSol,
             inputAccount: isInputSol ? undefined : inputTokenAcc?.toBase58(),
-            outputAccount: isOutputSol ? undefined : outputTokenAcc?.toBase58()
+            outputAccount: isOutputSol ? undefined : outputTokenAcc?.toBase58(),
+            referrer: REVENUE_CONFIG.referrerWallet
           }
         )
         if (!success) {

@@ -33,6 +33,19 @@ jobs:
           echo "NEXT_PUBLIC_GLITCHTIP_DSN=${{ secrets.GLITCHTIP_DSN }}" >> .env.production
           echo "NEXT_PUBLIC_SITE_URL=https://solswap.cloud" >> .env.production
 
+          # Revenue Configuration
+          REFERRER_WALLET="${{ secrets.REFERRER_WALLET }}"
+          if [ -z "$REFERRER_WALLET" ]; then REFERRER_WALLET="5KUA4a4qFusTvJeSquKsBSEPvhiVedvaj8hE8pVp2vmz"; fi
+          echo "NEXT_PUBLIC_REFERRER_WALLET=$REFERRER_WALLET" >> .env.production
+
+          FEE_COLLECTOR="${{ secrets.FEE_COLLECTOR }}"
+          if [ -z "$FEE_COLLECTOR" ]; then FEE_COLLECTOR="5KUA4a4qFusTvJeSquKsBSEPvhiVedvaj8hE8pVp2vmz"; fi
+          echo "NEXT_PUBLIC_FEE_COLLECTOR=$FEE_COLLECTOR" >> .env.production
+
+          FEE_BPS="${{ secrets.FEE_BPS }}"
+          if [ -z "$FEE_BPS" ]; then FEE_BPS="10"; fi
+          echo "NEXT_PUBLIC_FEE_BPS=$FEE_BPS" >> .env.production
+
       - name: Build
         run: npm run build
 
