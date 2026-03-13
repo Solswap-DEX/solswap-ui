@@ -21,15 +21,6 @@ const nextConfig = {
       '@': path.resolve('./src')
     }
     return config
-  },
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/swap/',
-        permanent: false
-      }
-    ]
   }
 }
 
