@@ -110,3 +110,4 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 ### utils Map
 
 - [`searchItems()`](./src/utils/searchItems.ts) apply search logic, it will only sort the result by match condition (TODO: support sort factor)
+# RPC updated Fri Mar 13 18:22:14 UTC 2026
