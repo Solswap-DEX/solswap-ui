@@ -91,6 +91,12 @@ export function SwapInfoBoard({
               : '-'}
           </Text>
         </HStack>
+        <HStack gap={4} py={1} justifyContent="space-between">
+          <ItemLabel name="Platform Fee" tooltip="Fee collected by SolSwap to support the platform" />
+          <Text fontSize="xs" color={colors.textSecondary} fontWeight={500}>
+            0.10%
+          </Text>
+        </HStack>
         <Collapse in={showMoreSwapInfo} animateOpacity>
           <HStack gap={4} py={1} justifyContent="space-between">
             <ItemLabel name={t('swap.info_order_routing')} tooltip={t('swap.info_order_routing_tooltip')} />

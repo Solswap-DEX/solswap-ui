@@ -9,6 +9,7 @@ import { debounce } from '@/utils/functionMethods'
 import { isValidPublicKey } from '@/utils/publicKey'
 import Decimal from 'decimal.js'
 import { ApiSwapV1OutSuccess, ApiSwapV1OutError } from './type'
+import { REVENUE_CONFIG } from '@/config/revenueConfig'
 
 const fetcher = async (url: string): Promise<ApiSwapV1OutSuccess | ApiSwapV1OutError> =>
   axios.get(url, {
@@ -51,7 +52,7 @@ export default function useSwap(props: {
           urlConfigs.SWAP_COMPUTE
         }${apiTrail}?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}&txVersion=${
           txVersion === TxVersion.V0 ? 'V0' : 'LEGACY'
-        }`
+        }&referrer=${REVENUE_CONFIG.referrerWallet}&platformFee=${REVENUE_CONFIG.feeBps}&feeAccount=${REVENUE_CONFIG.feeCollector}`
       : null
 
   const updateAmount = useCallback(
