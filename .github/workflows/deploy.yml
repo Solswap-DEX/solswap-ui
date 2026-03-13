@@ -7,13 +7,15 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
@@ -21,69 +23,114 @@ jobs:
 
       - name: Create .env.production
         run: |
-          RPC_URL="${{ secrets.RPC_URL }}"
-          if [ -z "$RPC_URL" ]; then RPC_URL="https://api.mainnet-beta.solana.com"; fi
-          echo "NEXT_PUBLIC_RPC_URL=$RPC_URL" >> .env.production
-          
-          BIRDEYE_API_KEY="${{ secrets.BIRDEYE_API_KEY }}"
-          # No public fallback for Birdeye, but we'll set it anyway
-          echo "NEXT_PUBLIC_BIRDEYE_API_KEY=$BIRDEYE_API_KEY" >> .env.production
-          
-          echo "NEXT_PUBLIC_ONRAMPER_API_KEY=${{ secrets.ONRAMPER_API_KEY }}" >> .env.production
-          echo "NEXT_PUBLIC_GLITCHTIP_DSN=${{ secrets.GLITCHTIP_DSN }}" >> .env.production
-          echo "NEXT_PUBLIC_SITE_URL=https://solswap.cloud" >> .env.production
+          # RPC Configuration (Helius)
+          echo "NEXT_PUBLIC_RPC_URL=${{ secrets.NEXT_PUBLIC_RPC_URL }}" \
+            >> .env.production
+          echo "NEXT_PUBLIC_WS_URL=${{ secrets.NEXT_PUBLIC_WS_URL }}" \
+            >> .env.production
+          echo "NEXT_PUBLIC_HELIUS_RPC_URL=${{ secrets.NEXT_PUBLIC_RPC_URL }}" \
+            >> .env.production
 
           # Revenue Configuration
           REFERRER_WALLET="${{ secrets.REFERRER_WALLET }}"
-          if [ -z "$REFERRER_WALLET" ]; then REFERRER_WALLET="5KUA4a4qFusTvJeSquKsBSEPvhiVedvaj8hE8pVp2vmz"; fi
-          echo "NEXT_PUBLIC_REFERRER_WALLET=$REFERRER_WALLET" >> .env.production
+          if [ -z "$REFERRER_WALLET" ]; then
+            REFERRER_WALLET="5KUA4a4qFusTvJeSquKsBSEPvhiVedvaj8hE8pVp2vmz"
+          fi
+          echo "NEXT_PUBLIC_REFERRER_WALLET=$REFERRER_WALLET" \
+            >> .env.production
 
           FEE_COLLECTOR="${{ secrets.FEE_COLLECTOR }}"
-          if [ -z "$FEE_COLLECTOR" ]; then FEE_COLLECTOR="5KUA4a4qFusTvJeSquKsBSEPvhiVedvaj8hE8pVp2vmz"; fi
-          echo "NEXT_PUBLIC_FEE_COLLECTOR=$FEE_COLLECTOR" >> .env.production
+          if [ -z "$FEE_COLLECTOR" ]; then
+            FEE_COLLECTOR="5KUA4a4qFusTvJeSquKsBSEPvhiVedvaj8hE8pVp2vmz"
+          fi
+          echo "NEXT_PUBLIC_FEE_COLLECTOR=$FEE_COLLECTOR" \
+            >> .env.production
 
           FEE_BPS="${{ secrets.FEE_BPS }}"
           if [ -z "$FEE_BPS" ]; then FEE_BPS="10"; fi
           echo "NEXT_PUBLIC_FEE_BPS=$FEE_BPS" >> .env.production
 
-      - name: Build
+          # Site
+          echo "NEXT_PUBLIC_SITE_URL=https://solswap.cloud" \
+            >> .env.production
+
+          # Verify .env.production was created (without showing values)
+          echo "=== .env.production keys ==="
+          cat .env.production | cut -d'=' -f1
+
+      - name: Verify RPC URL is set
+        run: |
+          if grep -q "NEXT_PUBLIC_RPC_URL=https://mainnet.helius" \
+            .env.production; then
+            echo "✅ Helius RPC URL confirmed in .env.production"
+          else
+            echo "❌ ERROR: Helius RPC URL not found in .env.production"
+            exit 1
+          fi
+
+      - name: Build static export
         run: npm run build
+        env:
+          NEXT_PUBLIC_RPC_URL: ${{ secrets.NEXT_PUBLIC_RPC_URL }}
+          NEXT_PUBLIC_WS_URL: ${{ secrets.NEXT_PUBLIC_WS_URL }}
+          NEXT_PUBLIC_REFERRER_WALLET: ${{ secrets.REFERRER_WALLET }}
+          NEXT_PUBLIC_FEE_COLLECTOR: ${{ secrets.FEE_COLLECTOR }}
+          NEXT_PUBLIC_FEE_BPS: ${{ secrets.FEE_BPS }}
 
-      - name: Deploy static export (out) to AWS via SCP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "out"
-          target: "/var/www/solswap.cloud/"
+      - name: Verify build output exists
+        run: |
+          if [ -d "out" ]; then
+            echo "✅ Build output found in out/"
+            ls out/ | head -10
+          elif [ -d ".next" ]; then
+            echo "✅ Build output found in .next/"
+            ls .next/ | head -10
+          else
+            echo "❌ ERROR: No build output found"
+            exit 1
+          fi
 
-      - name: Sync Static Files and Reload Apache
+      - name: Deploy to Apache via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /var/www/solswap.cloud
-            # Move the new export to the public_html folder
-            # We use rsync-like behavior with cp -r if rsync is missing, 
-            # or just overwrite.
-            rm -rf public_html_old
-            mv public_html public_html_old || true
-            mkdir public_html
-            cp -r out/* public_html/
-            
-            # Clean up out folder
-            rm -rf out
-            
-            # Graceful reload of Apache to ensure everything is fresh
-            # (Though static files usually don't need a reload, it's good practice)
-            sudo systemctl reload apache2 || true
-            echo "Deploy to public_html completed at $(date)"
+            # Backup current public_html
+            cp -r /var/www/solswap.cloud/public_html \
+              /var/www/solswap.cloud/public_html_backup_$(date +%Y%m%d_%H%M%S) \
+              2>/dev/null || true
 
-      - name: Health Check
+            # Clear public_html for fresh deploy
+            rm -rf /var/www/solswap.cloud/public_html/*
+            echo "✅ public_html cleared"
+
+      - name: Copy build files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "out/*"
+          target: "/var/www/solswap.cloud/public_html/"
+          strip_components: 1
+
+      - name: Post-deploy verification
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "=== Files in public_html ==="
+            ls /var/www/solswap.cloud/public_html/ | head -20
+            echo "=== Apache status ==="
+            systemctl is-active apache2
+            echo "✅ Deploy completed at $(date)"
+
+      - name: Health check
         run: |
-          sleep 10
+          sleep 20
           curl -f https://solswap.cloud || exit 1
-          echo "solswap.cloud is responding correctly"
+          echo "✅ solswap.cloud is responding"
