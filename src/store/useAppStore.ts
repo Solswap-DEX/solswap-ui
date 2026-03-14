@@ -325,7 +325,7 @@ export const useAppStore = createStore<AppState>(
             if (i < readyRpcs.length) {
               checkAndSetRpcNode()
             } else {
-              setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244', true, true)
+              isRpcLoading = false; setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244', true, true)
             }
           }
         }
