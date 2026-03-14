@@ -4,7 +4,7 @@
  */
 
 // Jupiter Price API v2
-export const JUP_PRICE_API = "https://lite-api.jup.ag/price/v1";
+export const JUP_PRICE_API = "https://lite-api.jup.ag/price/v2";
 
 /**
  * Fetch a single token price from Jupiter
@@ -40,6 +40,6 @@ export const getMultipleTokenPrices = async (mints: string[]): Promise<Record<st
   }
 };
 
-export const TOKEN_LIST = "https://tokens.jup.ag/tokens?tags=verified";
+export const TOKEN_LIST = "https://token.jup.ag/all";
 export const OHLCV_API = "https://api.geckoterminal.com/api/v2/networks/solana";
 export const POOL_API = "https://api.dexscreener.com/latest/dex/tokens";
