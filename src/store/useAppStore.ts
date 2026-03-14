@@ -319,13 +319,13 @@ export const useAppStore = createStore<AppState>(
         const checkAndSetRpcNode = async () => {
           const readyRpcs = [...rpcs]
           if (localRpcNode?.rpcNode) readyRpcs.sort((a, b) => (a.name === localRpcNode.rpcNode!.name ? -1 : 1))
-          const success = await setRpcUrlAct(readyRpcs[i].url, true, i !== readyRpcs.length - 1)
+          const success = await setRpcUrlAct(readyRpcs[i].url, true, true)
           if (!success) {
             i++
             if (i < readyRpcs.length) {
               checkAndSetRpcNode()
             } else {
-              isRpcLoading = false; setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244', true, true)
+              isRpcLoading = false; await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244', true, true)
             }
           }
         }
