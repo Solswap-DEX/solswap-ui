@@ -336,6 +336,11 @@ export const useAppStore = createStore<AppState>(
         } else {
           checkAndSetRpcNode()
         }
+      } catch {
+  // Raydium API blocked — use Helius directly
+  const heliusUrl = process.env.NEXT_PUBLIC_RPC_URL || 
+    "https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244"
+  await setRpcUrlAct(heliusUrl, true, true)
       } finally {
         rpcLoading = false
       }
