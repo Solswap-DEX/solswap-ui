@@ -28,17 +28,124 @@ type RawVolumeDataItem = {
 
 type PriceData = { address: string; unixTime: number; value: number }
 
-const fetcher = (url: string): Promise<{ success: boolean; data: { items: RawVolumeDataItem[] } }> => {
+const poolAddressCache = new Map<string, string>()
+
+const fetcher = async (url: string): Promise<{ success: boolean; data: { items: RawVolumeDataItem[] } }> => {
+  try {
+    const isGeckoSchema = url.startsWith('gecko://')
+    const isDirectGecko = url.includes('api.geckoterminal.com')
+
+    if (isGeckoSchema || isDirectGecko) {
+      let finalUrl = url
+      let timeType: TimeType = '4H'
+
+      if (isGeckoSchema) {
+        const parts = url.split('/')
+        const network = parts[2]
+        const base = parts[3]
+        const quote = parts[4]
+        const timeframe = parts[5]
+        const aggregate = parts[6]
+        const limit = parts[7]
+        timeType = parts[8] as TimeType
+
+        const cacheKey = `${base}-${quote}`
+        let poolAddress = poolAddressCache.get(cacheKey)
+
+        if (!poolAddress) {
+          const poolRes = (await axios.get(`https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${base}/pools`)) as any
+          if (poolRes?.data?.[0]) {
+            poolAddress = poolRes.data[0].attributes.address
+            poolAddressCache.set(cacheKey, poolAddress)
+          } else {
+            const poolResRev = (await axios.get(`https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${quote}/pools`)) as any
+            if (poolResRev?.data?.[0]) {
+              poolAddress = poolResRev.data[0].attributes.address
+              poolAddressCache.set(cacheKey, poolAddress)
+            }
+          }
+        }
+
+        if (!poolAddress) return { success: false, data: { items: [] } }
+        finalUrl = `https://api.geckoterminal.com/api/v2/networks/${network}/pools/${poolAddress}/ohlcv/${timeframe}?aggregate=${aggregate}&limit=${limit}`
+      }
+
+      const ohlcvRes = (await axios.get(finalUrl)) as any
+      if (!ohlcvRes?.data?.attributes?.ohlcv_list) return { success: false, data: { items: [] } }
+
+      const items: RawVolumeDataItem[] = ohlcvRes.data.attributes.ohlcv_list
+        .map((item: any) => ({
+          unixTime: item[0],
+          o: parseFloat(item[1]),
+          h: parseFloat(item[2]),
+          l: parseFloat(item[3]),
+          c: parseFloat(item[4]),
+          v: parseFloat(item[5]),
+          type: timeType
+        }))
+        .reverse()
+
+      return { success: true, data: { items } }
+    }
+  } catch (e) {
+    console.error('GeckoTerminal fetcher error:', e)
+    return { success: false, data: { items: [] } }
+  }
+
   return axios.get(url, {
     skipError: true
   })
 }
 
-const priceFetcher = (url: string): Promise<{ success: boolean; data: { items: PriceData[] } }> => {
+const priceFetcher = async (url: string): Promise<{ success: boolean; data: { items: PriceData[] } }> => {
+  if (url.startsWith('gecko://')) {
+    try {
+      const parts = url.split('/')
+      const network = parts[2]
+      const base = parts[3]
+      const quote = parts[4]
+      const timeframe = parts[5]
+      const aggregate = parts[6]
+      const limit = parts[7]
+
+      const cacheKey = `${base}-${quote}`
+      let poolAddress = poolAddressCache.get(cacheKey)
+
+      if (!poolAddress) {
+        const poolRes = (await axios.get(`https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${base}/pools`)) as any
+        if (poolRes?.data?.[0]) {
+          poolAddress = poolRes.data[0].attributes.address
+          poolAddressCache.set(cacheKey, poolAddress)
+        }
+      }
+
+      if (!poolAddress) return { success: false, data: { items: [] } }
+
+      const ohlcvUrl = `https://api.geckoterminal.com/api/v2/networks/${network}/pools/${poolAddress}/ohlcv/${timeframe}?aggregate=${aggregate}&limit=${limit}`
+      const ohlcvRes = (await axios.get(ohlcvUrl)) as any
+
+      if (!ohlcvRes?.data?.attributes?.ohlcv_list) return { success: false, data: { items: [] } }
+
+      const items: PriceData[] = ohlcvRes.data.attributes.ohlcv_list
+        .map((item: any) => ({
+          address: base,
+          unixTime: item[0],
+          value: parseFloat(item[4])
+        }))
+        .reverse()
+
+      return { success: true, data: { items } }
+    } catch (e) {
+      console.error('GeckoTerminal priceFetcher error:', e)
+      return { success: false, data: { items: [] } }
+    }
+  }
+
   return axios.get(url, {
     skipError: true
   })
 }
+
 
 const MINUTE_SECONDS = 60
 export const SECONDS: Record<TimeType, number> = {
