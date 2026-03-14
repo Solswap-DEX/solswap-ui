@@ -1,4 +1,4 @@
-export const TOKEN_LIST_URL = 'https://tokens.jup.ag/tokens?tags=verified';
+export const TOKEN_LIST_URL = 'https://token.jup.ag/all';
 
 export interface TokenInfo {
   address: string;
