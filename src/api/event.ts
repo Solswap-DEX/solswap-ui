@@ -25,7 +25,7 @@ export const sendWalletEvent = async (props: EventTypeConnectWallet) => {
       { skipError: true }
     )
   } catch {
-    console.log('send wallet event error')
+    // silence
   }
 }
 
@@ -49,6 +49,6 @@ export const sendNetworkEvent = async (props: EventTypeNetworkError) => {
       { skipError: true }
     )
   } catch {
-    console.log('send network event error')
+    // silence
   }
 }

@@ -61,5 +61,5 @@ export const birdeyePairPriceApiAddress = ({
   return `gecko://solana/${baseMint}/So11111111111111111111111111111111111111112/${config.timeframe}/${config.aggregate}/1000/${timeType}`
 }
 
-export const birdeyePriceUrl = `/api/jup-price`
+export const birdeyePriceUrl = `https://api.geckoterminal.com/api/v2/simple/networks/solana/token_price`
 

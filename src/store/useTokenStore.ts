@@ -98,7 +98,8 @@ export const useTokenStore = createStore<TokenStore>(
       
       try {
         const res = await fetch(TOKEN_LIST_URL)
-        const tokenList = (await res.json()) as TokenInfo[]
+        const data = await res.json()
+        const tokenList = (data.tokens || data) as TokenInfo[]
         const tokenMap = new Map<string, TokenInfo>()
         const officialMints = new Set<string>()
 
