@@ -3,8 +3,8 @@
  * Centralized endpoints for external data services.
  */
 
-// Jupiter Price API v2
-export const JUP_PRICE_API = "https://lite-api.jup.ag/price/v2";
+// Jupiter Price API v6
+export const JUP_PRICE_API = "https://price.jup.ag/v6/price";
 
 /**
  * Fetch a single token price from Jupiter
