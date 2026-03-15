@@ -1,7 +1,3 @@
-import dynamic from 'next/dynamic'
-
-const Swap = dynamic(() => import('@/features/Swap'))
-
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 
