@@ -3,8 +3,8 @@
  * Centralized endpoints for external data services.
  */
 
-// Jupiter Price API v6
-export const JUP_PRICE_API = "https://price.jup.ag/v6/price";
+// Jupiter Price API v6 (via local proxy)
+export const JUP_PRICE_API = "/api/jup-price";
 
 /**
  * Fetch a single token price from Jupiter
@@ -40,6 +40,6 @@ export const getMultipleTokenPrices = async (mints: string[]): Promise<Record<st
   }
 };
 
-export const TOKEN_LIST = "https://token.jup.ag/all";
+export const TOKEN_LIST = "/api/jup-tokens";
 export const OHLCV_API = "https://api.geckoterminal.com/api/v2/networks/solana";
 export const POOL_API = "https://api.dexscreener.com/latest/dex/tokens";
