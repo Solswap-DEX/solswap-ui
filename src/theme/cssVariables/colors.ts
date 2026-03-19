@@ -1,81 +1,81 @@
 export const darkColors: Record<keyof typeof colors, string> = {
   // app main bg color
-  primary: '#00D1CF',
+  primary: '#00D1FF',
   secondary: '#7B61FF',
   secondary10: 'rgba(123, 97, 255, 0.1)',
 
   // component color
-  backgroundDark: '#0C0D14',
-  backgroundDark50: '#0C0D1480',
-  backgroundMedium: '#13141F',
-  backgroundLight: '#1A1B2E',
-  backgroundLight50: '#1A1B2E88',
-  backgroundLight30: '#1A1B2E4d',
-  backgroundTransparent12: 'rgba(0, 209, 207, 0.12)',
-  backgroundTransparent07: 'rgba(0, 209, 207, 0.07)',
-  backgroundTransparent10: 'rgba(0, 209, 207, 0.1)',
+  backgroundDark: '#05070A',
+  backgroundDark50: '#05070A80',
+  backgroundMedium: '#0D1117',
+  backgroundLight: '#13141F',
+  backgroundLight50: '#13141F88',
+  backgroundLight30: '#13141F4d',
+  backgroundTransparent12: 'rgba(0, 209, 255, 0.12)',
+  backgroundTransparent07: 'rgba(0, 209, 255, 0.07)',
+  backgroundTransparent10: 'rgba(0, 209, 255, 0.1)',
 
   // text
   textPrimary: '#FFFFFF',
   textSecondary: '#FFFFFF',
-  textTertiary: '#00D1CF',
-  textRevertPrimary: '#0C0D14',
+  textTertiary: '#00D1FF',
+  textRevertPrimary: '#05070A',
 
-  textLink: '#00D1CF',
+  textLink: '#00D1FF',
 
   /** 🤔 what's this */
   textQuaternary: '#8B8FA8',
   /** 🤔 what's this */
-  textQuinary: '#1A1B2E',
+  textQuinary: '#13141F',
   /** 🤔 what's this */
   textSenary: 'rgba(139, 143, 168, 0.5)',
   /** 🤔 what's this */
-  textSeptenary: '#00D1CF',
+  textSeptenary: '#00D1FF',
   /** 🤔 what's this */
   textPurple: '#7B61FF',
   /** 🤔 what's this */
-  textPink: '#FF4D6A',
+  textPink: '#FF4D6D',
 
-  textLaunchpadLink: '#00D1CF',
+  textLaunchpadLink: '#00D1FF',
 
   // button
-  buttonPrimary: '#00D1CF',
-  buttonPrimary__01: '#00D1CF',
-  buttonPrimary__02: '#00E8E6',
-  buttonSolidText: '#0C0D14',
+  buttonPrimary: '#00D1FF',
+  buttonPrimary__01: '#00D1FF',
+  buttonPrimary__02: '#0099CC',
+  buttonSolidText: '#05070A',
   buttonSecondary: '#7B61FF',
 
   // switch
-  switchOn: '#00D1CF',
-  switchOff: '#1A1B2E',
+  switchOn: '#00D1FF',
+  switchOff: '#13141F',
 
   // select
-  selectActive: '#00D1CF',
+  selectActive: '#00D1FF',
   selectActiveSecondary: '#7B61FF',
-  selectInactive: 'rgba(26, 27, 46, 0.5)',
+  selectInactive: 'rgba(19, 20, 31, 0.5)',
 
   // chart
-  chart01: '#00D1CF',
+  chart01: '#00D1FF',
   chart02: '#7B61FF',
-  chart03: '#00C896',
-  chart04: '#FF4D6A',
+  chart03: '#00FFA3',
+  chart04: '#FF4D6D',
   chart05: '#FF7043',
   chart06: '#FED33A',
   chart07: '#4F53F3',
-  chart08: '#00D1CF',
+  chart08: '#00D1FF',
   chart09: 'rgba(123, 97, 255, 0.2)',
 
   // Icon
-  iconBg: '#1A1B2E',
-  iconEmptyStroke: '#0C0D14',
+  iconBg: '#13141F',
+  iconEmptyStroke: '#05070A',
 
   // success/warning/error/info
-  semanticSuccess: '#00C896',
-  semanticError: '#FF4D6A',
+  semanticSuccess: '#00FFA3',
+  semanticError: '#FF4D6D',
   semanticWarning: '#FED33A',
   semanticNeutral: '#8B8FA8',
-  semanticFocus: '#00D1CF',
-  semanticFocusShadow: 'rgba(0, 209, 207, 0.2)',
+  semanticFocus: '#00D1FF',
+  semanticFocusShadow: 'rgba(0, 209, 255, 0.2)',
 
   // Tab
   tabFolderTabListBg: 'var(--background-medium)',
@@ -85,59 +85,59 @@ export const darkColors: Record<keyof typeof colors, string> = {
   stepHoofBg: 'var(--primary)',
 
   // +1% is priceFloatingUp; -1% is priceFloatingDown
-  priceFloatingUp: '#00C896',
-  priceFloatingDown: '#FF4D6A',
+  priceFloatingUp: '#00FFA3',
+  priceFloatingDown: '#FF4D6D',
   priceFloatingFlat: '#888888',
 
   // tooltip (this color is not in figma ui color system,but in figma ui page)
-  tooltipBg: '#13141F',
+  tooltipBg: '#0D1117',
 
-  popoverBg: '#13141F',
+  popoverBg: '#0D1117',
 
   //customize (by V3 frontend coder)
-  scrollbarThumb: 'rgba(0, 209, 207, 0.2)',
+  scrollbarThumb: 'rgba(0, 209, 255, 0.2)',
 
   // badge
   badgePurple: 'rgba(123, 97, 255, 0.5)',
-  badgeBlue: 'rgba(0, 209, 207, 0.5)',
+  badgeBlue: 'rgba(0, 209, 255, 0.5)',
 
   // divider
   dividerBg: '#2A2B3D',
 
   // input
-  inputMask: '#0C0D1466',
+  inputMask: '#05070A66',
 
   // customize (by V3 frontend coder)
-  backgroundApp: '#0C0D14',
-  solidButtonBg: 'linear-gradient(270deg, #00D1CF 0%, #00B4B2 100%)',
-  outlineButtonBg: 'rgba(0, 209, 207, 0.1)',
-  filledProgressBg: '#00D1CF',
-  transparentContainerBg: '#13141F',
-  cardStackBg: '#1A1B2E',
-  modalContainerBg: 'rgba(12, 13, 20, 0.9)',
-  infoButtonBg: 'rgba(0, 209, 207, 0.1)',
+  backgroundApp: '#05070A',
+  solidButtonBg: 'linear-gradient(270deg, #00D1FF 0%, #0099CC 100%)',
+  outlineButtonBg: 'rgba(0, 209, 255, 0.1)',
+  filledProgressBg: '#00D1FF',
+  transparentContainerBg: '#0D1117',
+  cardStackBg: '#13141F',
+  modalContainerBg: 'rgba(5, 7, 10, 0.9)',
+  infoButtonBg: 'rgba(0, 209, 255, 0.1)',
   warnButtonBg: '#FED33A33',
   warnButtonLightBg: '#FED33A1A',
-  buttonBg01: '#1A1B2E',
+  buttonBg01: '#13141F',
   lightPurple: '#7B61FF',
-  background01: '#0C0D14',
-  background02: '#13141F',
-  background03: '#FF4D6A1A',
+  background01: '#05070A',
+  background02: '#0D1117',
+  background03: '#FF4D6D1A',
   cardBorder01: '#2A2B3D',
   text01: '#FFFFFF',
   text02: '#FFFFFF',
   text03: '#8B8FA8',
   /** it's designer's variable name in Figma */
-  brandGradient: 'linear-gradient(135deg, #00D1CF 0%, #7B61FF 100%)',
+  brandGradient: 'linear-gradient(135deg, #00D1FF 0%, #7B61FF 100%)',
   dividerDashGradient: 'repeating-linear-gradient(to right, #2A2B3D 0 5px, transparent 5px 10px)',
 
-  tokenAvatarBg: '#13141F',
+  tokenAvatarBg: '#0D1117',
 
   panelCardShadow: '0px 4px 20px rgba(0, 0, 0, 0.5)',
   panelCardBorder: '1px solid #2A2B3D',
 
-  positive: '#00C896',
-  negative: '#FF4D6A'
+  positive: '#00FFA3',
+  negative: '#FF4D6D'
 }
 
 export const lightColors: Partial<typeof darkColors> = {
