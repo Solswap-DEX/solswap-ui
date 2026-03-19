@@ -91,8 +91,6 @@ function AppNavLayout({
                 ? t('portfolio.title')
                 : pathname === '/playground'
                 ? t('common.playground')
-                : pathname === '/staking'
-                ? t('staking.title')
                 : pathname === '/bridge'
                 ? t('bridge.title')
                 : ''}
@@ -107,27 +105,15 @@ function AppNavLayout({
             <RouteLink href="/liquidity-pools" isActive={pathname.includes('/liquidity')} title={t('liquidity.title')} />
             <RouteLink href="/portfolio" isActive={pathname === '/portfolio'} title={t('portfolio.title')} />
             <RouteLink href="https://perps.solswap.cloud" isActive={false} title={t('perpetuals.title')} />
-            <RouteLink
-              href={`/launchpad${queryReferrer}`}
-              isActive={pathname.includes('/launchpad')}
-              title={
-                <Box as="span" bgGradient="linear-gradient(245.22deg, #FF2FC8 7.97%, #FFB12B 49.17%, #D3D839 92.1%)" bgClip="text">
-                  {t('launchpad.title')}
-                </Box>
-              }
-              slotAfter={<TagNewIcon />}
-              sx={{
-                gap: '0.25rem'
-              }}
-            />
+
             <Menu size="lg">
               <MenuButton fontSize={'sm'} px={1.5} py={1.5}>
                 <Flex
                   align="center"
                   gap={0.5}
-                  color={pathname === '/staking' || pathname === '/bridge' ? colors.textSecondary : colors.textTertiary}
+                  color={pathname === '/bridge' ? colors.textSecondary : colors.textTertiary}
                 >
-                  {pathname === '/staking' ? t('staking.title') : pathname === '/bridge' ? t('bridge.title') : t('common.more')}
+                  {pathname === '/bridge' ? t('bridge.title') : t('common.more')}
                   <ChevronDownIcon width={16} height={16} />
                 </Flex>
               </MenuButton>

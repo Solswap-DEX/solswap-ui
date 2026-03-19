@@ -4,7 +4,7 @@ import TwitterMediaIcon from '@/icons/media/TwitterMediaIcon'
 import ExternalLink from '@/icons/misc/ExternalLink'
 import DocThumbnailIcon from '@/icons/pageNavigation/DocThumbnailIcon'
 import FeedbackThumbnailIcon from '@/icons/pageNavigation/FeedbackThumbnailIcon'
-import StakingPageThumbnailIcon from '@/icons/pageNavigation/StakingPageThumbnailIcon'
+
 import BridgePageThumbnailIcon from '@/icons/pageNavigation/BridgePageThumbnailIcon'
 import DisclaimerThumbnailIcon from '@/icons/pageNavigation/DisclaimerThumbnailIcon'
 // import PortfolioPageThumbnailIcon from '@/icons/pageNavigation/PortfolioPageThumbnailIcon'
@@ -27,14 +27,7 @@ export function NavMoreButtonMenuPanel() {
             </HStack>
           </Link>
         </MenuItem> */}
-        <MenuItem>
-          <Link as={NextLink} _hover={{ textDecoration: 'none' }} w="full" href="/staking">
-            <HStack>
-              <StakingPageThumbnailIcon />
-              <Text>{t('staking.title')}</Text>
-            </HStack>
-          </Link>
-        </MenuItem>
+
         <MenuItem>
           <Link as={NextLink} _hover={{ textDecoration: 'none' }} w="full" href="/bridge">
             <HStack>
