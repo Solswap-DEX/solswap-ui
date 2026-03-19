@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react'
-import { Box } from '@chakra-ui/react'
+import React, { useMemo, useState, useEffect } from 'react'
+import { Box, Spinner, Text } from '@chakra-ui/react'
 
 interface TVChartProps {
   id?: string
@@ -15,31 +15,62 @@ const NULL_MINT = '11111111111111111111111111111111'
 
 /**
  * TVChart renders a DexScreener embedded chart for the given token pair.
- * Uses both base and quote mints from poolId to resolve the exact pair.
- * Falls back to a styled placeholder if no valid mint address is provided.
+ * Resolves the exact pool address via DexScreener API using both mints.
  */
 export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...rest }: TVChartProps) {
-  const tokenAddress = useMemo(() => {
-    // poolId format: "baseMint_quoteMint"
-    // Use the BASE token (first part) for DexScreener lookup — it shows the
-    // highest-volume pair for that token, which is typically the correct one.
-    if (poolId) {
-      const parts = poolId.split('_').filter((p) => !!p)
-      // Pick the first non-null mint; map null address to WSOL
-      for (const p of parts) {
-        if (p === NULL_MINT) return WSOL_MINT
-        return p
-      }
-    }
-    // Fallback to mintBInfo
-    if (mintBInfo?.address) {
-      if (mintBInfo.address === NULL_MINT) return WSOL_MINT
-      return mintBInfo.address
-    }
-    return null
-  }, [poolId, mintBInfo])
+  const [pairAddress, setPairAddress] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  if (!tokenAddress) {
+  // Extract both mints from poolId
+  const mints = useMemo(() => {
+    if (!poolId) return null
+    const parts = poolId.split('_').filter((p) => !!p)
+    if (parts.length < 2) return null
+    return {
+      base: parts[0] === NULL_MINT ? WSOL_MINT : parts[0],
+      quote: parts[1] === NULL_MINT ? WSOL_MINT : parts[1]
+    }
+  }, [poolId])
+
+  // Use DexScreener API to find the exact pool matching both tokens
+  useEffect(() => {
+    if (!mints) {
+      setPairAddress(null)
+      return
+    }
+
+    let cancelled = false
+    setLoading(true)
+
+    fetch(`https://api.dexscreener.com/latest/dex/tokens/${mints.base}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return
+        const pairs = data?.pairs || []
+        // Find a pair that matches our quote token
+        const match = pairs.find(
+          (p: any) =>
+            (p.baseToken?.address === mints.base && p.quoteToken?.address === mints.quote) ||
+            (p.baseToken?.address === mints.quote && p.quoteToken?.address === mints.base)
+        )
+        if (match) {
+          setPairAddress(match.pairAddress)
+        } else if (pairs.length > 0) {
+          // Fallback: use the first pair (highest liquidity)
+          setPairAddress(pairs[0].pairAddress)
+        }
+        setLoading(false)
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [mints?.base, mints?.quote])
+
+  if (!mints) {
     return (
       <Box
         w="100%"
@@ -58,7 +89,27 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
     )
   }
 
-  const embedUrl = `https://dexscreener.com/solana/${tokenAddress}?embed=1&info=0&trades=0&theme=dark`
+  if (loading || !pairAddress) {
+    return (
+      <Box
+        w="100%"
+        h={height}
+        minH="300px"
+        bg="#0D1117"
+        borderRadius="xl"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        gap={3}
+      >
+        <Spinner color="#00D1FF" size="lg" />
+        <Text color="#555" fontSize="sm">Loading chart...</Text>
+      </Box>
+    )
+  }
+
+  const embedUrl = `https://dexscreener.com/solana/${pairAddress}?embed=1&info=0&trades=0&theme=dark`
 
   return (
     <Box w="100%" h={height} minH="300px" borderRadius="xl" overflow="hidden">
