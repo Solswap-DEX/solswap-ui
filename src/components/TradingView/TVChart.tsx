@@ -19,30 +19,27 @@ const NULL_MINT = '11111111111111111111111111111111'
  * Falls back to a styled placeholder if no valid mint address is provided.
  */
 export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...rest }: TVChartProps) {
-  const pairQuery = useMemo(() => {
+  const tokenAddress = useMemo(() => {
     // poolId format: "baseMint_quoteMint"
+    // Use the BASE token (first part) for DexScreener lookup — it shows the
+    // highest-volume pair for that token, which is typically the correct one.
     if (poolId) {
-      const parts = poolId
-        .split('_')
-        .map((p) => (p === NULL_MINT ? WSOL_MINT : p))
-        .filter((p) => !!p)
-
-      if (parts.length === 2) {
-        // Use both mints so DexScreener finds the exact pair
-        return parts.join('%20')
-      }
-      if (parts.length === 1) {
-        return parts[0]
+      const parts = poolId.split('_').filter((p) => !!p)
+      // Pick the first non-null mint; map null address to WSOL
+      for (const p of parts) {
+        if (p === NULL_MINT) return WSOL_MINT
+        return p
       }
     }
     // Fallback to mintBInfo
-    if (mintBInfo?.address && mintBInfo.address !== NULL_MINT) {
+    if (mintBInfo?.address) {
+      if (mintBInfo.address === NULL_MINT) return WSOL_MINT
       return mintBInfo.address
     }
     return null
   }, [poolId, mintBInfo])
 
-  if (!pairQuery) {
+  if (!tokenAddress) {
     return (
       <Box
         w="100%"
@@ -61,7 +58,7 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
     )
   }
 
-  const embedUrl = `https://dexscreener.com/solana/${pairQuery}?embed=1&info=0&trades=0&theme=dark`
+  const embedUrl = `https://dexscreener.com/solana/${tokenAddress}?embed=1&info=0&trades=0&theme=dark`
 
   return (
     <Box w="100%" h={height} minH="300px" borderRadius="xl" overflow="hidden">
