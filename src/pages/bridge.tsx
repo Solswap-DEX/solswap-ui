@@ -3,7 +3,7 @@ import { Box, Flex, Container } from '@chakra-ui/react';
 
 // Dynamic import to avoid hydration errors as the widget uses browser APIs
 const LiFiWidget = dynamic(
-  () => import('@lifi/widget').then((config) => config.LiFiWidget),
+  () => import('@lifi/widget').then((mod) => mod.LiFiWidget),
   {
     ssr: false,
     loading: () => (
@@ -16,6 +16,7 @@ const LiFiWidget = dynamic(
 
 const widgetConfig = {
   integrator: 'SolSwap',
+  appearance: 'dark' as const,
   theme: {
     palette: {
       primary: { main: '#00D1FF' },
@@ -35,7 +36,6 @@ const widgetConfig = {
       fontFamily: 'inherit',
     },
   },
-  appearance: 'dark' as const,
   containerStyle: {
     border: '1px solid #1A1B2E',
     borderRadius: '16px',
@@ -61,3 +61,4 @@ export async function getStaticProps() {
     props: { title: 'Bridge | SolSwap' }
   };
 }
+
