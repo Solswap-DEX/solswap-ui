@@ -8,7 +8,6 @@ import MorePageThumbnailIcon from '@/icons/pageNavigation/MoreThumbnailIcon'
 import PortfolioPageThumbnailIcon from '@/icons/pageNavigation/PortfolioPageThumbnailIcon'
 import PerpetualsPageThumbnailIcon from '@/icons/pageNavigation/PerpetualsPageThumbnailIcon'
 import SwapPageThumbnailIcon from '@/icons/pageNavigation/SwapPageThumbnailIcon'
-import LaunchpadPageThumbnailIcon from '@/icons/pageNavigation/LaunchpadPageThumbnailIcon'
 import { colors } from '@/theme/cssVariables'
 import { NavMoreButtonMenuPanel } from './components/NavMoreButtonMenuPanel'
 import { shrinkToValue } from '@/utils/shrinkToValue'
@@ -26,9 +25,7 @@ export function MobileBottomNavbar() {
   const isLiquidityActive = pathname === liquidityHref
   const protfolioHref = '/portfolio'
   const isPortfolioActive = pathname === protfolioHref
-  const launchpadHref = '/launchpad'
-  const isLaunchpadActive = pathname.includes(launchpadHref)
-  const isMoreActive = pathname === '/staking'
+  const isMoreActive = pathname === '/bridge'
 
   return (
     <SimpleGrid
@@ -64,12 +61,7 @@ export function MobileBottomNavbar() {
         icon={(colorMode) => <PerpetualsPageThumbnailIcon colorMode={colorMode} isActive={false} />}
         isActive={false}
       />
-      <BottomNavbarItem
-        href={launchpadHref}
-        text={t('launchpad.title')}
-        icon={(colorMode) => <LaunchpadPageThumbnailIcon colorMode={colorMode} isActive={isLaunchpadActive} />}
-        isActive={isLaunchpadActive}
-      />
+
       <Menu size="lg" placement="top-end" offset={[0, 30]} /* make menu popup higher */>
         <MenuButton as="div">
           <BottomNavbarItem
