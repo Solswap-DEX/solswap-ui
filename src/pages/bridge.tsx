@@ -31,17 +31,25 @@ function BridgePage() {
       fromChain: 8453,       // Base chain id
       toChain: 1151111081099710, // Solana chain id
       fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-      toToken: '0x0000000000000000000000000000000000000000',      // native SOL
+      toToken: '11111111111111111111111111111111',      // native SOL (System Program)
+
+      // --- Filter Chains ---
+      chains: {
+        allow: [8453, 1151111081099710],
+      },
 
       // --- SVM (Solana) wallet integration ---
       sdkConfig: {
         routeOptions: {
           fee: 0.01,
         },
+        rpcUrls: {
+          '1151111081099710': ['https://mainnet.helius-rpc.com/?api-key=d526019a-9e67-4638-9273-0490b4bfdb8a'],
+        },
       },
       toTokens: {
         allow: [
-          { chainId: 1151111081099710, address: '0x0000000000000000000000000000000000000000' }, // native SOL
+          { chainId: 1151111081099710, address: '11111111111111111111111111111111' }, // native SOL
           { chainId: 1151111081099710, address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' }, // USDC
           { chainId: 1151111081099710, address: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB' }, // USDT
           { chainId: 1151111081099710, address: 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN' }, // JUP
