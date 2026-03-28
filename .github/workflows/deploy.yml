@@ -96,6 +96,8 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 15m
+          timeout: 15m
           script: |
             # Backup current public_html
             cp -r /var/www/solswap.cloud/public_html \
@@ -115,6 +117,8 @@ jobs:
           source: "out/*"
           target: "/var/www/solswap.cloud/public_html/"
           strip_components: 1
+          timeout: 15m
+          command_timeout: 15m
 
       - name: Post-deploy verification
         uses: appleboy/ssh-action@v1
@@ -122,6 +126,8 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 10m
+          timeout: 10m
           script: |
             echo "=== Files in public_html ==="
             ls /var/www/solswap.cloud/public_html/ | head -20

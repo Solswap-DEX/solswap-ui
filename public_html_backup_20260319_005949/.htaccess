@@ -1,9 +1,0 @@
-Options -MultiViews
-RewriteEngine On
-
-# Redirect root to /swap/
-RewriteRule ^$ /swap/ [L,R=302]
-
-# SPA Routing
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^ index.html [L]
