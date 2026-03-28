@@ -39,6 +39,15 @@ function BridgePage() {
           fee: 0.01,
         },
       },
+      toTokens: {
+        allow: [
+          { chainId: 1151111081099710, address: '0x0000000000000000000000000000000000000000' }, // native SOL
+          { chainId: 1151111081099710, address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' }, // USDC
+          { chainId: 1151111081099710, address: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB' }, // USDT
+          { chainId: 1151111081099710, address: 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN' }, // JUP
+          { chainId: 1151111081099710, address: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' }, // BONK
+        ],
+      },
       walletConfig: {
         onConnect: async () => {
           // Triggered when LI.FI widget tries to connect.
@@ -54,7 +63,7 @@ function BridgePage() {
       },
 
       // --- Hide internal connect wallet button ---
-      hiddenUI: ['walletMenu' as any],
+      hiddenUI: ['walletMenu' as any, 'connectWalletButton' as any],
 
       // --- Theme: Neon Moderno ---
       theme: {
@@ -95,7 +104,7 @@ function BridgePage() {
   );
 
   return (
-    <Box pt={20} minH="100vh" bg="#05070A">
+    <Box pt={20} minH="100vh" bg="#05070A" className="widget-wrapper">
       <Container maxW="container.lg">
         <Flex justify="center" align="center" direction="column">
           <LiFiWidget integrator="SolSwap" config={widgetConfig} />
@@ -104,11 +113,12 @@ function BridgePage() {
 
       {/* Global CSS override as a fallback to hide any internal connect wallet UI */}
       <style jsx global>{`
-        /* Hide LI.FI internal connect wallet button(s) */
-        .MuiButton-root[class*="connectWallet"],
-        [class*="WalletButton"],
-        button[aria-label*="connect" i][class*="lifi"],
-        .lifi-widget button[class*="connect" i]:not([class*="header"]) {
+        /* Hide ALL LI.FI connect wallet buttons */
+        .widget-wrapper button[class*="connect" i],
+        .widget-wrapper button[class*="wallet" i],
+        div[class*="lifi"] button[class*="connect" i],
+        [data-testid="connect-wallet-button"],
+        .MuiButton-root.MuiButton-contained[class*="connect" i] {
           display: none !important;
         }
       `}</style>

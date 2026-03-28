@@ -117,7 +117,7 @@
     "updated": "Updated",
     "ecosystem": "Ecosystem",
     "fusion": "Fusion",
-    "raydium": "SolSwap",
+    "SolSwap": "SolSwap",
     "openbook": "Openbook"
   },
   "setting_board": {
@@ -855,7 +855,7 @@
     "text3": "The SolSwap Protocol is not available to residents of Belarus, the Central African Republic, The Democratic Republic of Congo, the Democratic People's Republic of Korea, the Crimea, Donetsk People's Republic, and Luhansk People's Republic regions of Ukraine, Cuba, Iran, Libya, Somalia, Sudan, South Sudan, Syria, the USA, Yemen, Zimbabwe and any other jurisdiction in which accessing or using the SolSwap Protocol is prohibited (the \"Prohibited Jurisdictions\").",
     "text4": "By using or accessing this Interface, the SolSwap Protocol, or related smart contracts, you represent that you are not located in, incorporated or established in, or a citizen or resident of the Prohibited Jurisdictions. You also represent that you are not subject to sanctions or otherwise designated on any list of prohibited or restricted parties or excluded or denied persons, including but not limited to the lists maintained by the United States' Department of Treasury's Office of Foreign Assets Control, the United Nations Security Council, the European Union or its Member States, or any other government authority.",
     "agree_terms": "Agree to terms",
-    "enter_raydium": "Enter SolSwap"
+    "enter_SolSwap": "Enter SolSwap"
   },
   "bridge": {
     "title": "Bridge"
@@ -907,6 +907,6 @@
     "vesting_description": "You must set an address to receive vesting tokens. Modify this any time on your created tokens page.",
     "view_token": "View token",
     "token_details_description": "Go to the token page to see progress, view details, trade, comment and more!",
-    "raydium_pool": "SolSwap pool"
+    "SolSwap_pool": "SolSwap pool"
   }
 }

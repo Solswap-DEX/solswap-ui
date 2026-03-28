@@ -80,9 +80,15 @@ function AppNavLayout({
           </Box>
         </Desktop>
         <Mobile>
-          <HStack>
+          <HStack flex={1} minW={0} overflow="hidden">
             <SolSwapLogoOutline />
-            <Text fontSize="xl" fontWeight="medium" color={colors.textSecondary}>
+            <Text 
+              fontSize="xl" 
+              fontWeight="medium" 
+              color={colors.textSecondary} 
+              isTruncated
+              noOfLines={1}
+            >
               {pathname === '/swap'
                 ? t('swap.title')
                 : pathname === '/liquidity-pools'
@@ -124,7 +130,9 @@ function AppNavLayout({
 
         {/* wallet button */}
         <Flex gap={[0.5, 1]} align="center" flexShrink={0}>
-          <TorqueButton />
+          <Desktop>
+            <TorqueButton />
+          </Desktop>
           <PriorityButton />
           <SettingsMenu />
           {/* <EVMWallet />  don't need currently yet*/}
