@@ -27,7 +27,9 @@ function BridgePage() {
       // --- Fee monetization: 1% (100 basis points) ---
       fee: 0.01,
 
-      // --- Default: destination is Solana ---
+      // --- Default: Base (USDC) to Solana ---
+      fromChain: 8453,
+      fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
       toChain: 1151111081099710, // Solana
 
       // --- SVM (Solana) wallet integration ---
