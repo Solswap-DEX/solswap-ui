@@ -33,7 +33,7 @@ function BridgePage() {
       fromChain: 8453,
       toChain: 1151111081099710, // Solana
       fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-      toToken: 'So11111111111111111111111111111111111111112', // WSOL/SOL on Solana
+      toToken: 'SOL', // Sol native using symbol
 
       // --- SVM (Solana) wallet integration ---
       sdkConfig: {
@@ -97,6 +97,11 @@ function BridgePage() {
       buttons.forEach((btn) => {
         const text = btn.textContent?.toLowerCase() || '';
         if (text.includes('connect')) {
+          // Hide both the button and its parent container to also hide the small wallet icon button next to it
+          const parent = btn.parentElement;
+          if (parent) {
+            parent.style.display = 'none';
+          }
           (btn as HTMLElement).style.display = 'none';
         }
       });
