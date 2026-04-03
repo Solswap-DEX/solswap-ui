@@ -1,6 +1,7 @@
 import dynamic from 'next/dynamic';
 import { Box, Flex, Container } from '@chakra-ui/react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useMemo } from 'react';
 
 // Dynamic import to avoid hydration errors as the widget uses browser APIs
@@ -18,6 +19,7 @@ const LiFiWidget = dynamic(
 
 function BridgePage() {
   const { publicKey, connected, connect, disconnect, wallet } = useWallet();
+  const { setVisible } = useWalletModal();
 
   const widgetConfig = useMemo(
     () => ({
@@ -31,7 +33,7 @@ function BridgePage() {
       fromChain: 8453,
       toChain: 1151111081099710, // Solana
       fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-      toToken: '0x0000000000000000000000000000000000000000',      // native SOL
+      toToken: '11111111111111111111111111111111',      // native SOL
 
       // --- SVM (Solana) wallet integration ---
       sdkConfig: {
@@ -44,15 +46,8 @@ function BridgePage() {
       },
       walletConfig: {
         onConnect: async () => {
-          // Triggered when LI.FI widget tries to connect.
-          // Delegate to the dApp's master wallet adapter.
-          if (!connected && wallet) {
-            try {
-              await connect();
-            } catch (e) {
-              console.warn('Wallet connect cancelled', e);
-            }
-          }
+          // Trigger the SolSwap custom wallet modal when LIFI requests connection
+          setVisible(true);
         },
       },
 
