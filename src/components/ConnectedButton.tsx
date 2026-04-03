@@ -18,6 +18,7 @@ export default forwardRef(function ConnectedButton({ children, onClick, isDisabl
       {...props}
       isDisabled={connected ? isDisabled : false}
       onClick={connected ? onClick : handleClick}
+      display={connected ? props.display : 'none'}
     >
       {connected ? children : t('button.connect_wallet')}
     </Button>

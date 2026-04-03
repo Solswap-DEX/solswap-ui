@@ -30,6 +30,8 @@ function BridgePage() {
       // --- Default: Base to Solana ---
       fromChain: 8453,
       toChain: 1151111081099710, // Solana
+      fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+      toToken: '0x0000000000000000000000000000000000000000',      // native SOL
 
       // --- SVM (Solana) wallet integration ---
       sdkConfig: {
@@ -104,16 +106,18 @@ function BridgePage() {
       </Container>
 
       {/* Global CSS override as a fallback to hide any internal connect wallet UI */}
-      <style jsx global>{`
-        /* Hide ALL LI.FI connect wallet buttons */
-        .widget-wrapper button[class*="connect" i],
-        .widget-wrapper button[class*="wallet" i],
-        div[class*="lifi"] button[class*="connect" i],
-        [data-testid="connect-wallet-button"],
-        .MuiButton-root.MuiButton-contained[class*="connect" i] {
-          display: none !important;
-        }
-      `}</style>
+      {!connected && (
+        <style jsx global>{`
+          /* Hide ALL LI.FI connect wallet buttons */
+          .widget-wrapper button[class*="connect" i],
+          .widget-wrapper button[class*="wallet" i],
+          div[class*="lifi"] button[class*="connect" i],
+          [data-testid="connect-wallet-button"],
+          .MuiButton-root.MuiButton-contained[class*="connect" i] {
+            display: none !important;
+          }
+        `}</style>
+      )}
     </Box>
   );
 }
