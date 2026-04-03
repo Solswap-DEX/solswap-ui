@@ -36,8 +36,9 @@ function BridgePage() {
       fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',  // USDC on Base
       toToken: '11111111111111111111111111111111',  // Native SOL on Solana
 
-      // --- Include Solana in allowed chains ---
+      // --- Include Solana and EVM in allowed chains ---
       chains: {
+        types: ['EVM' as any, 'SVM' as any],
         allow: [
           1,              // Ethereum
           137,            // Polygon
