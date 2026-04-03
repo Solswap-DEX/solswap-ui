@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic';
 import { Box, Flex, Container } from '@chakra-ui/react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 
 // Dynamic import to avoid hydration errors as the widget uses browser APIs
 const LiFiWidget = dynamic(
@@ -18,41 +18,50 @@ const LiFiWidget = dynamic(
 );
 
 function BridgePage() {
-  const { publicKey, connected, connect, disconnect, wallet } = useWallet();
+  const { connected } = useWallet();
   const { setVisible } = useWalletModal();
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const widgetConfig = useMemo(
     () => ({
       integrator: 'SolSwap',
       appearance: 'dark' as const,
 
-      // --- Fee monetization: 1% (100 basis points) ---
+      // --- Fee monetization: 1% ---
       fee: 0.01,
 
-      // --- Default: Base to Solana ---
-      fromChain: 8453,
-      toChain: 1151111081099710, // Solana
-      fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-      toToken: 'SOL', // Sol native using symbol
+      // --- Default route: Base USDC → Solana SOL ---
+      fromChain: 8453,  // Base
+      toChain: 1151111081099710,  // Solana
+      fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',  // USDC on Base
+      toToken: '11111111111111111111111111111111',  // Native SOL on Solana
 
-      // --- SVM (Solana) wallet integration ---
+      // --- Include Solana in allowed chains ---
+      chains: {
+        allow: [
+          1,              // Ethereum
+          137,            // Polygon
+          56,             // BSC
+          43114,          // Avalanche
+          42161,          // Arbitrum
+          10,             // Optimism
+          8453,           // Base
+          1151111081099710, // Solana
+        ],
+      },
+
+      // --- SDK config with Solana RPC ---
       sdkConfig: {
         routeOptions: {
           fee: 0.01,
         },
         rpcUrls: {
-          '1151111081099710': ['https://mainnet.helius-rpc.com/?api-key=d526019a-9e67-4638-9273-0490b4bfdb8a'],
-        },
-      },
-      walletConfig: {
-        onConnect: async () => {
-          // Trigger the SolSwap custom wallet modal when LIFI requests connection
-          setVisible(true);
+          1151111081099710: ['https://mainnet.helius-rpc.com/?api-key=d526019a-9e67-4638-9273-0490b4bfdb8a'],
         },
       },
 
-      // --- Hide internal connect wallet button ---
-      hiddenUI: ['walletMenu' as any, 'connectWalletButton' as any],
+      // --- Hide wallet menu only (connectWalletButton is not a valid HiddenUI value) ---
+      hiddenUI: ['walletMenu' as const],
 
       // --- Theme: Neon Moderno ---
       theme: {
@@ -67,8 +76,6 @@ function BridgePage() {
             primary: '#F0F4F8',
             secondary: '#8B8EA8',
           },
-          success: { main: '#00FFA3' },
-          error: { main: '#FF4D6D' },
         },
         shape: {
           borderRadius: 16,
@@ -78,41 +85,56 @@ function BridgePage() {
         },
       },
 
-      // --- Container style with CSS override to hide any remaining internal connect button ---
       containerStyle: {
         border: '1px solid #0D1117',
         borderRadius: '16px',
       } as any,
     }),
-    [connected, wallet, connect, setVisible]
+    []
   );
 
-  // Use a MutationObserver to completely hide the internal LI.FI "Connect Wallet" button
-  // because dynamically injected CSS classes by MUI often evade static CSS rules.
+  // MutationObserver: hide the internal LI.FI "Connect wallet" button,
+  // and redirect clicks on any surviving connect element to the dApp's own wallet modal.
   useEffect(() => {
-    if (connected) return; // Only hide it when disconnected so they can still see "Review swap" later
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
 
-    const observer = new MutationObserver(() => {
-      const buttons = document.querySelectorAll('.widget-wrapper button');
+    const hideConnectButtons = () => {
+      const buttons = wrapper.querySelectorAll('button');
       buttons.forEach((btn) => {
-        const text = btn.textContent?.toLowerCase() || '';
-        if (text.includes('connect')) {
-          // Hide both the button and its parent container to also hide the small wallet icon button next to it
-          const parent = btn.parentElement;
-          if (parent) {
-            parent.style.display = 'none';
-          }
+        const text = (btn.textContent || '').toLowerCase().trim();
+        if (text.includes('connect wallet') || text === 'connect') {
+          // Replace the button's click handler to open dApp wallet modal instead
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setVisible(true);
+          };
+          // Hide the button and its immediate parent container (which may hold a wallet icon)
           (btn as HTMLElement).style.display = 'none';
+          const parent = btn.parentElement;
+          if (parent && parent !== wrapper) {
+            // Only hide the parent if it looks like a button container (not the main widget)
+            const siblingButtons = parent.querySelectorAll('button');
+            if (siblingButtons.length <= 2) {
+              parent.style.display = 'none';
+            }
+          }
         }
       });
-    });
+    };
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Run immediately once
+    hideConnectButtons();
+
+    const observer = new MutationObserver(hideConnectButtons);
+    observer.observe(wrapper, { childList: true, subtree: true });
+
     return () => observer.disconnect();
-  }, [connected]);
+  }, [setVisible, connected]);
 
   return (
-    <Box pt={20} minH="100vh" bg="#05070A" className="widget-wrapper">
+    <Box pt={20} minH="100vh" bg="#05070A" className="widget-wrapper" ref={wrapperRef}>
       <Container maxW="container.lg">
         <Flex justify="center" align="center" direction="column">
           <LiFiWidget integrator="SolSwap" config={widgetConfig} />
