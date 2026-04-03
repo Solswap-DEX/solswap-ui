@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic';
 import { Box, Flex, Container } from '@chakra-ui/react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 
 // Dynamic import to avoid hydration errors as the widget uses browser APIs
 const LiFiWidget = dynamic(
@@ -33,7 +33,7 @@ function BridgePage() {
       fromChain: 8453,
       toChain: 1151111081099710, // Solana
       fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-      toToken: '11111111111111111111111111111111',      // native SOL
+      toToken: 'So11111111111111111111111111111111111111112', // WSOL/SOL on Solana
 
       // --- SVM (Solana) wallet integration ---
       sdkConfig: {
@@ -82,15 +82,29 @@ function BridgePage() {
       containerStyle: {
         border: '1px solid #0D1117',
         borderRadius: '16px',
-        // Targeted CSS workaround to hide any internal "Connect Wallet" button
-        // that the widget may still render
-        '& button[class*="connect"], & [class*="ConnectButton"], & [data-testid*="connect-wallet"]': {
-          display: 'none !important',
-        },
       } as any,
     }),
-    [connected, wallet, connect]
+    [connected, wallet, connect, setVisible]
   );
+
+  // Use a MutationObserver to completely hide the internal LI.FI "Connect Wallet" button
+  // because dynamically injected CSS classes by MUI often evade static CSS rules.
+  useEffect(() => {
+    if (connected) return; // Only hide it when disconnected so they can still see "Review swap" later
+
+    const observer = new MutationObserver(() => {
+      const buttons = document.querySelectorAll('.widget-wrapper button');
+      buttons.forEach((btn) => {
+        const text = btn.textContent?.toLowerCase() || '';
+        if (text.includes('connect')) {
+          (btn as HTMLElement).style.display = 'none';
+        }
+      });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [connected]);
 
   return (
     <Box pt={20} minH="100vh" bg="#05070A" className="widget-wrapper">
@@ -99,20 +113,6 @@ function BridgePage() {
           <LiFiWidget integrator="SolSwap" config={widgetConfig} />
         </Flex>
       </Container>
-
-      {/* Global CSS override as a fallback to hide any internal connect wallet UI */}
-      {!connected && (
-        <style jsx global>{`
-          /* Hide ALL LI.FI connect wallet buttons */
-          .widget-wrapper button[class*="connect" i],
-          .widget-wrapper button[class*="wallet" i],
-          div[class*="lifi"] button[class*="connect" i],
-          [data-testid="connect-wallet-button"],
-          .MuiButton-root.MuiButton-contained[class*="connect" i] {
-            display: none !important;
-          }
-        `}</style>
-      )}
     </Box>
   );
 }
