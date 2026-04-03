@@ -30,6 +30,7 @@
     "clean": "shx rm -rf .next .swc lib",
     "dev": "next dev --port 3002",
     "build": "next build && next export",
+    "postinstall": "sed -i 's/with { type: \\'json\\' }/assert { type: \\'json\\' }/g' node_modules/@lifi/wallet-management/dist/esm/providers/I18nProvider/enResource.js node_modules/@lifi/widget/dist/esm/providers/I18nProvider/enResource.js || true",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --pretty --noEmit"
@@ -56,6 +57,9 @@
     "@lifi/wallet-management": "^3.4.1",
     "@lifi/sdk": "^3.5.0",
     "@moongate/moongate-adapter": "^0.6.1",
+    "@base-org/account": "^1.0.0",
+    "porto": "^1.0.0",
+    "@mysten/sui": "^1.45.2",
     "@mysten/dapp-kit": "^1.0.4",
     "@next/third-parties": "^14.2.5",
     "@project-serum/serum": "^0.13.65",
