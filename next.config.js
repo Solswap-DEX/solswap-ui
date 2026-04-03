@@ -15,13 +15,11 @@ const nextConfig = {
     ignoreDuringBuilds: true
   },
   // Required so Next.js can handle global CSS imported by @lifi/widget
-  transpilePackages: ['@lifi/widget'],
+  transpilePackages: ['@lifi/widget', '@lifi/wallet-management', '@lifi/sdk'],
   webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.resolve('./src'),
-      '@mysten/dapp-kit': false,
-      '@mysten/sui': false
+      '@': path.resolve('./src')
     }
     return config
   }
