@@ -42,6 +42,11 @@
     "decimal.js": "^10.4.3",
     "bn.js": "^5.2.1"
   },
+  "overrides": {
+    "@lifi/widget": "3.0.0",
+    "@lifi/wallet-management": "3.0.0",
+    "@lifi/sdk": "3.0.0"
+  },
   "peerDependencies": {
     "@solana/spl-token": "^0.4.8",
     "@solana/web3.js": ">=1.95.3"
