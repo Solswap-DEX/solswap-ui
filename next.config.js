@@ -19,7 +19,9 @@ const nextConfig = {
   webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.resolve('./src')
+      '@': path.resolve('./src'),
+      '@mysten/dapp-kit': false,
+      '@mysten/sui': false
     }
     return config
   }
