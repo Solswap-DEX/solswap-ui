@@ -19,7 +19,9 @@ import {
   VStack,
   useDisclosure
 } from '@chakra-ui/react'
-import { Wallet } from '@solana/wallet-adapter-react'
+import { Wallet, useConnection } from '@solana/wallet-adapter-react'
+import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { useState, useEffect } from 'react'
 import dayjs from 'dayjs'
 
 import CircleSuccess from '@/icons/misc/CircleSuccess'
@@ -92,6 +94,45 @@ function getNetworkIcon(network: string): ReactNode | undefined {
 export default function WalletRecentTransactionBoard({ wallet, address, isOpen = false, onClose, onDisconnect }: WalletMenuProps) {
   const { t } = useTranslation()
   const allRecords = getTxAllRecord()
+  const { connection } = useConnection()
+  const [balance, setBalance] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (isOpen && address) {
+      let subscriptionId: number | null = null;
+      let isMounted = true;
+      const pubKey = new PublicKey(address);
+
+      const getBalance = async () => {
+        try {
+          const bal = await connection.getBalance(pubKey);
+          if (isMounted) {
+            setBalance(bal / LAMPORTS_PER_SOL);
+          }
+        } catch (error) {
+          console.error("Error fetching balance", error);
+        }
+      };
+      getBalance();
+      
+      try {
+        subscriptionId = connection.onAccountChange(pubKey, (accountInfo) => {
+          if (isMounted) {
+            setBalance(accountInfo.lamports / LAMPORTS_PER_SOL);
+          }
+        });
+      } catch (e) {
+         console.error("PubSub error", e);
+      }
+
+      return () => {
+        isMounted = false;
+        if (subscriptionId !== null && connection) {
+          connection.removeAccountChangeListener(subscriptionId).catch(console.error);
+        }
+      };
+    }
+  }, [isOpen, address, connection]);
 
   const handleDisConnect = useEvent(() => {
     onDisconnect()
@@ -160,6 +201,15 @@ export default function WalletRecentTransactionBoard({ wallet, address, isOpen =
             canCopy
             showCopyIcon
           />
+          <Box w="full" mt={3} p={4} rounded="xl" bg={colors.backgroundDark} border={'1px solid'} borderColor={colors.backgroundLight}>
+             <Text fontSize="xs" color={colors.textTertiary} mb={1} textTransform="uppercase" fontWeight="bold">Total Balance</Text>
+             <HStack align="baseline" spacing={2}>
+                <Text fontSize="2xl" fontWeight="bold" color={colors.textPrimary}>
+                  {balance !== null ? balance.toFixed(4) : '...'}
+                </Text>
+                <Text fontSize="sm" color={colors.textSecondary} fontWeight="bold">SOL</Text>
+             </HStack>
+          </Box>
         </VStack>
       )}
 
