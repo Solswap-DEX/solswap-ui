@@ -36,20 +36,8 @@ function BridgePage() {
       fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',  // USDC on Base
       toToken: '11111111111111111111111111111111',  // Native SOL on Solana
 
-      // --- Include Solana and EVM in allowed chains ---
-      chains: {
-        types: ['EVM' as any, 'SVM' as any],
-        allow: [
-          1,              // Ethereum
-          137,            // Polygon
-          56,             // BSC
-          43114,          // Avalanche
-          42161,          // Arbitrum
-          10,             // Optimism
-          8453,           // Base
-          1151111081099710, // Solana
-        ],
-      },
+      // --- Let the widget show ALL supported chains (EVM + SVM) ---
+      // No chains.allow filter so all chains including Solana are visible
 
       // --- SDK config with Solana RPC ---
       sdkConfig: {
