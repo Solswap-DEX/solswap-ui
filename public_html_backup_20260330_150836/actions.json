@@ -1,0 +1,8 @@
+{
+  "rules": [
+    {
+      "pathPattern": "/swap/**",
+      "apiPath": "https://share.solswap.cloud/dialect/actions/swap/info/**"
+    }
+  ]
+}

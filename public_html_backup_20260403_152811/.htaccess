@@ -1,0 +1,17 @@
+Options -MultiViews
+DirectoryIndex index.html
+RewriteEngine On
+
+# Redirect root to /swap/
+RewriteRule ^$ /swap/ [L,R=302]
+
+# If the request matches a real file, serve it
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# If the request matches a real directory (e.g. /bridge/), let Apache serve its index.html
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Everything else falls back to root index.html (true SPA routes only)
+RewriteRule ^ index.html [L]

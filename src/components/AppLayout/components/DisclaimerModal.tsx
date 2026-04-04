@@ -85,7 +85,7 @@ function DisclaimerModal() {
         <ModalFooter mt={4}>
           <Flex width="full" justifyContent="center">
             <Button width="full" onClick={confirmDisclaimer} isDisabled={!userHaveAgree}>
-              {t('disclaimer.enter_raydium')}
+              {t('disclaimer.enter_SolSwap')}
             </Button>
           </Flex>
         </ModalFooter>
