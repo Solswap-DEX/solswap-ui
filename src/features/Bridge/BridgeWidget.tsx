@@ -14,7 +14,7 @@ export const BridgeWidget: React.FC = () => {
   const widgetConfig = useMemo(() => ({
     integrator: 'SolSwap',
     fee: 0.001, // 10 BPS revenue share matching NEXT_PUBLIC_FEE_BPS
-    variant: 'compact' as const,
+    variant: 'expandable' as const,
     appearance: 'dark' as const,
     hiddenUI: ['appearance', 'language'] as any[],
     theme: {
