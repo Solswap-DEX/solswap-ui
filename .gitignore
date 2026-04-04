@@ -47,3 +47,7 @@ tsconfig.tsbuildinfo
 # Sentry Config File
 .env.sentry-build-plugin
 .env.production
+
+# build outputs and backups
+/public_html
+/public_html_backup_*
