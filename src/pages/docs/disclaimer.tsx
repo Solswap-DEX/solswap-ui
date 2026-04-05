@@ -31,7 +31,7 @@ export default function DisclaimerPage() {
               <Heading as="h2" size="md" color={colors.textPrimary} mb={3}>
                 1. Interface vs. Protocol
               </Heading>
-              <Text lineHeight={1.8}>
+              <Text lineHeight={1.8} textAlign="justify">
                 The SolSwap interface (the "Interface") is an open-source, decentralized frontend software portal that allows users to interact with the SolSwap protocol, a suite of permissionless smart contracts deployed on the Solana blockchain (the "Protocol"). 
                 The Interface is provided as a convenience to the community and acts as one of several possible entry points to the Protocol.
               </Text>
@@ -41,7 +41,7 @@ export default function DisclaimerPage() {
               <Heading as="h2" size="md" color={colors.textPrimary} mb={3}>
                 2. No Warranties
               </Heading>
-              <Text lineHeight={1.8}>
+              <Text lineHeight={1.8} textAlign="justify">
                 THIS INTERFACE AND THE PROTOCOL ARE PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, AT YOUR OWN RISK, AND WITHOUT WARRANTIES OF ANY KIND. 
                 We do not guarantee that the Interface will be secure, available, or free of bugs or viruses. No developer, entity, or contributor involved in creating or maintaining SolSwap shall be liable for any damages or losses associated with your use of the Interface or Protocol.
               </Text>
@@ -51,7 +51,7 @@ export default function DisclaimerPage() {
               <Heading as="h2" size="md" color={colors.textPrimary} mb={3}>
                 3. Assumption of Risk
               </Heading>
-              <Text lineHeight={1.8}>
+              <Text lineHeight={1.8} textAlign="justify">
                 By using SolSwap, you acknowledge that blockchain technology and decentralized finance (DeFi) involve significant risks, including but not limited to: smart contract vulnerabilities, permanent loss of digital assets, extreme price volatility, and regulatory uncertainty. 
                 You are solely responsible for your own digital assets and investment decisions.
               </Text>
@@ -61,7 +61,7 @@ export default function DisclaimerPage() {
               <Heading as="h2" size="md" color={colors.textPrimary} mb={3}>
                 4. Compliance and Eligibility
               </Heading>
-              <Text lineHeight={1.8}>
+              <Text lineHeight={1.8} textAlign="justify">
                 SolSwap is a global, permissionless platform. Users are responsible for ensuring that their use of the Interface and Protocol complies with all applicable local, state, and federal laws and regulations in their respective jurisdictions. 
                 By accessing this Interface, you represent and warrant that you are of legal age and have the capacity to enter into a binding agreement.
               </Text>
@@ -71,7 +71,7 @@ export default function DisclaimerPage() {
               <Heading as="h2" size="md" color={colors.textPrimary} mb={3}>
                 5. Limitation of Liability
               </Heading>
-              <Text lineHeight={1.8}>
+              <Text lineHeight={1.8} textAlign="justify">
                 In no event shall the developers, contributors, or any associated entities be liable for any direct, indirect, incidental, special, or consequential damages (including loss of profits, data, or digital assets) arising out of or in connection with your use or inability to use the platform.
               </Text>
             </section>

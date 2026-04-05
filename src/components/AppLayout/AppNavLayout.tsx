@@ -99,6 +99,8 @@ function AppNavLayout({
                 ? t('common.playground')
                 : pathname === '/bridge'
                 ? t('bridge.title')
+                : pathname.includes('/docs/disclaimer')
+                ? t('disclaimer.title')
                 : ''}
             </Text>
           </HStack>
@@ -128,16 +130,18 @@ function AppNavLayout({
           </HStack>
         </Desktop>
 
-        {/* wallet button */}
-        <Flex gap={[0.5, 1]} align="center" flexShrink={0}>
-          <Desktop>
-            <TorqueButton />
-          </Desktop>
-          <PriorityButton />
-          <SettingsMenu />
-          {/* <EVMWallet />  don't need currently yet*/}
-          <SolWallet />
-        </Flex>
+        {/* wallet and settings button */}
+        {pathname !== '/docs/disclaimer/' && pathname !== '/docs/disclaimer' && (
+          <Flex gap={[0.5, 1]} align="center" flexShrink={0}>
+            <Desktop>
+              <TorqueButton />
+            </Desktop>
+            <PriorityButton />
+            <SettingsMenu />
+            {/* <EVMWallet />  don't need currently yet*/}
+            <SolWallet />
+          </Flex>
+        )}
       </HStack>
 
       <Box
