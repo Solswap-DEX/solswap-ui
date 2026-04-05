@@ -4,6 +4,21 @@ import { Box, Flex, Text } from '@chakra-ui/react';
 export const OnramperWidget: React.FC = () => {
   const apiKey = process.env.NEXT_PUBLIC_ONRAMPER_API_KEY;
 
+  if (!apiKey) {
+    return (
+      <Box w="100%" maxW="450px" mx="auto" minH="500px" borderRadius="2xl" p={4} bg="#1A1B2E" border="1px solid" borderColor="whiteAlpha.100">
+        <Flex direction="column" align="center" justify="center" h="100%">
+          <Text fontSize="xl" fontWeight="bold" color="white" mb={2}>Fiat On-Ramp</Text>
+          <Text color="whiteAlpha.600" textAlign="center" mb={6}>Buy crypto with your credit card or bank account.</Text>
+          
+          <Box bg="whiteAlpha.50" px={6} py={3} borderRadius="full" border="1px solid" borderColor="whiteAlpha.200">
+            <Text color="#00D1CF" fontWeight="bold">Coming Soon</Text>
+          </Box>
+        </Flex>
+      </Box>
+    );
+  }
+
   return (
     <Box w="100%" maxW="450px" mx="auto" minH="500px" borderRadius="2xl" p={4} bg="#1A1B2E" border="1px solid" borderColor="whiteAlpha.100">
       <Flex direction="column" align="center" justify="center" h="500px">

@@ -21,61 +21,19 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Create .env.production
-        run: |
-          # RPC Configuration (Helius)
-          echo "NEXT_PUBLIC_RPC_URL=${{ secrets.NEXT_PUBLIC_RPC_URL }}" \
-            >> .env.production
-          echo "NEXT_PUBLIC_WS_URL=${{ secrets.NEXT_PUBLIC_WS_URL }}" \
-            >> .env.production
-          echo "NEXT_PUBLIC_HELIUS_RPC_URL=${{ secrets.NEXT_PUBLIC_RPC_URL }}" \
-            >> .env.production
-
-          # Revenue Configuration
-          REFERRER_WALLET="${{ secrets.REFERRER_WALLET }}"
-          if [ -z "$REFERRER_WALLET" ]; then
-            REFERRER_WALLET="5KUA4a4qFusTvJeSquKsBSEPvhiVedvaj8hE8pVp2vmz"
-          fi
-          echo "NEXT_PUBLIC_REFERRER_WALLET=$REFERRER_WALLET" \
-            >> .env.production
-
-          FEE_COLLECTOR="${{ secrets.FEE_COLLECTOR }}"
-          if [ -z "$FEE_COLLECTOR" ]; then
-            FEE_COLLECTOR="5KUA4a4qFusTvJeSquKsBSEPvhiVedvaj8hE8pVp2vmz"
-          fi
-          echo "NEXT_PUBLIC_FEE_COLLECTOR=$FEE_COLLECTOR" \
-            >> .env.production
-
-          FEE_BPS="${{ secrets.FEE_BPS }}"
-          if [ -z "$FEE_BPS" ]; then FEE_BPS="10"; fi
-          echo "NEXT_PUBLIC_FEE_BPS=$FEE_BPS" >> .env.production
-
-          # Site
-          echo "NEXT_PUBLIC_SITE_URL=https://solswap.cloud" \
-            >> .env.production
-
-          # Verify .env.production was created (without showing values)
-          echo "=== .env.production keys ==="
-          cat .env.production | cut -d'=' -f1
-
-      - name: Verify RPC URL is set
-        run: |
-          if grep -q "NEXT_PUBLIC_RPC_URL=https://mainnet.helius" \
-            .env.production; then
-            echo "✅ Helius RPC URL confirmed in .env.production"
-          else
-            echo "❌ ERROR: Helius RPC URL not found in .env.production"
-            exit 1
-          fi
-
-      - name: Build static export
-        run: npm run build
+      - name: Build
         env:
-          NEXT_PUBLIC_RPC_URL: ${{ secrets.NEXT_PUBLIC_RPC_URL }}
-          NEXT_PUBLIC_WS_URL: ${{ secrets.NEXT_PUBLIC_WS_URL }}
+          NEXT_PUBLIC_RPC_URL: ${{ secrets.RPC_URL }}
+          NEXT_PUBLIC_HELIUS_RPC_URL: ${{ secrets.HELIUS_RPC_URL }}
+          NEXT_PUBLIC_BIRDEYE_API_KEY: ${{ secrets.BIRDEYE_API_KEY }}
+          NEXT_PUBLIC_ONRAMPER_API_KEY: ${{ secrets.ONRAMPER_API_KEY }}
+          NEXT_PUBLIC_GLITCHTIP_DSN: ${{ secrets.GLITCHTIP_DSN }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.SITE_URL }}
           NEXT_PUBLIC_REFERRER_WALLET: ${{ secrets.REFERRER_WALLET }}
           NEXT_PUBLIC_FEE_COLLECTOR: ${{ secrets.FEE_COLLECTOR }}
           NEXT_PUBLIC_FEE_BPS: ${{ secrets.FEE_BPS }}
+          NEXT_PUBLIC_WS_URL: ${{ secrets.WS_URL }}
+        run: npm run build
 
       - name: Verify build output exists
         run: |
