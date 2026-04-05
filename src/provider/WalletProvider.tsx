@@ -8,6 +8,7 @@ import { GlowWalletAdapter } from '@solana/wallet-adapter-glow'
 import { ExodusWalletAdapter } from '@solana/wallet-adapter-exodus'
 import { SlopeWalletAdapter } from '@solana/wallet-adapter-slope'
 import { SolflareWalletAdapter, initialize } from '@solflare-wallet/wallet-adapter'
+import { BackpackWalletAdapter } from '@solana/wallet-adapter-backpack'
 import {
   PhantomWalletAdapter,
   TorusWalletAdapter,
@@ -92,6 +93,7 @@ const App: FC<PropsWithChildren<any>> = ({ children }) => {
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
+      new BackpackWalletAdapter(),
       new SlopeWalletAdapter({ endpoint }),
       new TorusWalletAdapter(),
       new LedgerWalletAdapter(),

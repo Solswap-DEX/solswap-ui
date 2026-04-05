@@ -318,27 +318,23 @@ function WalletItem({
     >
       <Image src={wallet.adapter.icon} w={8} h={8} ml={1} />
       <Text fontWeight={700}>{wallet.adapter.name}</Text>
-      {wallet.adapter.name === 'Phantom' && (
+      {(wallet.adapter.name === 'Phantom' || wallet.adapter.name === 'Solflare') && (
         <HStack gap={1} backgroundColor={colors.selectInactive} px={2} py={1} borderRadius="8px">
           <Text fontSize="12px" color={colors.textPurple}>
-            {t('wallet_connect_panel.auto_confirm')}
+            {wallet.adapter.name === 'Phantom' ? t('wallet_connect_panel.auto_confirm') : t('wallet_connect_panel.auto_approve')}
           </Text>
-          <QuestionToolTip
-            label={
-              <Trans i18nKey="wallet_connect_panel.auto_confirm_tip">
-                <Link href="https://phantom.com/learn/blog/auto-confirm" isExternal></Link>
-              </Trans>
-            }
-            iconProps={{ color: colors.textPurple }}
+          <QuestionToolTip 
+            label={wallet.adapter.name === 'Phantom' ? 
+              <Trans i18nKey="wallet_connect_panel.auto_confirm_tip"><Link href="https://phantom.com/learn/blog/auto-confirm" isExternal></Link></Trans> : 
+              t('wallet_connect_panel.auto_approve_tip_solflare')
+            } 
+            iconProps={{ color: colors.textPurple }} 
           />
         </HStack>
       )}
-      {wallet.adapter.name === 'Solflare' && (
+      {['Backpack', 'Trust', 'Exodus', 'Gem Wallet', 'Atomic'].includes(wallet.adapter.name) && (
         <HStack gap={1} backgroundColor={colors.selectInactive} px={2} py={1} borderRadius="8px">
-          <Text fontSize="12px" color={colors.textPurple}>
-            {t('wallet_connect_panel.auto_approve')}
-          </Text>
-          <QuestionToolTip label={t('wallet_connect_panel.auto_approve_tip_solflare')} iconProps={{ color: colors.textPurple }} />
+           <Text fontSize="10px" fontWeight="bold" color={colors.textPurple}>PREMIUM</Text>
         </HStack>
       )}
     </Flex>
@@ -370,12 +366,31 @@ function NetworkItem({
 }
 */
 function splitWallets(wallets: Wallet[]): { recommendedWallets: Wallet[]; notInstalledWallets: Wallet[] } {
+  const featuredNames = ['Phantom', 'Solflare', 'Backpack', 'Trust Wallet', 'Trust', 'Exodus', 'Gem Wallet', 'Atomic'];
+  
   const supportedWallets = wallets.filter((w) => w.readyState !== WalletReadyState.Unsupported)
-  const recommendedWallets = supportedWallets.filter((w) => w.readyState !== WalletReadyState.NotDetected && w.adapter.name !== 'Sollet')
-  const notInstalledWallets = supportedWallets.filter((w) => w.readyState == WalletReadyState.NotDetected && w.adapter.name !== 'Phantom')
+  
+  // Custom priority sorting
+  const recommendedWallets = supportedWallets.filter((w) => 
+    (w.readyState !== WalletReadyState.NotDetected || featuredNames.some(fn => w.adapter.name.includes(fn))) && 
+    w.adapter.name !== 'Sollet'
+  ).sort((a, b) => {
+    const aIndex = featuredNames.findIndex(fn => a.adapter.name.includes(fn));
+    const bIndex = featuredNames.findIndex(fn => b.adapter.name.includes(fn));
+    if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+    if (aIndex !== -1) return -1;
+    if (bIndex !== -1) return 1;
+    return 0;
+  });
+
+  const notInstalledWallets = supportedWallets.filter((w) => 
+    w.readyState == WalletReadyState.NotDetected && 
+    !featuredNames.some(fn => w.adapter.name.includes(fn)) &&
+    w.adapter.name !== 'Phantom'
+  )
+  
   const solletWallet = supportedWallets.find((w) => w.adapter.name === 'Sollet')
   solletWallet && notInstalledWallets.push(solletWallet)
-  const phantomWallet = supportedWallets.find((w) => w.adapter.name === 'Phantom')
-  phantomWallet && phantomWallet.readyState == WalletReadyState.NotDetected && recommendedWallets.unshift(phantomWallet)
+  
   return { recommendedWallets, notInstalledWallets }
 }
