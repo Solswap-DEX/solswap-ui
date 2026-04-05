@@ -1,53 +1,85 @@
-import { Box, Container, VStack, Text } from '@chakra-ui/react'
+import { Box, Container, VStack, Text, Heading, Divider } from '@chakra-ui/react'
 import { colors } from '@/theme/cssVariables'
 
 export default function DisclaimerPage() {
   return (
-    <Box display="flex" justifyContent="center">
-      <Container maxW="6xl" my={[2, 10]} px={0}>
-        <VStack spacing={[2, 10]} maxW="4xl" mx="auto">
-          <Text fontSize={['2xl', '4xl']} textAlign="center" color={colors.textPrimary} fontWeight="bold" mb={4}>
-            Disclaimer
-          </Text>
+    <Box display="flex" justifyContent="center" bg={colors.backgroundDark}>
+      <Container maxW="6xl" py={[10, 20]} px={4}>
+        <VStack spacing={[6, 10]} maxW="4xl" mx="auto" align="stretch">
+          <VStack align="center" spacing={4}>
+            <Heading as="h1" size="2xl" textAlign="center" color={colors.textPrimary}>
+              SolSwap Disclaimer
+            </Heading>
+            <Text color={colors.textTertiary} fontSize="lg" textAlign="center">
+              Last updated: April 2026
+            </Text>
+          </VStack>
+
+          <Divider borderColor={colors.backgroundTransparent07} />
+
           <VStack
-            p={[6, 16]}
-            bg={colors.backgroundDark}
-            borderRadius="lg"
-            fontSize="base"
-            color={colors.textTertiary}
-            boxShadow="md"
-            spacing={['2', '4']}
+            p={[6, 12]}
+            bg={colors.backgroundMedium}
+            borderRadius="2xl"
+            fontSize="md"
+            color={colors.textSecondary}
+            boxShadow="xl"
+            spacing={6}
+            align="stretch"
           >
-            <Text fontSize={{ base: 'sm', md: 'md' }} lineHeight={1.625}>
-              This website-hosted user interface (this “Interface”) is an open source frontend software portal to the SolSwap protocol, a
-              decentralized and community-driven collection of blockchain-enabled smart contracts and tools (the “SolSwap Protocol”). This
-              Interface and the SolSwap Protocol are made available by the SolSwap Holding Foundation, however all transactions conducted on
-              the protocol are run by related permissionless smart contracts. As the Interface is open-sourced and the SolSwap Protocol and
-              its related smart contracts are accessible by any user, entity or third party, there are a number of third party web and
-              mobile user-interfaces that allow for interaction with the SolSwap Protocol.
-            </Text>
-            <Text fontSize={{ base: 'sm', md: 'md' }} lineHeight={1.625}>
-              THIS INTERFACE AND THE SOLSWAP PROTOCOL ARE PROVIDED “AS IS”, AT YOUR OWN RISK, AND WITHOUT WARRANTIES OF ANY KIND. The
-              SolSwap Holding Foundation does not provide, own, or control the SolSwap Protocol or any transactions conducted on the
-              protocol or via related smart contracts. By using or accessing this Interface or the SolSwap Protocol and related smart
-              contracts, you agree that no developer or entity involved in creating, deploying or maintaining this Interface or the SolSwap
-              Protocol will be liable for any claims or damages whatsoever associated with your use, inability to use, or your interaction
-              with other users of, this Interface or the SolSwap Protocol, including any direct, indirect, incidental, special, exemplary,
-              punitive or consequential damages, or loss of profits, digital assets, tokens, or anything else of value.
-            </Text>
-            <Text fontSize={{ base: 'sm', md: 'md' }} lineHeight={1.625}>
-              The SolSwap Protocol is not available to residents of Belarus, the Central African Republic, The Democratic Republic of Congo,
-              the Democratic People&apos;s Republic of Korea, the Crimea, Donetsk People’s Republic, and Luhansk People’s Republic regions
-              of Ukraine, Cuba, Iran, Libya, Somalia, Sudan, South Sudan, Syria, the USA, Yemen, Zimbabwe and any other jurisdiction in
-              which accessing or using the SolSwap Protocol is prohibited (the “Prohibited Jurisdictions”).
-            </Text>
-            <Text fontSize={{ base: 'sm', md: 'md' }} lineHeight={1.625}>
-              By using or accessing this Interface, the SolSwap Protocol, or related smart contracts, you represent that you are not located
-              in, incorporated or established in, or a citizen or resident of the Prohibited Jurisdictions. You also represent that you are
-              not subject to sanctions or otherwise designated on any list of prohibited or restricted parties or excluded or denied
-              persons, including but not limited to the lists maintained by the United States’ Department of Treasury’s Office of Foreign
-              Assets Control, the United Nations Security Council, the European Union or its Member States, or any other government
-              authority.
+            <section>
+              <Heading as="h2" size="md" color={colors.textPrimary} mb={3}>
+                1. Interface vs. Protocol
+              </Heading>
+              <Text lineHeight={1.8}>
+                The SolSwap interface (the "Interface") is an open-source, decentralized frontend software portal that allows users to interact with the SolSwap protocol, a suite of permissionless smart contracts deployed on the Solana blockchain (the "Protocol"). 
+                The Interface is provided as a convenience to the community and acts as one of several possible entry points to the Protocol.
+              </Text>
+            </section>
+
+            <section>
+              <Heading as="h2" size="md" color={colors.textPrimary} mb={3}>
+                2. No Warranties
+              </Heading>
+              <Text lineHeight={1.8}>
+                THIS INTERFACE AND THE PROTOCOL ARE PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, AT YOUR OWN RISK, AND WITHOUT WARRANTIES OF ANY KIND. 
+                We do not guarantee that the Interface will be secure, available, or free of bugs or viruses. No developer, entity, or contributor involved in creating or maintaining SolSwap shall be liable for any damages or losses associated with your use of the Interface or Protocol.
+              </Text>
+            </section>
+
+            <section>
+              <Heading as="h2" size="md" color={colors.textPrimary} mb={3}>
+                3. Assumption of Risk
+              </Heading>
+              <Text lineHeight={1.8}>
+                By using SolSwap, you acknowledge that blockchain technology and decentralized finance (DeFi) involve significant risks, including but not limited to: smart contract vulnerabilities, permanent loss of digital assets, extreme price volatility, and regulatory uncertainty. 
+                You are solely responsible for your own digital assets and investment decisions.
+              </Text>
+            </section>
+
+            <section>
+              <Heading as="h2" size="md" color={colors.textPrimary} mb={3}>
+                4. Compliance and Eligibility
+              </Heading>
+              <Text lineHeight={1.8}>
+                SolSwap is a global, permissionless platform. Users are responsible for ensuring that their use of the Interface and Protocol complies with all applicable local, state, and federal laws and regulations in their respective jurisdictions. 
+                By accessing this Interface, you represent and warrant that you are of legal age and have the capacity to enter into a binding agreement.
+              </Text>
+            </section>
+
+            <section>
+              <Heading as="h2" size="md" color={colors.textPrimary} mb={3}>
+                5. Limitation of Liability
+              </Heading>
+              <Text lineHeight={1.8}>
+                In no event shall the developers, contributors, or any associated entities be liable for any direct, indirect, incidental, special, or consequential damages (including loss of profits, data, or digital assets) arising out of or in connection with your use or inability to use the platform.
+              </Text>
+            </section>
+
+            <Divider borderColor={colors.backgroundTransparent07} />
+
+            <Text fontSize="sm" color={colors.textTertiary} fontStyle="italic" textAlign="center">
+              SolSwap is a community-driven project. Exercise caution and do your own research before interacting with any smart contracts.
             </Text>
           </VStack>
         </VStack>
@@ -58,6 +90,6 @@ export default function DisclaimerPage() {
 
 export async function getStaticProps() {
   return {
-    props: { title: 'Disclaimer' }
+    props: { title: 'Disclaimer | SolSwap' }
   }
 }

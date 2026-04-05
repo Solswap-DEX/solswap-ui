@@ -39,7 +39,7 @@ export function NavMoreButtonMenuPanel() {
         </MenuItem>
         <MenuDivider />
         <MenuItem>
-          <Link as={NextLink} href="/docs/disclaimer" _hover={{ textDecoration: 'none' }} w="full" isExternal>
+          <Link as={NextLink} href="/docs/disclaimer/" _hover={{ textDecoration: 'none' }} w="full" isExternal>
             <HStack>
               <DisclaimerThumbnailIcon />
               <Text>{t('disclaimer.title')}</Text>
