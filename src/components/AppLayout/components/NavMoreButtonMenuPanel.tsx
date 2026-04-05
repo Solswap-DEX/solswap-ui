@@ -66,7 +66,7 @@ export function NavMoreButtonMenuPanel() {
           </Link>
         </MenuItem>
       </Box>
-      <Flex mb={-1} mt={1} py={2} justifyContent={'space-around'} alignItems="center" color={colors.textSecondary} bg={colors.backgroundTransparent07}>
+      <Flex mb={-1} mt={1} py={2} justifyContent={'space-evenly'} alignItems="center" color={colors.textSecondary} bg={colors.backgroundTransparent07}>
         <Link as={NextLink} href="https://x.com/SolswapDEX" isExternal>
           <TwitterMediaIcon width={36} height={36} />
         </Link>
