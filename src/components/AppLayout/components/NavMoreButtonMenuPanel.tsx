@@ -66,18 +66,18 @@ export function NavMoreButtonMenuPanel() {
           </Link>
         </MenuItem>
       </Box>
-      <Flex mb={-1} mt={1} py={2} justifyContent={'space-around'} color={colors.textSecondary} bg={colors.backgroundTransparent07}>
+      <Flex mb={-1} mt={1} py={2} justifyContent={'space-around'} alignItems="center" color={colors.textSecondary} bg={colors.backgroundTransparent07}>
         <Link as={NextLink} href="https://x.com/SolswapDEX" isExternal>
-          <TwitterMediaIcon />
+          <TwitterMediaIcon width={32} height={32} />
         </Link>
         <Link as={NextLink} href="https://t.me/Solswap_Pro" isExternal>
-          <TelegrameMediaIcon />
+          <TelegrameMediaIcon width={32} height={32} />
         </Link>
         <Link as={NextLink} href="https://github.com/Solswap-DEX" isExternal>
-          <GithubMediaIcon />
+          <GithubMediaIcon width={24} height={24} />
         </Link>
         <Link as={NextLink} href="https://www.instagram.com/solswap_dex" isExternal>
-          <InstagramMediaIcon />
+          <InstagramMediaIcon width={24} height={24} />
         </Link>
       </Flex>
     </MenuList>
