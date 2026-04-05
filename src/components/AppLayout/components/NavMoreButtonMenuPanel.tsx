@@ -1,4 +1,5 @@
-import DiscardMediaIcon from '@/icons/media/DiscardMediaIcon'
+import GithubMediaIcon from '@/icons/media/GithubMediaIcon'
+import InstagramMediaIcon from '@/icons/media/InstagramMediaIcon'
 import TelegrameMediaIcon from '@/icons/media/TelegrameMediaIcon'
 import TwitterMediaIcon from '@/icons/media/TwitterMediaIcon'
 import ExternalLink from '@/icons/misc/ExternalLink'
@@ -66,14 +67,17 @@ export function NavMoreButtonMenuPanel() {
         </MenuItem>
       </Box>
       <Flex mb={-1} mt={1} py={2} justifyContent={'space-around'} color={colors.textSecondary} bg={colors.backgroundTransparent07}>
-        <Link as={NextLink} href="https://twitter.com/SolSwapProtocol" isExternal>
+        <Link as={NextLink} href="https://x.com/SolswapDEX" isExternal>
           <TwitterMediaIcon />
         </Link>
-        <Link as={NextLink} href="https://t.me/raydiumprotocol" isExternal>
+        <Link as={NextLink} href="https://t.me/Solswap_Pro" isExternal>
           <TelegrameMediaIcon />
         </Link>
-        <Link as={NextLink} href="https://discord.com/invite/raydium" isExternal>
-          <DiscardMediaIcon />
+        <Link as={NextLink} href="https://github.com/Solswap-DEX" isExternal>
+          <GithubMediaIcon />
+        </Link>
+        <Link as={NextLink} href="https://www.instagram.com/solswap_dex" isExternal>
+          <InstagramMediaIcon />
         </Link>
       </Flex>
     </MenuList>
