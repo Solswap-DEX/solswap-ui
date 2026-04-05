@@ -48,7 +48,7 @@ export function NavMoreButtonMenuPanel() {
           </Link>
         </MenuItem>
         <MenuItem>
-          <Link as={NextLink} href="https://docs.solswap.cloud/raydium/" _hover={{ textDecoration: 'none' }} w="full" isExternal>
+          <Link as={NextLink} href="/docs/" _hover={{ textDecoration: 'none' }} w="full" isExternal>
             <HStack>
               <DocThumbnailIcon />
               <Text>{t('common.nav_text_docs')}</Text>
