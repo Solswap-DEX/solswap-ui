@@ -51,3 +51,4 @@ tsconfig.tsbuildinfo
 # build outputs and backups
 /public_html
 /public_html_backup_*
+.env.production
