@@ -105,6 +105,9 @@ function useInitConnection(props: SSRData) {
 
   const showConnect = useCallback(
     (key: PublicKey) => {
+      const isDocsPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/docs')
+      if (isDocsPage) return
+
       toastSubject.next({
         title: `${wallet?.adapter.name} wallet connected`,
         description: `Wallet ${key}`,

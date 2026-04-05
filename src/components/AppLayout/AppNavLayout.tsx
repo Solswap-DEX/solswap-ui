@@ -131,7 +131,7 @@ function AppNavLayout({
         </Desktop>
 
         {/* wallet and settings button */}
-        {pathname !== '/docs/disclaimer/' && pathname !== '/docs/disclaimer' && (
+        {!pathname.startsWith('/docs') && (
           <Flex gap={[0.5, 1]} align="center" flexShrink={0}>
             <Desktop>
               <TorqueButton />
