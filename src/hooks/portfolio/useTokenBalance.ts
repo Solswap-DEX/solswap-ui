@@ -3,6 +3,7 @@ import { useTokenAccountStore, useTokenStore } from '@/store'
 import useTokenPrice from '@/hooks/token/useTokenPrice'
 import Decimal from 'decimal.js'
 import { IdleType } from '@/features/Portfolio/components/SectionOverview/components/PortfolioIdle'
+import { WSOLMint } from '@raydium-io/raydium-sdk-v2'
 
 const displayCount = 3
 
@@ -12,7 +13,7 @@ export default function useTokenBalance() {
   const { data: tokenPrices } = useTokenPrice({
     mintList: tokenAccounts
       .filter((tokenAccount) => (tokenAccount.isNative || tokenAccount.isAssociated) && !tokenAccount.amount.isZero())
-      .map((a) => a.mint)
+      .map((a) => (a.isNative ? WSOLMint : a.mint))
   })
 
   const idleList: IdleType[] = useMemo(() => {
@@ -21,7 +22,7 @@ export default function useTokenBalance() {
         .filter((tokenAccount) => tokenAccount.isNative || tokenAccount.isAssociated)
         .map((tokenAccount) => {
           const uiAmount = getTokenBalanceUiAmount({ mint: tokenAccount.mint })
-          const tokenMint = tokenAccount.mint.toString()
+          const tokenMint = tokenAccount.isNative ? WSOLMint.toString() : tokenAccount.mint.toString()
           const token = tokenMap.get(tokenMint)
           if (!token) {
             return {
