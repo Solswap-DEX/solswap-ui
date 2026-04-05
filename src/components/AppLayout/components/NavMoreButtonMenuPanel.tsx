@@ -57,7 +57,7 @@ export function NavMoreButtonMenuPanel() {
           </Link>
         </MenuItem>
         <MenuItem>
-          <Link as={NextLink} href="https://tally.so/r/n9WZZV" _hover={{ textDecoration: 'none' }} w="full" isExternal>
+          <Link as={NextLink} href="https://tally.so/r/5Bvg7E" _hover={{ textDecoration: 'none' }} w="full" isExternal>
             <HStack>
               <FeedbackThumbnailIcon />
               <Text>{t('common.nav_text_feedback')}</Text>
