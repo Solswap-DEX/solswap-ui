@@ -32,7 +32,10 @@
     "build": "next build && next export",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --pretty --noEmit"
+    "type-check": "tsc --pretty --noEmit",
+    "release": "release-it",
+    "release:patch": "release-it patch --ci",
+    "release:minor": "release-it minor --ci"
   },
   "resolutions": {
     "@solana/spl-token": "^0.4.8",
@@ -133,6 +136,7 @@
     "zustand": "^4.1.1"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "^8.0.1",
     "@types/node-fetch": "^2.6.2",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
@@ -140,6 +144,7 @@
     "eslint-config-next": "^12.2.5",
     "eslint-plugin-react": "^7.31.7",
     "prettier": "^2.7.1",
+    "release-it": "^17.4.0",
     "shx": "^0.3.4",
     "typescript": "^5.0.4"
   },
