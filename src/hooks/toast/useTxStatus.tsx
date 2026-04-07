@@ -196,6 +196,14 @@ function useTxStatus() {
               })
             } else {
               onConfirmed?.(signatureResult, context)
+              // 🔥 GA4: fire swap_confirmed event on blockchain confirmation
+              if (isSwap && typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+                ;(window as any).gtag('event', 'swap_confirmed', {
+                  event_category: 'Swap',
+                  event_label: txId,
+                  transaction_id: txId
+                })
+              }
               if (hideResultToast) return
               // update toast status to success
               toastSubject.next({
@@ -463,6 +471,14 @@ function useTxStatus() {
                   const isAllSent = allTxStatus.length === subTxIds.length
                   const isAllSuccess = isAllSent && allTxStatus.filter((s) => s === 'success').length === subTxIds.length
                   subscribeMap.set(toastId, isAllSuccess)
+                  // 🔥 GA4: fire swap_confirmed event when ALL txs succeed
+                  if (isSwap && isAllSuccess && typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+                    ;(window as any).gtag('event', 'swap_confirmed', {
+                      event_category: 'Swap',
+                      event_label: toastId,
+                      transaction_id: toastId
+                    })
+                  }
                   // update toast status to success
                   toastSubject.next({
                     id: toastId,

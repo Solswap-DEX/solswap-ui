@@ -2,6 +2,8 @@ import { theme } from '@/theme'
 import { ColorModeScript } from '@chakra-ui/react'
 import NextDocument, { Html, Main, Head, NextScript } from 'next/document'
 
+const GA_MEASUREMENT_ID = 'G-6LSV102YE6'
+
 /**
  * @see https://chakra-ui.com/docs/styled-system/color-mode#for-nextjs
  */
@@ -9,7 +11,20 @@ export default class Document extends NextDocument {
   render() {
     return (
       <Html lang="en" suppressHydrationWarning>
-        <Head />
+        <Head>
+          {/* Google Analytics 4 */}
+          <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}', { page_path: window.location.pathname });
+              `
+            }}
+          />
+        </Head>
         <body>
           {/* 👇 Here's the script */}
           <ColorModeScript initialColorMode={theme.config.initialColorMode} />
