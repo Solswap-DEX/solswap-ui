@@ -111,6 +111,7 @@ function AppNavLayout({
           <HStack flexGrow={1} flexShrink={1} justify="start" overflow={['auto', 'visible']} gap={0}>
             <RouteLink href="/swap" isActive={pathname === '/swap'} title={t('swap.title')} />
             <RouteLink href="/liquidity-pools" isActive={pathname.includes('/liquidity')} title={t('liquidity.title')} />
+            <RouteLink href="/launchpad" isActive={pathname.startsWith('/launchpad')} title={t('launchpad.title')} />
             <RouteLink href="/portfolio" isActive={pathname === '/portfolio'} title={t('portfolio.title')} />
             <RouteLink href="https://perps.solswap.cloud" isActive={false} title={t('perpetuals.title')} />
 
