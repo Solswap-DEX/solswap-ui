@@ -45,7 +45,7 @@ export const RAY_TOKEN_INFO = {
   chainId: 101,
   address: '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R',
   programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
-  logoURI: 'https://img-v1.solswap.cloud/icon/4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R.png',
+  logoURI: 'https://img-v1.raydium.io/icon/4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R.png',
   symbol: 'RAY',
   name: 'SolSwap',
   decimals: 6,

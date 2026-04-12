@@ -155,10 +155,10 @@ export const launchpadShareRate = new Decimal(defaultShareFeeRate.toString())
   .toString()
 
 const initialState = {
-  authHost: process.env.NEXT_PUBLIC_LAUNCH_AUTH_HOST || 'https://launch-auth-v1.solswap.cloud',
-  commentHost: process.env.NEXT_PUBLIC_LAUNCH_COMMENT_HOST || 'https://launch-forum-v1.solswap.cloud',
-  historyHost: process.env.NEXT_PUBLIC_LAUNCH_HISTORY_HOST || 'https://launch-history-v1.solswap.cloud',
-  mintHost: process.env.NEXT_PUBLIC_LAUNCH_MINT_HOST || 'https://launch-mint-v1.solswap.cloud',
+  authHost: process.env.NEXT_PUBLIC_LAUNCH_AUTH_HOST || 'https://launch-auth-v1.raydium.io',
+  commentHost: process.env.NEXT_PUBLIC_LAUNCH_COMMENT_HOST || 'https://launch-forum-v1.raydium.io',
+  historyHost: process.env.NEXT_PUBLIC_LAUNCH_HISTORY_HOST || 'https://launch-history-v1.raydium.io',
+  mintHost: process.env.NEXT_PUBLIC_LAUNCH_MINT_HOST || 'https://api-v3.raydium.io',
   slippage: 0.025,
   configInfo: new Map()
 }
