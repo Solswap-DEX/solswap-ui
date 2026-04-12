@@ -76,8 +76,8 @@ const App: FC<PropsWithChildren<any>> = ({ children }) => {
             projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PJ_ID,
             metadata: {
               name: 'SolSwap',
-              description: 'SolSwap',
-              url: 'https://solswap.cloud/',
+              description: 'Solana DEX - Swap, Bridge & LaunchLab',
+              url: 'https://solswap.cloud',
               icons: ['https://solswap.cloud/logo/logo-only-icon.svg']
             }
           }
