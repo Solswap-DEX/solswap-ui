@@ -74,11 +74,14 @@ export default function Footer() {
           </Flex>
 
           <Box mt={16} textAlign="center" color="var(--text-tertiary)" maxW="800px" mx="auto">
-             <Text mb={4}>
-               <strong>SolSwap</strong> is an independent decentralized exchange on Solana, developed and maintained by <strong>ArtLogic Labs</strong>.
+             <Text mb={4} opacity={0.8} fontSize="sm">
+               <strong>SolSwap</strong> is an independent decentralized exchange on Solana, developed and maintained by <strong>Jose Reyes Dev | ArtLogic Labs</strong>.
              </Text>
-             <Text fontSize="sm">
-               © {new Date().getFullYear()} ArtLogic Labs. All rights reserved. SolSwap is open-source software licensed under Apache 2.0.
+             <Text fontSize="xs" opacity={0.6} px={4}>
+               To ensure maximum transparency, SolSwap acknowledges its architectural foundations as an independent fork of the Raydium Protocol V3, fully optimized with a custom security layer, emerald UI, and exclusive smart routing algorithms.
+             </Text>
+             <Text fontSize="xs" mt={4} opacity={0.5}>
+               © {new Date().getFullYear()} Jose Reyes Dev | ArtLogic Labs. All rights reserved. SolSwap is open-source software licensed under Apache 2.0.
              </Text>
           </Box>
         </Box>

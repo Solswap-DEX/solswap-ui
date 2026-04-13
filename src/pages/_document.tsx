@@ -24,6 +24,7 @@ export default class Document extends NextDocument {
               `
             }}
           />
+          <link rel="manifest" href="/manifest.json" />
         </Head>
         <body>
           {/* 👇 Here's the script */}

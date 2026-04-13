@@ -26,7 +26,7 @@ export default function Header() {
   return (
     <>
       <Box w="100%" bg="var(--background-light)" color="var(--text-secondary)" py={2} textAlign="center" fontSize="sm" borderBottom="1px solid var(--primary)">
-        <Text><strong>SolSwap</strong> — An independent decentralized exchange on Solana, developed by <strong>ArtLogic Labs</strong>.</Text>
+        <Text><strong>SolSwap</strong> — An independent decentralized exchange on Solana, developed by <strong>Jose Reyes Dev | ArtLogic Labs</strong>.</Text>
       </Box>
       <Flex justify={['center', 'flex-start']} pl={[0, 77]} py={6}>
         <Logo />
