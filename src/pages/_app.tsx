@@ -39,7 +39,6 @@ const MyApp = ({ Component, pageProps, ...props }: AppProps) => {
       <GoogleAnalytics gaId="G-DR3V6FTKE3" />
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="twitter:image" content="/logo.webp" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@SolSwapProtocol" />
         <meta name="twitter:creator" content="@SolSwapProtocol" />
@@ -48,8 +47,6 @@ const MyApp = ({ Component, pageProps, ...props }: AppProps) => {
         <meta property="og:description" content="The fastest decentralized exchange on Solana" />
         <meta property="og:url" content="https://solswap.cloud/" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="/logo.webp" />
-        <meta property="og:image:alt" content="SolSwap" />
         <meta property="og:locale" content="en" />
         <meta property="og:site_name" content="SolSwap" />
         <meta property="og:title" content="SolSwap — Fast Solana DEX" />
