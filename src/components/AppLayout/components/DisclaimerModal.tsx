@@ -72,6 +72,9 @@ function DisclaimerModal() {
               <Text mb="3" fontSize="sm">
                 {t('disclaimer.text4')}
               </Text>
+              <Text mb="3" fontSize="sm">
+                {t('disclaimer.text5')}
+              </Text>
             </Box>
             <Flex width="full" justifyContent="flex-start">
               <Checkbox isChecked={userHaveAgree} onChange={(e) => setUserHaveAgree(e.target.checked)}>

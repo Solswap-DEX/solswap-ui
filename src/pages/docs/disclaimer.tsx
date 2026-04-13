@@ -76,6 +76,15 @@ export default function DisclaimerPage() {
               </Text>
             </section>
 
+            <section>
+              <Heading as="h2" size="md" color={colors.textPrimary} mb={3}>
+                6. Non-Affiliation
+              </Heading>
+              <Text lineHeight={1.8} textAlign="justify">
+                SolSwap is an independent project developed by ArtLogic Labs. It is a fork of open-source components and is not affiliated with, endorsed by, or associated with Raydium or any other decentralized exchange protocol.
+              </Text>
+            </section>
+
             <Divider borderColor={colors.backgroundTransparent07} />
 
             <Text fontSize="sm" color={colors.textTertiary} fontStyle="italic" textAlign="center">

@@ -10,6 +10,7 @@ import {
   Box,
   Flex,
   HStack,
+  VStack,
   Menu,
   MenuButton,
   Modal,
@@ -182,6 +183,24 @@ function AppNavLayout({
         }}
       >
         {children}
+        <Box as="footer" py={6} mt="auto" textAlign="center" borderTop={`1px solid ${colors.backgroundTransparent07}`}>
+          <VStack spacing={2}>
+            <HStack spacing={4} justify="center">
+              <Link href="/docs/disclaimer">
+                <Text fontSize="xs" color={colors.textTertiary} _hover={{ color: colors.textSecondary, textDecoration: 'underline' }}>
+                  Disclaimer
+                </Text>
+              </Link>
+              <Text fontSize="xs" color={colors.textTertiary}>|</Text>
+              <Text fontSize="xs" color={colors.textTertiary}>
+                Jose Reyes Dev | ArtLogic Labs
+              </Text>
+            </HStack>
+            <Text fontSize="x-small" color={colors.textQuaternary}>
+              SolSwap is an independent fork of the Raydium Protocol V3
+            </Text>
+          </VStack>
+        </Box>
       </Box>
       <DisclaimerModal />
       <Mobile>
