@@ -1,15 +1,6 @@
+import Logo from '@/components/LandingPage/images/Logo'
 import { SvgIcon } from './type'
 
 export default function SolSwapLogo(props: SvgIcon) {
-  const { width, height, ...rest } = props as any
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src="/logo.png"
-      alt="SolSwap"
-      width={120}
-      height={30}
-      style={{ objectFit: 'contain', height: '30px', width: 'auto' }}
-    />
-  )
+  return <Logo {...props} width="120px" height="30px" />
 }

@@ -65,28 +65,28 @@ export default function Logo(props: SvgIcon) {
       />
       <defs>
         <linearGradient id="paint0_linear_13847_11866" x1="7.57868" y1="23.5725" x2="53.949" y2="22.1952" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#39D0D8" />
-          <stop offset="1" stopColor="#4F53F3" />
+          <stop stopColor="#00BCD4" />
+          <stop offset="1" stopColor="#00E5A0" />
         </linearGradient>
         <linearGradient id="paint1_linear_13847_11866" x1="8.77567" y1="24.9819" x2="19.7416" y2="19.9194" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#4AD9ED" />
-          <stop offset="1" stopColor="#4AD9ED" stopOpacity="0" />
+          <stop stopColor="#00BCD4" />
+          <stop offset="1" stopColor="#00BCD4" stopOpacity="0" />
         </linearGradient>
         <linearGradient id="paint2_linear_13847_11866" x1="50.2332" y1="27.4705" x2="45.8644" y2="22.2674" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#4348F4" />
-          <stop offset="1" stopColor="#4F53F3" stopOpacity="0" />
+          <stop stopColor="#00E5A0" />
+          <stop offset="1" stopColor="#00E5A0" stopOpacity="0" />
         </linearGradient>
         <linearGradient id="paint3_linear_13847_11866" x1="54.312" y1="36.4291" x2="7.94169" y2="37.8064" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#39D0D8" />
-          <stop offset="1" stopColor="#4F53F3" />
+          <stop stopColor="#00BCD4" />
+          <stop offset="1" stopColor="#00E5A0" />
         </linearGradient>
         <linearGradient id="paint4_linear_13847_11866" x1="53.1151" y1="35.0197" x2="42.1492" y2="40.0822" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#4AD9ED" />
-          <stop offset="1" stopColor="#4AD9ED" stopOpacity="0" />
+          <stop stopColor="#00BCD4" />
+          <stop offset="1" stopColor="#00BCD4" stopOpacity="0" />
         </linearGradient>
         <linearGradient id="paint5_linear_13847_11866" x1="11.6575" y1="32.5311" x2="16.0263" y2="37.7342" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#4348F4" />
-          <stop offset="1" stopColor="#4F53F3" stopOpacity="0" />
+          <stop stopColor="#00E5A0" />
+          <stop offset="1" stopColor="#00E5A0" stopOpacity="0" />
         </linearGradient>
       </defs>
     </svg>

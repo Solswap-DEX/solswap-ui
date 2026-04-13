@@ -29,20 +29,20 @@ export default function LogoLegacy(props: SvgIcon) {
       />
       <defs>
         <linearGradient id="paint0_linear_12759_11829" x1="47.2146" y1="17.4174" x2="-4.27887" y2="38.7732" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#7748FC" />
-          <stop offset="1" stopColor="#39D0D8" />
+          <stop stopColor="#00E5A0" />
+          <stop offset="1" stopColor="#00BCD4" />
         </linearGradient>
         <linearGradient id="paint1_linear_12759_11829" x1="47.2146" y1="17.4174" x2="-4.27887" y2="38.7732" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#7748FC" />
-          <stop offset="1" stopColor="#39D0D8" />
+          <stop stopColor="#00E5A0" />
+          <stop offset="1" stopColor="#00BCD4" />
         </linearGradient>
         <linearGradient id="paint2_linear_12759_11829" x1="47.2146" y1="17.4174" x2="-4.27887" y2="38.7732" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#7748FC" />
-          <stop offset="1" stopColor="#39D0D8" />
+          <stop stopColor="#00E5A0" />
+          <stop offset="1" stopColor="#00BCD4" />
         </linearGradient>
         <linearGradient id="paint3_linear_12759_11829" x1="47.2146" y1="17.4174" x2="-4.27887" y2="38.7732" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#7748FC" />
-          <stop offset="1" stopColor="#39D0D8" />
+          <stop stopColor="#00E5A0" />
+          <stop offset="1" stopColor="#00BCD4" />
         </linearGradient>
       </defs>
     </svg>

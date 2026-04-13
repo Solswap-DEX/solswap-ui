@@ -1,14 +1,9 @@
-import { Box, Center, Flex, Text } from '@chakra-ui/react'
-
+import { Box, Center, Flex, Text, Link } from '@chakra-ui/react'
 import FooterItem from './components/FooterItem'
 import FooterTitle from './components/FooterTitle'
 import Discord from './images/Discord'
-import ExpandArrowDown from './images/ExpandArrowDown'
-import FooterBg from './images/footer-bg.png'
-import Medium from './images/Medium'
-import Logo from './images/SecondaryLogo'
-import Telegram from './images/Telegram'
 import Twitter from './images/Twitter'
+import Logo from './images/SecondaryLogo'
 
 export default function Footer() {
   const footerList = [
@@ -16,51 +11,31 @@ export default function Footer() {
       title: 'ABOUT',
       items: [
         <FooterItem key="footer-about-01">Meet SolSwap</FooterItem>,
-        <FooterItem key="footer-about-02">Ray Token</FooterItem>,
-        <FooterItem key="footer-about-03">Media Assets</FooterItem>
+        <FooterItem key="footer-about-02">Media Assets</FooterItem>
       ]
     },
     {
-      title: 'PROTOCOL',
+      title: 'DEVELOPMENT',
       items: [
-        <FooterItem key="footer-protocol-01">Apply for Fusion Pool</FooterItem>,
-        <FooterItem key="footer-protocol-02">Apply for AcceleRaytor</FooterItem>,
-        <FooterItem key="footer-protocol-03">Permissionless Pool</FooterItem>,
-        <FooterItem key="footer-protocol-04">API</FooterItem>
-      ]
-    },
-    {
-      title: 'SUPPORT',
-      items: [
-        <FooterItem key="footer-support-01">Getting Started on Solana</FooterItem>,
-        <FooterItem key="footer-support-02">Getting Started on SolSwap</FooterItem>,
-        <FooterItem key="footer-support-03">FAQ</FooterItem>
+        <FooterItem key="footer-protocol-01">
+          <Link href="https://github.com/solswap-protocol" isExternal>GitHub Repository</Link>
+        </FooterItem>,
+        <FooterItem key="footer-protocol-02">API Documentation</FooterItem>
       ]
     },
     {
       title: 'COMMUNITY',
       items: [
         <FooterItem key="footer-community-01">
-          <Flex gap="19.38px">
-            <Twitter /> <Text>Twitter</Text>
-          </Flex>
+          <Link href="https://twitter.com/SolSwapProtocol" isExternal>
+            <Flex gap="15px" align="center">
+              <Twitter /> <Text>Twitter / X</Text>
+            </Flex>
+          </Link>
         </FooterItem>,
         <FooterItem key="footer-community-02">
-          <Flex gap="19.38px">
-            <Medium /> <Text>Medium</Text>
-          </Flex>
-        </FooterItem>,
-        <FooterItem key="footer-community-03">
-          <Flex gap="19.38px">
+          <Flex gap="15px" align="center">
             <Discord /> <Text>Discord</Text>
-          </Flex>
-        </FooterItem>,
-        <FooterItem key="footer-community-04">
-          <Flex align="center">
-            <Telegram /> <Text ml="19.38px">Telegram</Text>{' '}
-            <Box>
-              <ExpandArrowDown style={{ marginLeft: 4, position: 'relative', bottom: -1 }} />
-            </Box>
           </Flex>
         </FooterItem>
       ]
@@ -78,7 +53,10 @@ export default function Footer() {
         alignItems: 'center',
         overflow: 'hidden'
       }}
-      pt="216.88px"
+      pt="100px"
+      pb="50px"
+      bg="var(--background-dark)"
+      borderTop="1px solid var(--primary)"
     >
       <Center px={[8, 0]}>
         <Box style={{ position: 'relative', zIndex: 2 }}>
@@ -94,10 +72,18 @@ export default function Footer() {
               )
             })}
           </Flex>
+
+          <Box mt={16} textAlign="center" color="var(--text-tertiary)" maxW="800px" mx="auto">
+             <Text mb={4}>
+               <strong>SolSwap</strong> is an independent decentralized exchange on Solana, developed and maintained by <strong>ArtLogic Labs</strong>.
+             </Text>
+             <Text fontSize="sm">
+               © {new Date().getFullYear()} ArtLogic Labs. All rights reserved. SolSwap is open-source software licensed under Apache 2.0.
+             </Text>
+          </Box>
         </Box>
       </Center>
-      <Logo style={{ position: 'relative', zIndex: 2, margin: '80px auto 80px auto' }} />
-      <img src={FooterBg.src} style={{ minWidth: '1440px', width: '100%', position: 'absolute', top: 0, height: '100%', zIndex: 1 }} />
+      <Logo style={{ position: 'relative', zIndex: 2, margin: '80px auto 40px auto' }} />
     </Box>
   )
 }

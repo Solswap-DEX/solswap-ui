@@ -1,5 +1,5 @@
 export const REVENUE_CONFIG = {
-  // Referral wallet — receives 1% on all swaps via Raydium referral system
+  // Referral wallet — receives 1% on all swaps via SolSwap protocol referral system
   referrerWallet: process.env.NEXT_PUBLIC_REFERRER_WALLET || '5KUA4a4qFusTvJeSquKsBSEPvhiVedvaj8hE8pVp2vmz',
 
   // Fee collector — receives 0.10% on all swaps via platform fee

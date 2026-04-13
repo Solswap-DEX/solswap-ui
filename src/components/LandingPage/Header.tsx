@@ -1,10 +1,7 @@
-import { Flex } from '@chakra-ui/react'
+import { Flex, Text, Box } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
-
 import useScroll from '@/hooks/useScroll'
-
 import Button from '../Button'
-
 import Logo from './images/Logo'
 import LogoLegacy from './images/LogoLegacy'
 
@@ -28,6 +25,9 @@ export default function Header() {
 
   return (
     <>
+      <Box w="100%" bg="var(--background-light)" color="var(--text-secondary)" py={2} textAlign="center" fontSize="sm" borderBottom="1px solid var(--primary)">
+        <Text><strong>SolSwap</strong> — An independent decentralized exchange on Solana, developed by <strong>ArtLogic Labs</strong>.</Text>
+      </Box>
       <Flex justify={['center', 'flex-start']} pl={[0, 77]} py={6}>
         <Logo />
       </Flex>
@@ -38,7 +38,7 @@ export default function Header() {
         px={[0, 77]}
         py={6}
         opacity={headerOpacity}
-        bg="#132141"
+        bg="var(--background-dark)"
         w="100%"
         zIndex="10"
       >

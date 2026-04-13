@@ -25,7 +25,8 @@ export const Button = {
       color: colors.textRevertPrimary,
       _hover: {
         opacity: '0.9',
-        background: colors.solidButtonBg
+        background: colors.solidButtonBg,
+        boxShadow: '0 0 12px rgba(0, 229, 160, 0.4)'
       },
       _active: {
         filter: 'brightness(0.7)',
@@ -143,7 +144,8 @@ export const Button = {
       color: colors.buttonSolidText,
       _hover: {
         opacity: '0.9',
-        background: colors.textPink
+        background: colors.textPink,
+        boxShadow: '0 0 12px rgba(255, 18, 114, 0.4)'
       },
       _active: {
         filter: 'brightness(0.7)',

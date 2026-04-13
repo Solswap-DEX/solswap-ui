@@ -1,9 +1,9 @@
 {
-  "name": "raydium-ui-v3",
-  "version": "0.0.1",
-  "author": "Solana Maintainers <maintainers@solana.foundation>",
-  "repository": "https://github.com/solana-labs/wallet-adapter",
-  "license": "Apache-2.0",
+  "name": "solswap-ui",
+  "version": "1.0.0",
+  "author": "ArtLogic Labs",
+  "repository": "https://github.com/ArtLogic-Labs/solswap-ui",
+  "license": "MIT",
   "engines": {
     "node": ">=16"
   },

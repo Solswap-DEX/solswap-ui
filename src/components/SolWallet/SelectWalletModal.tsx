@@ -263,7 +263,7 @@ export default function SelectWalletModal({ wallets, isOpen, onSelectWallet, onC
                     <WalletSelectEggIcon />
                     <Text>{t('wallet_connect_panel.tour_title')}</Text>
                   </HStack>
-                  <Link as={NextLink} href="https://docs.solswap.cloud/raydium/" _hover={{ textDecoration: 'none' }} isExternal>
+                  <Link as={NextLink} href="https://docs.solswap.cloud/" _hover={{ textDecoration: 'none' }} isExternal>
                     <HStack gap={1}>
                       <Text>{t('wallet_connect_panel.tour_desc')}</Text>
                       <ChevronRightIcon width={'14px'} height={'14px'} />
