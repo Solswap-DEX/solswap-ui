@@ -41,6 +41,9 @@ with free, open alternatives.
 ### Liquidity Pools
 ![Liquidity Pools](.github/assets/liquidity_pools.jpg)
 
+### LaunchLab (Launchpad)
+![LaunchLab](.github/assets/launchpad.jpg)
+
 ### Cross-Chain Bridge
 ![Cross-Chain Bridge](.github/assets/bridge.jpg)
 
