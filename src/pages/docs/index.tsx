@@ -1,4 +1,4 @@
-import { Box, Container, VStack, Text, Heading, Button, Icon, Flex, useColorModeValue } from '@chakra-ui/react'
+import { Box, Container, VStack, HStack, Text, Heading, Button, Icon, Flex, useColorModeValue } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
