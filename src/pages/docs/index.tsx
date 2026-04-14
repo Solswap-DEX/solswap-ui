@@ -1,164 +1,182 @@
-import { Box, Container, VStack, Text, Heading, Divider, Grid, GridItem, Icon, Link, Flex } from '@chakra-ui/react'
+import { Box, Container, VStack, Text, Heading, Button, Icon, Flex, useColorModeValue } from '@chakra-ui/react'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import { colors } from '@/theme/cssVariables'
-import SwapPageThumbnailIcon from '@/icons/pageNavigation/SwapPageThumbnailIcon'
-import LiquidityPageThumbnailIcon from '@/icons/pageNavigation/LiquidityPageThumbnailIcon'
-import BridgePageThumbnailIcon from '@/icons/pageNavigation/BridgePageThumbnailIcon'
 import DocThumbnailIcon from '@/icons/pageNavigation/DocThumbnailIcon'
-import PerpetualsPageThumbnailIcon from '@/icons/pageNavigation/PerpetualsPageThumbnailIcon'
+import TwitterMediaIcon from '@/icons/media/TwitterMediaIcon'
+import TelegrameMediaIcon from '@/icons/media/TelegrameMediaIcon'
 
-export default function DocsPage() {
+const MotionBox = motion(Box)
+const MotionVStack = motion(VStack)
+
+export default function DocsUnderConstruction() {
+  const { t } = useTranslation()
+  const glowColor = colors.primary
+
   return (
-    <Box display="flex" justifyContent="center" bg={colors.backgroundDark} minH="100vh">
-      <Container maxW="6xl" py={[10, 20]} px={4}>
-        <VStack spacing={[10, 16]} align="stretch">
-          {/* Hero Section */}
-          <VStack align="center" spacing={6} textAlign="center">
-            <Box p={3} bg={colors.backgroundTransparent07} borderRadius="full">
-              <DocThumbnailIcon width={48} height={48} color={colors.textPrimary} />
-            </Box>
-            <Heading as="h1" size="2xl" color={colors.textPrimary} letterSpacing="tight">
-              SolSwap Documentation
-            </Heading>
-            <Text color={colors.textQuaternary} fontSize="xl" maxW="2xl" lineHeight="tall">
-              Welcome to the official SolSwap documentation. Learn how to trade, provide liquidity, and bridge assets on the fastest decentralized exchange on Solana.
-            </Text>
-          </VStack>
+    <Box 
+      minH="100vh" 
+      display="flex" 
+      alignItems="center" 
+      justifyContent="center" 
+      bg={colors.backgroundDark}
+      position="relative"
+      overflow="hidden"
+    >
+      {/* Background Decorative Elements */}
+      <Box 
+        position="absolute" 
+        top="-10%" 
+        left="-10%" 
+        w="40%" 
+        h="40%" 
+        bgGradient={`radial(${glowColor}22 0%, transparent 70%)`}
+        filter="blur(80px)"
+        zIndex={0}
+      />
+      <Box 
+        position="absolute" 
+        bottom="-10%" 
+        right="-10%" 
+        w="40%" 
+        h="40%" 
+        bgGradient={`radial(${colors.secondary}22 0%, transparent 70%)`}
+        filter="blur(80px)"
+        zIndex={0}
+      />
 
-          <Divider borderColor={colors.backgroundTransparent07} />
-
-          {/* Main Content Grid */}
-          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={8}>
-            {/* Swapping */}
-            <GridItem>
-              <DocCard 
-                title="Swapping Tokens" 
-                icon={SwapPageThumbnailIcon}
-                description="SolSwap uses an Automated Market Maker (AMM) model to enable instant token swaps. Simply select your trading pair and execute your trade directly from your Solana wallet."
-              />
-            </GridItem>
-
-            {/* Liquidity */}
-            <GridItem>
-              <DocCard 
-                title="Liquidity Pools" 
-                icon={LiquidityPageThumbnailIcon}
-                description="Provide liquidity to our pools and earn a share of every trade performed in that pair. Liquidity providers receive LP tokens representing their share of the pool."
-              />
-            </GridItem>
-
-            {/* Bridge */}
-            <GridItem>
-              <DocCard 
-                title="Cross-Chain Bridge" 
-                icon={BridgePageThumbnailIcon}
-                description="Bridge assets from Ethereum, Polygon, Arbitrum, and more directly into the Solana ecosystem using our integrated LI.FI bridge solution."
-              />
-            </GridItem>
-
-            {/* Perpetuals */}
-            <GridItem>
-              <DocCard 
-                title="Perpetual Trading" 
-                icon={PerpetualsPageThumbnailIcon}
-                description="Trade with leverage on our Perpetuals platform. Liquid, low-fee, and decentralized perpetual swaps for professional traders."
-              />
-            </GridItem>
-          </Grid>
-
-          {/* Detailed FAQ Section */}
-          <VStack align="stretch" spacing={8} pt={10}>
-            <Heading as="h2" size="xl" color={colors.textPrimary}>
-              Frequently Asked Questions
-            </Heading>
-            <VStack align="stretch" spacing={6}>
-              <FAQItem 
-                question="What is SolSwap?" 
-                answer="SolSwap is a decentralized exchange (DEX) built on the Solana blockchain. It allows users to swap tokens, provide liquidity, and trade perpetuals with high speed and low transaction costs."
-              />
-              <FAQItem 
-                question="Are my funds safe?" 
-                answer="SolSwap is a non-custodial platform. Your funds are always in your wallet and controlled by you via decentralized smart contracts on the Solana blockchain."
-              />
-              <FAQItem 
-                question="How do I get started?" 
-                answer="To use SolSwap, you'll need a Solana wallet like Phantom or Solflare. Simply connect your wallet, ensure you have some SOL for gas fees, and you're ready to trade."
-              />
-              <FAQItem 
-                question="What are the trading fees?" 
-                answer="Trading fees are used to incentivize liquidity providers. Standard pools typically have a 0.25% fee, most of which goes directly to the LPs."
-              />
-            </VStack>
-          </VStack>
-
-          {/* Footer CTA */}
-          <Box 
-            p={10} 
-            bg={colors.backgroundTransparent07} 
-            borderRadius="3xl" 
-            textAlign="center"
+      <Container maxW="container.md" zIndex={1}>
+        <MotionVStack
+          spacing={8}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          {/* Main Card */}
+          <Box
+            w="full"
+            p={[8, 12]}
+            bg={colors.backgroundTransparent07}
+            backdropFilter="blur(20px)"
+            borderRadius="3xl"
             border="1px solid"
             borderColor={colors.backgroundTransparent10}
+            textAlign="center"
+            position="relative"
+            overflow="hidden"
           >
-            <Text color={colors.textPrimary} fontSize="lg" fontWeight="bold" mb={4}>
-              Still have questions?
+            {/* Pulsing Icon */}
+            <MotionBox
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: [0.8, 1.1, 1], opacity: 1 }}
+              transition={{ 
+                duration: 2, 
+                repeat: Infinity, 
+                repeatType: "reverse",
+                ease: "easeInOut" 
+              }}
+              mb={6}
+              display="inline-block"
+            >
+              <Box 
+                p={5} 
+                bg={colors.backgroundTransparent07} 
+                borderRadius="2xl"
+                boxShadow={`0 0 30px ${glowColor}33`}
+              >
+                <Icon as={DocThumbnailIcon} w={12} h={12} color={colors.primary} />
+              </Box>
+            </MotionBox>
+
+            <Heading 
+              as="h1" 
+              size="2xl" 
+              mb={4} 
+              bgGradient={colors.brandGradient} 
+              bgClip="text"
+              fontWeight="extrabold"
+            >
+              {t('docs.coming_soon')}
+            </Heading>
+            
+            <Text 
+              fontSize="xl" 
+              color={colors.textPrimary} 
+              fontWeight="medium"
+              mb={2}
+            >
+              {t('docs.title')}
             </Text>
-            <Flex justify="center" gap={6}>
-              <Link href="https://x.com/SolswapDEX" isExternal color={colors.textLink}>X (Twitter)</Link>
-              <Link href="https://t.me/Solswap_Pro" isExternal color={colors.textLink}>Telegram</Link>
-            </Flex>
+
+            <Text 
+              fontSize="md" 
+              color={colors.textQuaternary} 
+              maxW="400px" 
+              mx="auto" 
+              lineHeight="tall"
+              mb={8}
+            >
+              {t('docs.under_construction_sub')}
+              <br />
+              {t('docs.stay_tuned')}
+            </Text>
+
+            <VStack spacing={6}>
+              <Link href="/swap" passHref>
+                <Button
+                  as="a"
+                  size="lg"
+                  variant="solid"
+                  bg={colors.solidButtonBg}
+                  color={colors.buttonSolidText}
+                  px={10}
+                  borderRadius="xl"
+                  _hover={{
+                    transform: 'translateY(-2px)',
+                    boxShadow: `0 8px 20px ${glowColor}44`,
+                    opacity: 0.9
+                  }}
+                  transition="all 0.3s"
+                >
+                  {t('docs.back_to_app')}
+                </Button>
+              </Link>
+
+              <HStack spacing={6} pt={4}>
+                <Link href="https://x.com/SolswapDEX" isExternal>
+                  <Box 
+                    color={colors.textQuaternary} 
+                    _hover={{ color: colors.primary, transform: 'scale(1.1)' }} 
+                    transition="all 0.2s"
+                  >
+                    <TwitterMediaIcon width={28} height={28} />
+                  </Box>
+                </Link>
+                <Link href="https://t.me/Solswap_Pro" isExternal>
+                  <Box 
+                    color={colors.textQuaternary} 
+                    _hover={{ color: colors.primary, transform: 'scale(1.1)' }} 
+                    transition="all 0.2s"
+                  >
+                    <TelegrameMediaIcon width={28} height={28} />
+                  </Box>
+                </Link>
+              </HStack>
+            </VStack>
           </Box>
-        </VStack>
+
+          <Text fontSize="sm" color={colors.textSenary}>
+            ArtLogic Labs &copy; {new Date().getFullYear()}
+          </Text>
+        </MotionVStack>
       </Container>
     </Box>
   )
 }
 
-function DocCard({ title, icon, description }: { title: string, icon: any, description: string }) {
-  return (
-    <VStack 
-      align="start" 
-      p={8} 
-      bg={colors.backgroundMedium} 
-      borderRadius="2xl" 
-      height="full"
-      border="1px solid"
-      borderColor="transparent"
-      transition="all 0.3s ease"
-      _hover={{
-        borderColor: colors.backgroundTransparent10,
-        transform: 'translateY(-4px)',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)'
-      }}
-    >
-      <Box p={3} bg={colors.backgroundTransparent07} borderRadius="lg" mb={2}>
-        <Icon as={icon} width={8} height={8} color={colors.textTertiary} />
-      </Box>
-      <Heading as="h3" size="md" color={colors.textPrimary}>
-        {title}
-      </Heading>
-      <Text color={colors.textQuaternary} lineHeight="tall" textAlign="justify">
-        {description}
-      </Text>
-    </VStack>
-  )
-}
-
-function FAQItem({ question, answer }: { question: string, answer: string }) {
-  return (
-    <VStack align="start" spacing={2}>
-      <Text color={colors.textPrimary} fontWeight="bold" fontSize="lg">
-        {question}
-      </Text>
-      <Text color={colors.textQuaternary} lineHeight="tall" textAlign="justify">
-        {answer}
-      </Text>
-      <Divider borderColor={colors.backgroundTransparent07} mt={4} />
-    </VStack>
-  )
-}
-
 export async function getStaticProps() {
   return {
-    props: { title: 'Documentation | SolSwap' }
+    props: { title: 'Docs | Coming Soon' }
   }
 }
