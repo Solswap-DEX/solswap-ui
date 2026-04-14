@@ -37,7 +37,7 @@ export default function Swap() {
   const [outputMint, setOutputMint] = useState<string>('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
   const [isPCChartShown, setIsPCChartShown] = useState<boolean>(true)
   const [isMobileChartShown, setIsMobileChartShown] = useState<boolean>(false)
-  const [isChartLeft, setIsChartLeft] = useState<boolean>(true)
+  const [isChartLeft, setIsChartLeft] = useState<boolean>(false)
   const { isMobile } = useResponsive()
   const publicKey = useAppStore((s) => s.publicKey)
   const connected = useAppStore((s) => s.connected)
