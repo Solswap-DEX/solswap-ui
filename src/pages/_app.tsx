@@ -39,17 +39,21 @@ const MyApp = ({ Component, pageProps, ...props }: AppProps) => {
       <GoogleAnalytics gaId="G-DR3V6FTKE3" />
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png" href="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@SolSwapProtocol" />
         <meta name="twitter:creator" content="@SolSwapProtocol" />
         <meta name="twitter:title" content="SolSwap" />
         <meta name="twitter:description" content="The fastest decentralized exchange on Solana" />
+        <meta name="twitter:image" content="https://solswap.cloud/og-image.png" />
         <meta property="og:description" content="The fastest decentralized exchange on Solana" />
         <meta property="og:url" content="https://solswap.cloud/" />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="en" />
         <meta property="og:site_name" content="SolSwap" />
         <meta property="og:title" content="SolSwap — Fast Solana DEX" />
+        <meta property="og:image" content="https://solswap.cloud/og-image.png" />
         <title>{pageProps?.title ? `${pageProps.title} | SolSwap` : 'SolSwap — Fast Solana DEX'}</title>
       </Head>
       <DynamicProviders>
