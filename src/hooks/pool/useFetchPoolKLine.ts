@@ -56,12 +56,12 @@ const fetcher = async (
       let poolAddress = poolAddressCache.get(cacheKey)
 
       if (!poolAddress) {
-        const poolRes = (await axios.get(`https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${base}/pools`)) as any
+        const poolRes = (await axios.get(`/api/gecko/networks/${network}/tokens/${base}/pools`)) as any
         if (poolRes?.data?.[0]) {
           poolAddress = poolRes.data[0].attributes.address
           poolAddressCache.set(cacheKey, poolAddress)
         } else {
-          const poolResRev = (await axios.get(`https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${quote}/pools`)) as any
+          const poolResRev = (await axios.get(`/api/gecko/networks/${network}/tokens/${quote}/pools`)) as any
           if (poolResRev?.data?.[0]) {
             poolAddress = poolResRev.data[0].attributes.address
             poolAddressCache.set(cacheKey, poolAddress)
@@ -71,7 +71,7 @@ const fetcher = async (
 
       if (!poolAddress) return { success: false, data: { items: [] } }
 
-      const ohlcvUrl = `https://api.geckoterminal.com/api/v2/networks/${network}/pools/${poolAddress}/ohlcv/${timeframe}?aggregate=${aggregate}&limit=${limit}`
+      const ohlcvUrl = `/api/gecko/networks/${network}/pools/${poolAddress}/ohlcv/${timeframe}?aggregate=${aggregate}&limit=${limit}`
       const ohlcvRes = (await axios.get(ohlcvUrl)) as any
 
       if (!ohlcvRes?.data?.attributes?.ohlcv_list) return { success: false, data: { items: [] } }

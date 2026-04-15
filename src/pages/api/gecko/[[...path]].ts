@@ -1,0 +1,153 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import pino from 'pino';
+
+const logger = pino({
+  name: 'gecko-proxy',
+  level: process.env.LOG_LEVEL || 'info', 
+});
+
+interface CacheEntry {
+  data: any;
+  cachedAt: number;        // when it was fresh
+  staleAt: number;         // when it becomes stale, but still usable for SWR
+  expiresAt: number;       // absolute deadline to drop it (e.g. 5 minutes)
+  revalidating: boolean;   // lock to prevent multiple background fetches
+}
+
+const cache = new Map<string, CacheEntry>();
+const inFlightRequests = new Map<string, Promise<any>>();
+
+function getTTLConfig(url: string) {
+  // Return [freshTTL, staleTTL] in ms
+  if (url.includes('/ohlcv') || url.includes('/chart')) {
+    // Graphs / OHLCV: 60s fresh, 5 mins stale
+    return [60000, 300000];
+  }
+  if (url.includes('token_price') || url.includes('simple')) {
+    // Simple Prices: 15s fresh, 1 min stale
+    return [15000, 60000];
+  }
+  // Default metadata (pools, lists, token info): 30s fresh, 2 min stale
+  return [30000, 120000];
+}
+
+async function fetchFromGecko(url: string): Promise<any> {
+    if (inFlightRequests.has(url)) {
+        return inFlightRequests.get(url)!;
+    }
+    
+    logger.info({ geckoUrl: url }, 'Fetching fresh data from GeckoTerminal');
+    const proxyHeaders = {
+        'Accept': 'application/json',
+    };
+
+    const promise = fetch(url, { headers: proxyHeaders }).then(async (res) => {
+        if (!res.ok) {
+            const errBody = await res.text().catch(() => '');
+            let errMessage = `Gecko API error: ${res.status}`;
+            if (errBody) errMessage += ` - ${errBody}`;
+            throw new Error(errMessage);
+        }
+        return res.json();
+    }).finally(() => {
+        inFlightRequests.delete(url);
+    });
+
+    inFlightRequests.set(url, promise);
+    return promise;
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  try {
+    const pathParams = req.query.path as string[];
+    const subpath = pathParams ? pathParams.join('/') : '';
+    
+    // Reconstruct full query string precisely
+    const urlObj = new URL(`https://api.geckoterminal.com/api/v2/${subpath}`);
+    Object.entries(req.query).forEach(([key, val]) => {
+      if (key !== 'path' && val !== undefined) {
+        urlObj.searchParams.append(key, String(val));
+      }
+    });
+
+    const targetUrl = urlObj.toString();
+    const cacheKey = targetUrl; // Stable cache key taking into account the full URL logic
+    
+    const [freshTTL, staleTTL] = getTTLConfig(targetUrl);
+    const now = Date.now();
+    const entry = cache.get(cacheKey);
+
+    // 1. Fresh hit
+    if (entry && now < entry.staleAt) {
+      res.setHeader('X-Proxy-Cache', 'HIT');
+      return res.status(200).json(entry.data);
+    }
+
+    // 2. Stale hit (Stale-While-Revalidate)
+    if (entry && now < entry.expiresAt) {
+      res.setHeader('X-Proxy-Cache', 'STALE');
+      
+      // Fire background revalidation safely (Fire and Forget)
+      if (!entry.revalidating) {
+        entry.revalidating = true;
+        fetchFromGecko(targetUrl)
+          .then(data => {
+            cache.set(cacheKey, {
+              data,
+              cachedAt: Date.now(),
+              staleAt: Date.now() + freshTTL,
+              expiresAt: Date.now() + staleTTL,
+              revalidating: false
+            });
+            logger.info({ cacheKey }, 'Background revalidation succeeded');
+          })
+          .catch(err => {
+            entry.revalidating = false;
+            logger.error({ cacheKey, error: err.message }, 'Background revalidation failed');
+          });
+      }
+
+      // Return stale immediately preventing UI disruption
+      return res.status(200).json(entry.data);
+    }
+
+    // 3. Cache Miss or Completely Expired
+    try {
+      const data = await fetchFromGecko(targetUrl);
+      
+      cache.set(cacheKey, {
+        data,
+        cachedAt: Date.now(),
+        staleAt: Date.now() + freshTTL,
+        expiresAt: Date.now() + staleTTL,
+        revalidating: false
+      });
+
+      res.setHeader('X-Proxy-Cache', 'MISS');
+      return res.status(200).json(data);
+    } catch (err: any) {
+      // Grace fallback: even if totally expired, return the old data if the API is completely down/ratelimited
+      if (entry && entry.data) {
+        logger.warn({ targetUrl }, 'Gecko API down, returning graceful fallback from heavily expired cache');
+        res.setHeader('X-Proxy-Cache', 'FALLBACK');
+        return res.status(200).json(entry.data);
+      }
+      
+      logger.error({ targetUrl, error: err.message }, 'Gecko API request failed');
+      return res.status(502).json({ error: 'Upstream API error' });
+    }
+  } catch (err: any) {
+    logger.error('Generic proxy error', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
