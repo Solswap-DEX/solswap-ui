@@ -36,92 +36,147 @@ export interface QueueStats {
   failed: number
 }
 
-// ─── RPC Failover Pool ──────────────────────────────────────────────────────
+// ─── RPC Failover Pool (Circuit Breaker) ────────────────────────────────────
+
+export type RpcCircuitState = 'healthy' | 'degraded' | 'failed' | 'cooldown'
 
 interface RpcEndpoint {
   url: string
-  healthy: boolean
+  state: RpcCircuitState
   lastError: number
+  lastSuccess: number
   errorCount: number
+  consecutiveErrors: number
   avgLatency: number
+  cooldownUntil: number
 }
 
-const RPC_HEALTH_RECOVERY_MS = 30_000    // Mark unhealthy RPCs as recoverable after 30s
-const RPC_MAX_ERRORS_BEFORE_DEGRADE = 3  // Consecutive errors before marking unhealthy
-const RPC_LATENCY_THRESHOLD_MS = 5_000   // Latency above which we prefer another RPC
+const RPC_DEGRADE_THRESHOLD = 2        // Consecutive errors before degraded
+const RPC_FAIL_THRESHOLD = 5           // Consecutive errors before failed
+const RPC_COOLDOWN_MS = 30_000         // Cooldown period before retry
+const RPC_COOLDOWN_PROBE_MS = 60_000   // Full recovery probe window after cooldown
+const RPC_LATENCY_THRESHOLD_MS = 5_000 // High latency triggers degraded
 
 class RpcFailoverPool {
   private endpoints: RpcEndpoint[] = []
-  private currentIndex = 0
+  private stickyIndex = 0 // Sticky per session — don't switch mid-batch
 
   constructor(primaryUrl: string) {
-    // Primary is always index 0
     this.endpoints = [
-      { url: primaryUrl, healthy: true, lastError: 0, errorCount: 0, avgLatency: 0 }
+      this.createEndpoint(primaryUrl)
     ]
+  }
+
+  private createEndpoint(url: string): RpcEndpoint {
+    return {
+      url,
+      state: 'healthy',
+      lastError: 0,
+      lastSuccess: 0,
+      errorCount: 0,
+      consecutiveErrors: 0,
+      avgLatency: 0,
+      cooldownUntil: 0
+    }
   }
 
   addEndpoint(url: string): void {
     if (!this.endpoints.find(e => e.url === url)) {
-      this.endpoints.push({ url, healthy: true, lastError: 0, errorCount: 0, avgLatency: 0 })
+      this.endpoints.push(this.createEndpoint(url))
     }
   }
 
-  /** Get the best available connection, preferring healthy + low latency */
+  /** Transition an endpoint's circuit breaker state */
+  private transition(ep: RpcEndpoint, newState: RpcCircuitState): void {
+    if (ep.state === newState) return
+    const prevState = ep.state
+    ep.state = newState
+
+    if (newState === 'cooldown') {
+      ep.cooldownUntil = Date.now() + RPC_COOLDOWN_MS
+    }
+
+    console.log('[RpcFailoverPool] State transition', {
+      url: ep.url,
+      from: prevState,
+      to: newState,
+      consecutiveErrors: ep.consecutiveErrors,
+      avgLatency: Math.round(ep.avgLatency)
+    })
+  }
+
+  /** Get the best available connection — sticky per session */
   getConnection(): Connection {
     const now = Date.now()
 
-    // Attempt recovery of degraded endpoints
+    // Attempt recovery of cooldown endpoints
     for (const ep of this.endpoints) {
-      if (!ep.healthy && (now - ep.lastError) > RPC_HEALTH_RECOVERY_MS) {
-        ep.healthy = true
-        ep.errorCount = 0
+      if (ep.state === 'cooldown' && now >= ep.cooldownUntil) {
+        this.transition(ep, 'degraded') // Probe mode — one more error = failed again
+        ep.consecutiveErrors = RPC_DEGRADE_THRESHOLD // Start at degraded threshold
       }
     }
 
-    // Find healthiest endpoint
-    const healthy = this.endpoints.filter(e => e.healthy)
-    if (healthy.length > 0) {
-      // Prefer lowest latency among healthy
-      healthy.sort((a, b) => a.avgLatency - b.avgLatency)
-      return new Connection(healthy[0].url, { commitment: 'confirmed' })
+    // Priority: healthy > degraded > cooldown-expired > failed
+    const candidates = this.endpoints
+      .filter(e => e.state === 'healthy' || e.state === 'degraded')
+      .sort((a, b) => {
+        // Prefer healthy over degraded
+        if (a.state === 'healthy' && b.state !== 'healthy') return -1
+        if (b.state === 'healthy' && a.state !== 'healthy') return 1
+        // Among same state, prefer lowest latency
+        return a.avgLatency - b.avgLatency
+      })
+
+    if (candidates.length > 0) {
+      return new Connection(candidates[0].url, { commitment: 'confirmed' })
     }
 
-    // All degraded — fallback to primary (index 0) regardless
-    console.warn('[RpcFailoverPool] All endpoints degraded, falling back to primary')
+    // All failed/cooldown — force primary as last resort
+    console.warn('[RpcFailoverPool] All endpoints failed/cooldown, forcing primary')
     return new Connection(this.endpoints[0].url, { commitment: 'confirmed' })
   }
 
   /** Report a successful call with latency */
   reportSuccess(url: string, latencyMs: number): void {
     const ep = this.endpoints.find(e => e.url === url)
-    if (ep) {
-      ep.errorCount = 0
-      ep.healthy = true
-      // Exponential moving average
-      ep.avgLatency = ep.avgLatency === 0 ? latencyMs : ep.avgLatency * 0.7 + latencyMs * 0.3
+    if (!ep) return
+
+    ep.consecutiveErrors = 0
+    ep.lastSuccess = Date.now()
+    ep.avgLatency = ep.avgLatency === 0 ? latencyMs : ep.avgLatency * 0.7 + latencyMs * 0.3
+
+    // High latency → degrade, otherwise heal
+    if (latencyMs > RPC_LATENCY_THRESHOLD_MS && ep.state === 'healthy') {
+      this.transition(ep, 'degraded')
+    } else if (ep.state !== 'healthy') {
+      this.transition(ep, 'healthy')
     }
   }
 
-  /** Report a failed call */
+  /** Report a failed call — drives circuit breaker transitions */
   reportError(url: string): void {
     const ep = this.endpoints.find(e => e.url === url)
-    if (ep) {
-      ep.errorCount++
-      ep.lastError = Date.now()
-      if (ep.errorCount >= RPC_MAX_ERRORS_BEFORE_DEGRADE) {
-        ep.healthy = false
-        console.warn(`[RpcFailoverPool] Endpoint degraded: ${url} (${ep.errorCount} consecutive errors)`)
-      }
+    if (!ep) return
+
+    ep.errorCount++
+    ep.consecutiveErrors++
+    ep.lastError = Date.now()
+
+    if (ep.consecutiveErrors >= RPC_FAIL_THRESHOLD) {
+      this.transition(ep, 'cooldown') // Circuit open — stop sending traffic
+    } else if (ep.consecutiveErrors >= RPC_DEGRADE_THRESHOLD) {
+      this.transition(ep, 'degraded')
     }
   }
 
   /** Get current health status for logging */
-  getHealthStatus(): { url: string; healthy: boolean; avgLatency: number }[] {
+  getHealthStatus(): { url: string; state: RpcCircuitState; avgLatency: number; consecutiveErrors: number }[] {
     return this.endpoints.map(e => ({
       url: e.url,
-      healthy: e.healthy,
-      avgLatency: Math.round(e.avgLatency)
+      state: e.state,
+      avgLatency: Math.round(e.avgLatency),
+      consecutiveErrors: e.consecutiveErrors
     }))
   }
 }
