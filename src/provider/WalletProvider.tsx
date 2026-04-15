@@ -125,7 +125,7 @@ const App: FC<PropsWithChildren<any>> = ({ children }) => {
   })
 
   return (
-    <ConnectionProvider endpoint={endpoint} config={{ disableRetryOnRateLimit: true, wsEndpoint: wsNodeUrl }}>
+    <ConnectionProvider endpoint={endpoint} config={{ disableRetryOnRateLimit: true, wsEndpoint: wsNodeUrl || 'wss://api.mainnet-beta.solana.com' }}>
       <WalletProvider wallets={wallets} onError={onWalletError} autoConnect>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
