@@ -56,8 +56,9 @@ interface SwapStore {
       onCloseToast?: () => void
     } & TxCallbackProps
   ) => Promise<string | string[] | undefined>
-  unWrapSolAct: (props: { amount: string; onClose?: () => void; onSent?: () => void; onError?: () => void }) => Promise<string | undefined>
   wrapSolAct: (amount: string) => Promise<string | undefined>
+  txConfidence: Record<string, number> // txId -> 0.0-1.0 (UX Layer)
+  txFinalizedTruth: Record<string, boolean> // txId -> boolean (Truth Layer)
 }
 
 export interface ComputeParams {
@@ -74,6 +75,8 @@ const initSwapState = {
 export const useSwapStore = createStore<SwapStore>(
   () => ({
     ...initSwapState,
+    txConfidence: {},
+    txFinalizedTruth: {},
 
     swapTokenAct: async ({ swapResponse, wrapSol, unwrapSol = false, inputMint, outputMint, onCloseToast, ...txProps }) => {
       const { publicKey, raydium, txVersion, connection, signAllTransactions, urlConfigs } = useAppStore.getState()
@@ -95,6 +98,22 @@ export const useSwapStore = createStore<SwapStore>(
       // ── Initialize reconciliation worker ──
       const reconciler = getReconciliationWorker(() => {
         return useAppStore.getState().connection!
+      })
+
+      // Register listeners only once (simplified logic)
+      reconciler.on('state_change', ({ txId, metadata }) => {
+        if (typeof metadata?.probability === 'number') {
+          useSwapStore.setState((s) => ({
+            txConfidence: { ...s.txConfidence, [txId]: metadata.probability }
+          }))
+        }
+      })
+
+      reconciler.on('finalized', ({ txId }) => {
+        useSwapStore.setState((s) => ({
+          txConfidence: { ...s.txConfidence, [txId]: 1.0 },
+          txFinalizedTruth: { ...s.txFinalizedTruth, [txId]: true }
+        }))
       })
 
       console.log('[SwapStore] Swap initiated', {

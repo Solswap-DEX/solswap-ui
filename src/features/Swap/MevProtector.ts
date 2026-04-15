@@ -14,6 +14,7 @@ export interface MevRiskProfile {
   suggestedPriority: 'standard' | 'high' | 'ultra'
   useJitoBundle: boolean
   estimatedTipUsd?: number
+  reasoning: string[]
 }
 
 const HIGH_VALUE_USD_THRESHOLD = 5000
@@ -25,29 +26,56 @@ export class MevProtector {
     inputAmountUsd: number
     slippage: number
     outputToken: string
+    priceImpact?: number
+    liquidityDepthUsd?: number
   }): MevRiskProfile {
     let riskPoints = 0
+    const reasoning: string[] = []
 
-    // 1. Value-based risk
-    if (params.inputAmountUsd > HIGH_VALUE_USD_THRESHOLD) riskPoints += 2
-    else if (params.inputAmountUsd > 1000) riskPoints += 1
-
-    // 2. Slippage-based risk
-    if (params.slippage >= HIGH_SLIPPAGE_THRESHOLD) riskPoints += 2
-    else if (params.slippage >= 0.01) riskPoints += 1
-
-    // 3. Known high-volatility token risk (simplified heuristic)
-    const volatileTokens = ['BONK', 'WIF', 'POPCAT']
-    if (volatileTokens.some(t => params.outputToken.includes(t))) {
+    // 1. Value-based risk (High value = more likely sándwich target)
+    if (params.inputAmountUsd > HIGH_VALUE_USD_THRESHOLD) {
+      riskPoints += 3
+      reasoning.push('High transaction value')
+    } else if (params.inputAmountUsd > 1000) {
       riskPoints += 1
+      reasoning.push('Moderate transaction value')
     }
 
-    if (riskPoints >= 4) {
+    // 2. Slippage-based risk
+    if (params.slippage >= HIGH_SLIPPAGE_THRESHOLD) {
+      riskPoints += 3
+      reasoning.push('Wide slippage tolerance')
+    } else if (params.slippage >= 0.01) {
+      riskPoints += 1
+      reasoning.push('Moderate slippage tolerance')
+    }
+
+    // 3. Liquidity Depth vs Value (Price Impact)
+    // If the swap is a significant portion of the pool, sándwiches are easier
+    if (params.priceImpact && params.priceImpact > 2.0) {
+      riskPoints += 2
+      reasoning.push('High price impact detected')
+    }
+
+    if (params.liquidityDepthUsd && params.inputAmountUsd > (params.liquidityDepthUsd * 0.01)) {
+      riskPoints += 2
+      reasoning.push('Low liquidity relative to size')
+    }
+
+    // 4. Volatility heuristic
+    const volatileTokens = ['BONK', 'WIF', 'POPCAT', 'MEME']
+    if (volatileTokens.some(t => params.outputToken.includes(t))) {
+      riskPoints += 1
+      reasoning.push('Volatile memecoin target')
+    }
+
+    if (riskPoints >= 5) {
       return { 
         riskLevel: 'high', 
         suggestedPriority: 'ultra', 
         useJitoBundle: true, 
-        estimatedTipUsd: 0.05 
+        estimatedTipUsd: 0.05,
+        reasoning
       }
     }
 
@@ -55,14 +83,16 @@ export class MevProtector {
       return { 
         riskLevel: 'medium', 
         suggestedPriority: 'high', 
-        useJitoBundle: false 
+        useJitoBundle: false,
+        reasoning
       }
     }
 
     return { 
       riskLevel: 'low', 
       suggestedPriority: 'standard', 
-      useJitoBundle: false 
+      useJitoBundle: false,
+      reasoning: ['Risk within nominal limits']
     }
   }
 

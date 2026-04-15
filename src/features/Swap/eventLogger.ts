@@ -11,7 +11,10 @@
 
 const IDB_NAME = 'solswap_reconciliation'
 const IDB_EVENT_STORE = 'event_log'
-const IDB_VERSION = 2 // Upgraded for event_log store
+const IDB_VERSION = 2
+
+const MAX_EVENTS_THRESHOLD = 500
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 
 export type EventSeverity = 'info' | 'warn' | 'error' | 'critical'
 
@@ -30,6 +33,8 @@ class EventLogger {
   private static instance: EventLogger | null = null
   private db: IDBDatabase | null = null
   private initPromise: Promise<void> | null = null
+  private eventCount = 0
+  private lastPruneAt = 0
 
   private constructor() {
     this.init()
@@ -69,6 +74,8 @@ class EventLogger {
 
         request.onsuccess = (event) => {
           this.db = (event.target as IDBOpenDBRequest).result
+          // Fire non-blocking cleanup for old sessions
+          this.prune(SESSION_TTL_MS)
           resolve()
         }
 
@@ -105,6 +112,55 @@ class EventLogger {
 
     // Fire and forget persistence
     this.persist(fullEvent)
+
+    // Trigger batch pruning if threshold reached
+    this.eventCount++
+    if (this.eventCount >= 100) { // Check every 100 events
+      this.eventCount = 0
+      this.checkAndPrune()
+    }
+  }
+
+  private async checkAndPrune(): Promise<void> {
+    await this.init()
+    if (!this.db) return
+
+    try {
+      const tx = this.db.transaction(IDB_EVENT_STORE, 'readonly')
+      const store = tx.objectStore(IDB_EVENT_STORE)
+      const countRequest = store.count()
+      
+      countRequest.onsuccess = () => {
+        if (countRequest.result > MAX_EVENTS_THRESHOLD) {
+          console.log(`[EventLogger] Threshold reached (${countRequest.result}), compacting log...`)
+          // Delete oldest 20% of events
+          this.pruneOldest(Math.floor(MAX_EVENTS_THRESHOLD * 0.2))
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  private async pruneOldest(count: number): Promise<void> {
+    await this.init()
+    if (!this.db) return
+
+    try {
+      const tx = this.db.transaction(IDB_EVENT_STORE, 'readwrite')
+      const store = tx.objectStore(IDB_EVENT_STORE)
+      
+      // Use cursor to delete first N items
+      let deleted = 0
+      store.openCursor().onsuccess = (e) => {
+        const cursor = (e.target as IDBRequest<IDBCursorWithValue>).result
+        if (cursor && deleted < count) {
+          cursor.delete()
+          deleted++
+          cursor.continue()
+        }
+      }
+    } catch (e) {
+      console.warn('[EventLogger] Batch pruning failed', e)
+    }
   }
 
   private async persist(event: AuditEvent): Promise<void> {

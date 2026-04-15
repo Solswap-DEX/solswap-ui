@@ -12,14 +12,16 @@
 import { FinalityState } from './reconciliationWorker'
 
 export interface SyncMessage {
-  type: 'TX_STATE_UPDATE' | 'TX_WATCHER_STOP' | 'SYNC_REQUEST'
+  type: 'TX_STATE_UPDATE' | 'TX_WATCHER_STOP' | 'SYNC_REQUEST' | 'SYNC_REPLY' | 'LEADER_HEARTBEAT'
   txId: string
   payload: {
     state?: FinalityState
     probability?: number
     confirmations?: number
+    isFinalizedTruth: boolean
     slot?: number
     timestamp: number
+    fullState?: any // Used for SYNC_REPLY
   }
 }
 
@@ -30,10 +32,21 @@ class SyncManager {
   private channel: BroadcastChannel
   private listeners: SyncListener[] = []
   private activeLocks = new Set<string>()
+  private heartbeats = new Map<string, number>()
+  private heartbeatTimers = new Map<string, ReturnType<typeof setInterval>>()
 
   private constructor() {
     this.channel = new BroadcastChannel('solswap_orchestration')
     this.channel.onmessage = (event) => this.handleMessage(event.data)
+    
+    // Broadcast sync request on tab boot to catch up with existing leaders
+    setTimeout(() => {
+      this.broadcastUpdate({
+        type: 'SYNC_REQUEST',
+        txId: 'global',
+        payload: { isFinalizedTruth: false }
+      })
+    }, 500)
   }
 
   static getInstance(): SyncManager {
@@ -55,19 +68,13 @@ class SyncManager {
         navigator.locks.request(`tx_watcher_${txId}`, { ifAvailable: true }, async (lock) => {
           if (lock) {
             this.activeLocks.add(txId)
+            this.startHeartbeat(txId)
             resolve(true)
-            // The lock is held as long asthis promise is pending.
-            // We return a promise that we can control if we need to release it externally,
-            // but for now, we keep it until the watcher finishes or the tab closes.
-            return new Promise((_) => {
-              // Lock held indefinitely within this callback scope
-            })
+            return new Promise((_) => { /* Hold lock indefinitely */ })
           } else {
             resolve(false)
           }
         })
-        
-        // Timeout if locks.request hangs (edge case)
         setTimeout(() => resolve(false), 2000)
       })
 
@@ -75,6 +82,32 @@ class SyncManager {
     } catch (e) {
       console.warn('[SyncManager] Lock request failed', e)
       return false
+    }
+  }
+
+  private startHeartbeat(txId: string): void {
+    if (this.heartbeatTimers.has(txId)) return
+    
+    const timer = setInterval(() => {
+      if (!this.activeLocks.has(txId)) {
+        this.stopHeartbeat(txId)
+        return
+      }
+      this.broadcastUpdate({
+        type: 'LEADER_HEARTBEAT',
+        txId,
+        payload: { isFinalizedTruth: false }
+      })
+    }, 3000) // 3s heartbeat
+
+    this.heartbeatTimers.set(txId, timer)
+  }
+
+  private stopHeartbeat(txId: string): void {
+    const timer = this.heartbeatTimers.get(txId)
+    if (timer) {
+      clearInterval(timer)
+      this.heartbeatTimers.delete(txId)
     }
   }
 
@@ -99,6 +132,10 @@ class SyncManager {
   }
 
   private handleMessage(msg: SyncMessage): void {
+    if (msg.type === 'LEADER_HEARTBEAT') {
+      this.heartbeats.set(msg.txId, Date.now())
+    }
+
     // Avoid processing messages from self (though channel usually ignores sender)
     for (const listener of this.listeners) {
       try {
@@ -109,12 +146,16 @@ class SyncManager {
     }
   }
 
+  /** Check if a leader is still alive for a given TX */
+  isLeaderResponsive(txId: string, gracePeriodMs = 10000): boolean {
+    const last = this.heartbeats.get(txId)
+    if (!last) return false
+    return (Date.now() - last) < gracePeriodMs
+  }
+
   releaseLock(txId: string): void {
-    // In Web Locks API, release is implicit when the promise resolves.
-    // Our implementation keeps the promise pending, so we don't have a manual release here
-    // unless we change the architecture to use a controlled promise.
-    // For now, locks release when the tab closes or the watcher finishes polling (if we resolve the promise).
     this.activeLocks.delete(txId)
+    this.stopHeartbeat(txId)
   }
 }
 

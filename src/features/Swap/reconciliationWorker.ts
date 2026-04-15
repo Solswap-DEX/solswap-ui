@@ -49,7 +49,8 @@ export interface TrackedTransaction {
   pollCount: number
   lastPollAt: number
   confirmations: number       // Number of slots since confirmation
-  probability: number         // finality score 0.0 to 1.0
+  probability: number         // finality score 0.0 to 1.0 (UX Layer)
+  isFinalizedTruth: boolean   // Absolute finality (Truth Layer)
   metadata: {
     inputToken: string
     outputToken: string
@@ -274,8 +275,11 @@ class ReconciliationWorker {
     }
   }
 
-  /** Subscribe to reconciliation events */
-  onEvent(listener: ReconciliationListener): () => void {
+  /** Subscribe to specific reconciliation events */
+  on(type: ReconciliationEvent['type'], callback: (event: ReconciliationEvent) => void): () => void {
+    const listener = (event: ReconciliationEvent) => {
+      if (event.type === type) callback(event)
+    }
     this.listeners.push(listener)
     return () => {
       this.listeners = this.listeners.filter(l => l !== listener)
@@ -333,6 +337,7 @@ class ReconciliationWorker {
       lastPollAt: 0,
       confirmations: 0,
       probability: 0,
+      isFinalizedTruth: false,
       metadata: meta
     }
 
@@ -389,6 +394,7 @@ class ReconciliationWorker {
     const isLeader = await syncManager.acquireWatcherLock(txId)
     if (!isLeader) {
       console.log('[ReconciliationWorker] Another tab is already watching, following sync updates', { txId })
+      this.startFollowerWatchdog(txId)
       return
     }
 
@@ -407,8 +413,50 @@ class ReconciliationWorker {
     }
   }
 
+  private startFollowerWatchdog(txId: string): void {
+    // Check leader health every 5s
+    const timer = setInterval(() => {
+      const entry = this.tracked.get(txId)
+      const isTerminal = entry && (entry.state === 'finalized' || entry.state === 'failed')
+      
+      if (isTerminal || !this.tracked.has(txId)) {
+        clearInterval(timer)
+        return
+      }
+
+      // If leader is dead, try to step up
+      if (!syncManager.isLeaderResponsive(txId)) {
+        console.warn('[ReconciliationWorker] Leader unresponsive, attempting failover...', { txId })
+        clearInterval(timer)
+        this.spawnWatcher(txId)
+      }
+    }, 5000)
+  }
+
   private handleSyncUpdate(msg: any): void {
-    if (msg.type !== 'TX_STATE_UPDATE') return
+    // 1. Handle state requests from new tabs
+    if (msg.type === 'SYNC_REQUEST') {
+      for (const [txId, entry] of this.tracked.entries()) {
+        if (this.watcherLocks.has(txId)) {
+          // I am the leader for this TX, send a reply
+          syncManager.broadcastUpdate({
+            type: 'SYNC_REPLY',
+            txId,
+            payload: {
+              state: entry.state,
+              probability: entry.probability,
+              confirmations: entry.confirmations,
+              isFinalizedTruth: entry.isFinalizedTruth,
+              slot: entry.metadata?.slot
+            }
+          })
+        }
+      }
+      return
+    }
+
+    // 2. Handle sync replies/updates
+    if (msg.type !== 'TX_STATE_UPDATE' && msg.type !== 'SYNC_REPLY') return
     
     const entry = this.tracked.get(msg.txId)
     if (!entry) return
@@ -551,7 +599,8 @@ class ReconciliationWorker {
           entry.state = 'finalized'
           entry.finalizedAt = Date.now()
           entry.probability = 1.0
-          entry.confirmations = 32 // Cap for finality
+          entry.confirmations = 32
+          entry.isFinalizedTruth = true
 
           // Persist then clean up
           await this.persistence.remove(txId)
@@ -565,6 +614,18 @@ class ReconciliationWorker {
             metadata: { pollCount: entry.pollCount, slot: status.value.slot }
           })
 
+          syncManager.broadcastUpdate({
+            type: 'TX_STATE_UPDATE',
+            txId,
+            payload: {
+              state: 'finalized',
+              probability: 1.0,
+              confirmations: 32,
+              isFinalizedTruth: true,
+              slot: status.value.slot
+            }
+          })
+
           this.emit({
             type: 'finalized',
             txId,
@@ -575,6 +636,7 @@ class ReconciliationWorker {
               pollCount: entry.pollCount,
               timeToFinalityMs: entry.finalizedAt - entry.confirmedAt,
               slot: status.value.slot,
+              isFinalizedTruth: true,
               ...entry.metadata
             }
           })
@@ -640,7 +702,8 @@ class ReconciliationWorker {
               payload: {
                 state: entry.state,
                 probability: entry.probability,
-                confirmations: entry.confirmations
+                confirmations: entry.confirmations,
+                isFinalizedTruth: false
               }
             })
 
@@ -653,6 +716,7 @@ class ReconciliationWorker {
               metadata: { 
                 probability: entry.probability, 
                 confirmations: entry.confirmations,
+                isFinalizedTruth: false,
                 prevProbability: prevProb
               }
             })
