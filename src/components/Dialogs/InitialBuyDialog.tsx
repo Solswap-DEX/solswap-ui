@@ -18,7 +18,7 @@ import { colors } from '@/theme/cssVariables'
 import { detectedSeparator, trimTrailZero } from '@/utils/numberish/formatter'
 import { useDisclosure } from '@/hooks/useDelayDisclosure'
 import { useLaunchpadStore } from '@/store'
-import shallow from 'zustand/shallow'
+import { shallow } from "zustand/shallow"
 import { LaunchpadPoolInfo, Curve, LaunchpadPoolInitParam } from '@raydium-io/raydium-sdk-v2'
 import { Keypair } from '@solana/web3.js'
 import BN from 'bn.js'

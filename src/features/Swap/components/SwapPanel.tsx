@@ -21,7 +21,7 @@ import { ApiV3Token, RAYMint, SOL_INFO, TokenInfo, TransferFeeDataBaseType } fro
 import { PublicKey } from '@solana/web3.js'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import shallow from 'zustand/shallow'
+import { shallow } from "zustand/shallow"
 import CircleInfo from '@/icons/misc/CircleInfo'
 import { getSwapPairCache, setSwapPairCache } from '../util'
 import { urlToMint, mintToUrl, isSolWSol, getMintPriority, getMintSymbol } from '@/utils/token'

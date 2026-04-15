@@ -14,7 +14,7 @@ import { LaunchpadConfigInfo, LaunchpadPoolInfo } from '@/hooks/launchpad/usePoo
 import BN from 'bn.js'
 import Decimal from 'decimal.js'
 import { useLaunchpadStore, useTokenAccountStore } from '@/store'
-import shallow from 'zustand/shallow'
+import { shallow } from "zustand/shallow"
 import { useDisclosure } from '@/hooks/useDelayDisclosure'
 import { MintInfo } from '../type'
 import { DEFAULT_SOL_RESERVER } from '@/components/TokenInput'

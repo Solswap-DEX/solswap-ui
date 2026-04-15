@@ -4,7 +4,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { TxVersion, validateAndParsePublicKey, txToBase64 } from '@raydium-io/raydium-sdk-v2'
 import { useAppStore, defaultEndpoint } from '@/store/useAppStore'
 import usePrevious from '@/hooks/usePrevious'
-import shallow from 'zustand/shallow'
+import { shallow } from "zustand/shallow"
 import { useTokenStore } from '@/store/useTokenStore'
 import { isLocal } from '@/utils/common'
 import { getDevOnlyStorage } from '@/utils/localStorage'

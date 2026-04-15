@@ -3,7 +3,7 @@ import axios from '@/api/axios'
 import { useAppStore } from '@/store'
 import { useSwapStore } from './useSwapStore'
 import useSWR from 'swr'
-import shallow from 'zustand/shallow'
+import { shallow } from "zustand/shallow"
 import { useCallback, useEffect, useState } from 'react'
 import { debounce } from '@/utils/functionMethods'
 import { isValidPublicKey } from '@/utils/publicKey'

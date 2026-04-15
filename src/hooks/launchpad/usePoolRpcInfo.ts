@@ -16,7 +16,7 @@ import Decimal from 'decimal.js'
 import { MintInfo } from '@/features/Launchpad/type'
 import { BN } from 'bn.js'
 import { NATIVE_MINT } from '@solana/spl-token'
-import shallow from 'zustand/shallow'
+import { shallow } from "zustand/shallow"
 import { ToLaunchPadConfig } from './utils'
 
 interface Props {
