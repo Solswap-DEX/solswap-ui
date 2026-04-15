@@ -372,11 +372,11 @@ function splitWallets(wallets: Wallet[]): { recommendedWallets: Wallet[]; notIns
   
   // Custom priority sorting
   const recommendedWallets = supportedWallets.filter((w) => 
-    (w.readyState !== WalletReadyState.NotDetected || featuredNames.some(fn => w.adapter.name.includes(fn))) && 
+    (w.readyState !== WalletReadyState.NotDetected || featuredNames.some(fn => w.adapter?.name?.includes(fn))) && 
     w.adapter.name !== 'Sollet'
   ).sort((a, b) => {
-    const aIndex = featuredNames.findIndex(fn => a.adapter.name.includes(fn));
-    const bIndex = featuredNames.findIndex(fn => b.adapter.name.includes(fn));
+    const aIndex = featuredNames.findIndex(fn => a.adapter?.name?.includes(fn));
+    const bIndex = featuredNames.findIndex(fn => b.adapter?.name?.includes(fn));
     if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
     if (aIndex !== -1) return -1;
     if (bIndex !== -1) return 1;
@@ -385,7 +385,7 @@ function splitWallets(wallets: Wallet[]): { recommendedWallets: Wallet[]; notIns
 
   const notInstalledWallets = supportedWallets.filter((w) => 
     w.readyState == WalletReadyState.NotDetected && 
-    !featuredNames.some(fn => w.adapter.name.includes(fn)) &&
+    !featuredNames.some(fn => w.adapter?.name?.includes(fn)) &&
     w.adapter.name !== 'Phantom'
   )
   

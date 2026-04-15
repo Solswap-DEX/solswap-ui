@@ -100,7 +100,7 @@ export default forwardRef<
     const sortedTokenList = sortItems(tokenList, {
       sortRules: [
         // { value: (i) => (i.address === SOLMint || i.address === RAYMint ? i.address : null) },
-        { value: (i) => (i.tags.includes('unknown') ? null : i.symbol.length), compareFn }
+        { value: (i: any) => (i.tags?.includes('unknown') ? null : i.symbol.length), compareFn }
       ]
     })
     const filteredList = search ? filterTokenFn(sortedTokenList, { searchStr: search }) : sortedTokenList
@@ -306,7 +306,7 @@ function TokenRowItem({
   onRemoveUnknownTokenClick: (token: TokenInfo) => void
 }) {
   const { t } = useTranslation()
-  const isUnknown = !token.type || token.type === 'unknown' || token.tags.includes('unknown')
+  const isUnknown = !token.type || token.type === 'unknown' || !!token.tags?.includes('unknown')
   const isTrusted = isUnknown && !!useTokenStore.getState().tokenMap.get(token.address)?.userAdded
 
   return (
