@@ -1,4 +1,5 @@
-import { create, Mutate, StoreApi } from 'zustand'
+import { Mutate, StoreApi } from 'zustand'
+import { createWithEqualityFn as create } from 'zustand/traditional'
 import { devtools } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 

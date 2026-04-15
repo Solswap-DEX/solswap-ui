@@ -201,15 +201,15 @@ export const useTokenAccountStore = createStore<TokenAccountStore>(
       loading = true
       preOwner = owner
       try {
-        logMessage('rpc: get owner acc info')
+        // logMessage('rpc: get owner acc info')
         const solAccountResp = await retry<Promise<AccountInfo<Buffer>>>(() =>
           connection.getAccountInfo(owner, { commitment: useAppStore.getState().commitment })
         )
-        logMessage('rpc: get owner token acc info')
+        // logMessage('rpc: get owner token acc info')
         const tokenAccountResp = await retry<Promise<RpcResponseAndContext<GetProgramAccountsResponse>>>(() =>
           connection.getTokenAccountsByOwner(owner, { programId: TOKEN_PROGRAM_ID }, { commitment: useAppStore.getState().commitment })
         )
-        logMessage('rpc: get owner token2022 acc info')
+        // logMessage('rpc: get owner token2022 acc info')
         const token2022Req = await retry<Promise<RpcResponseAndContext<GetProgramAccountsResponse>>>(() =>
           connection.getTokenAccountsByOwner(owner, { programId: TOKEN_2022_PROGRAM_ID }, { commitment: useAppStore.getState().commitment })
         )
