@@ -1,10 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import pino from 'pino';
-
-const logger = pino({
-  name: 'gecko-proxy',
-  level: process.env.LOG_LEVEL || 'info', 
-});
 
 interface CacheEntry {
   data: any;
@@ -36,7 +30,7 @@ async function fetchFromGecko(url: string): Promise<any> {
         return inFlightRequests.get(url)!;
     }
     
-    logger.info({ geckoUrl: url }, 'Fetching fresh data from GeckoTerminal');
+    console.info(`[gecko-proxy] Fetching fresh data from GeckoTerminal: ${url}`);
     const proxyHeaders = {
         'Accept': 'application/json',
     };
@@ -109,11 +103,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               expiresAt: Date.now() + staleTTL,
               revalidating: false
             });
-            logger.info({ cacheKey }, 'Background revalidation succeeded');
+            console.info(`[gecko-proxy] Background revalidation succeeded for ${cacheKey}`);
           })
           .catch(err => {
             entry.revalidating = false;
-            logger.error({ cacheKey, error: err.message }, 'Background revalidation failed');
+            console.error(`[gecko-proxy] Background revalidation failed for ${cacheKey}`, err.message);
           });
       }
 
@@ -138,16 +132,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch (err: any) {
       // Grace fallback: even if totally expired, return the old data if the API is completely down/ratelimited
       if (entry && entry.data) {
-        logger.warn({ targetUrl }, 'Gecko API down, returning graceful fallback from heavily expired cache');
+        console.warn(`[gecko-proxy] Gecko API down, returning graceful fallback from heavily expired cache for ${targetUrl}`);
         res.setHeader('X-Proxy-Cache', 'FALLBACK');
         return res.status(200).json(entry.data);
       }
       
-      logger.error({ targetUrl, error: err.message }, 'Gecko API request failed');
+      console.error(`[gecko-proxy] Gecko API request failed for ${targetUrl}`, err.message);
       return res.status(502).json({ error: 'Upstream API error' });
     }
   } catch (err: any) {
-    logger.error('Generic proxy error', err.message);
+    console.error('[gecko-proxy] Generic proxy error', err.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 }
