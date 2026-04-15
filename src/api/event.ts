@@ -12,21 +12,8 @@ interface EventTypeConnectWallet {
 }
 
 export const sendWalletEvent = async (props: EventTypeConnectWallet) => {
-  if (isLocal()) return
-  try {
-    const deviceInfo = parseUserAgent(window.navigator.userAgent)
-    const deviceType = deviceInfo.device.type || 'pc'
-    axios.post(
-      `${useAppStore.getState().urlConfigs.MONITOR_BASE_HOST}/event`,
-      {
-        ...props,
-        deviceType
-      },
-      { skipError: true }
-    )
-  } catch {
-    // silence
-  }
+  // Disabled in SolSwap for privacy and log silence
+  return
 }
 
 interface EventTypeNetworkError {
@@ -35,20 +22,6 @@ interface EventTypeNetworkError {
 }
 
 export const sendNetworkEvent = async (props: EventTypeNetworkError) => {
-  if (isLocal()) return
-  try {
-    const deviceInfo = parseUserAgent(window.navigator.userAgent)
-    const deviceType = deviceInfo.device.type || 'pc'
-    axios.post(
-      `${useAppStore.getState().urlConfigs.MONITOR_BASE_HOST}/event`,
-      {
-        type: 'networkError',
-        deviceType,
-        ...props
-      },
-      { skipError: true }
-    )
-  } catch {
-    // silence
-  }
+  // Disabled in SolSwap for privacy and log silence
+  return
 }

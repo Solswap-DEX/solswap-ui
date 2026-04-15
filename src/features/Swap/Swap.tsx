@@ -110,6 +110,11 @@ export default function Swap() {
     setValue(copyUrl)
   }, [inputMint, outputMint, connected, publicKey])
 
+  const chartPoolId = useMemo(() => {
+    if (!baseToken || !quoteToken) return undefined
+    return `${solToWSolToken(baseToken).address}_${solToWSolToken(quoteToken).address}`
+  }, [baseToken, quoteToken])
+
   return (
     <VStack
       mx={['unset', 'auto']}
@@ -228,7 +233,7 @@ export default function Swap() {
               id="swap-tv-chart"
               height="100%"
               birdeye
-              poolId={`${baseToken ? solToWSolToken(baseToken).address : ''}_${quoteToken ? solToWSolToken(quoteToken).address : ''}`}
+              poolId={chartPoolId}
               mintBInfo={quoteToken}
             />
             {/* <SwapKlinePanel

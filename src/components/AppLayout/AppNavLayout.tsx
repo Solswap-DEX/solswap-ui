@@ -42,7 +42,8 @@ import DisclaimerModal from './components/DisclaimerModal'
 import AppVersion from './AppVersion'
 import TagNewIcon from '@/icons/misc/TagNewIcon'
 import { useReferrerQuery } from '@/features/Launchpad/utils'
-import { TorqueButton } from '@/features/Torque'
+// Torque rewards feature disabled in SolSwap cleanup
+// import { TorqueButton } from '@/features/Torque'
 
 export interface NavSettings {
   // colorTheme: 'dark' | 'light'
@@ -155,7 +156,7 @@ function AppNavLayout({
         {!pathname.startsWith('/docs') && (
           <Flex gap={[0.5, 1]} align="center" flexShrink={0}>
             <Desktop>
-              <TorqueButton />
+              {/* <TorqueButton /> */}
             </Desktop>
             <PriorityButton />
             <SettingsMenu />

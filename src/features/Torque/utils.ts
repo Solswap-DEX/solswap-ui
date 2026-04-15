@@ -27,39 +27,8 @@ const TORQUE_API_ROUTES = {
  * @returns Promise with the response data
  */
 async function fetchTorqueData<T>(endpoint: string, queryParams: Record<string, string> = {}): Promise<T> {
-  // Construct the URL
-  const url = new URL(endpoint, TORQUE_API_URL)
-
-  // Add query parameters
-  Object.entries(queryParams).forEach(([key, value]) => {
-    if (value !== undefined) {
-      url.searchParams.append(key, value)
-    }
-  })
-
-  // Make the fetch request
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
-
-  // Check if the request was successful
-  if (!response.ok) {
-    const errorData = await response.json()
-
-    throw new Error(`API request failed: ${errorData.message || response.statusText}`)
-  }
-
-  // Parse and return the response data
-  const result = await response.json()
-
-  if (result.status === 'SUCCESS') {
-    return result.data
-  }
-
-  throw new Error(`Failed to fetch offers: ${result.message}`)
+  // Torque integration disabled in SolSwap cleanup to prevent console errors
+  return { status: 'ERROR', message: 'Torque disabled' } as unknown as T
 }
 
 /**

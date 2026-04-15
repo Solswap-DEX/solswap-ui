@@ -205,25 +205,6 @@ export default function Launchpad() {
                 <X width="22px" height="22px" color="#4F53F3" cursor="pointer" onClick={() => setIsReferBannerShown(true)} />
               </Flex>
             ) : null}
-            {!isFeeDistributionBannerShown ? (
-              <Flex borderRadius="8px" background="#8C6EEF33" width="100%" px={3} py={2} ml={[0, 0, 5]} justifyContent="space-between">
-                <Flex alignItems="center" lineHeight="18px">
-                  <Text>🤑</Text>
-                  <Text
-                    fontSize="sm"
-                    bgGradient={
-                      isLight
-                        ? 'linear-gradient(245.22deg, #DA2EEF 7.97%, #2B6AFF 49.17%, #39D0D8 92.1%)'
-                        : 'linear-gradient(245.22deg, #FF2FC8 7.97%, #FFB12B 49.17%, #D3D839 92.1%)'
-                    }
-                    bgClip="text"
-                  >
-                    Rewards are LIVE for traders AND creators! Check ‘Rewards’ tab and X account for updates!
-                  </Text>
-                </Flex>
-                <X width="22px" height="22px" color="#4F53F3" cursor="pointer" onClick={() => setIsFeeDistributionBannerShown(true)} />
-              </Flex>
-            ) : null}
           </Flex>
         </Box>
       )}
