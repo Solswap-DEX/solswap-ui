@@ -11,6 +11,8 @@
  */
 
 import { Connection } from '@solana/web3.js'
+import { auditLog } from './eventLogger'
+import { MevRiskProfile } from './MevProtector'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -20,8 +22,9 @@ export type QueueTaskStatus = 'queued' | 'running' | 'completed' | 'failed' | 'r
 
 export interface QueueTask<T = any> {
   swapSessionId: SwapSessionId
-  execute: (connection: Connection) => Promise<T>
+  execute: (connection: Connection, riskProfile?: MevRiskProfile) => Promise<T>
   status: QueueTaskStatus
+  riskProfile?: MevRiskProfile
   enqueuedAt: number
   startedAt?: number
   completedAt?: number
@@ -102,6 +105,14 @@ class RpcFailoverPool {
       to: newState,
       consecutiveErrors: ep.consecutiveErrors,
       avgLatency: Math.round(ep.avgLatency)
+    })
+
+    auditLog.log({
+      topic: 'RPC_STATE_CHANGE',
+      message: `RPC Endpoint transitioned to ${newState.toUpperCase()}`,
+      severity: newState === 'failed' || newState === 'cooldown' ? 'error' : 
+                newState === 'degraded' ? 'warn' : 'info',
+      metadata: { url: ep.url, from: prevState, to: newState, avgLatency: ep.avgLatency }
     })
   }
 
@@ -292,7 +303,8 @@ class TxQueueManager {
    */
   async enqueue<T>(
     swapSessionId: SwapSessionId,
-    executeFn: (connection: Connection) => Promise<T>
+    executeFn: (connection: Connection, riskProfile?: MevRiskProfile) => Promise<T>,
+    riskProfile?: MevRiskProfile
   ): Promise<T> {
     // ── Idempotency check ──
     if (this.idempotency.isDuplicate(swapSessionId)) {
@@ -306,6 +318,7 @@ class TxQueueManager {
       swapSessionId,
       execute: executeFn,
       status: 'queued',
+      riskProfile,
       enqueuedAt: Date.now()
     }
 
@@ -337,7 +350,7 @@ class TxQueueManager {
 
         try {
           const connection = this.rpcPool.getConnection()
-          const result = await executeFn(connection)
+          const result = await executeFn(connection, task.riskProfile)
           task.status = 'completed'
           task.result = result
           task.completedAt = Date.now()

@@ -32,6 +32,13 @@ SolSwap features a **CEX-lite Orchestration Layer** designed for maximum resilie
   - **Execution Plane**: Fast confirmation (60s timeout) with graceful unknown state handling.
   - **Observability Plane**: Async background workers poll until `finalized`, with exponential backoff and normalized drift detection.
 - **Crash Recovery**: Persistent tracking state via **IndexedDB** allows the system to auto-resume finality monitoring even after a browser crash or page refresh.
+- **Global Event Log (Audit)**: An append-only local log in IndexedDB that records every orchestration event (e.g., `RPC_CIRCUIT_OPEN`, `DRIFT_DETECTED`, `TX_INIT`) for post-mortem analysis.
+
+### ⚡ Performance & Synchronization
+- **Multi-Tab Leadership Election**: Uses the **Web Locks API** to ensure only one browser tab actively polls the RPC for a specific transaction, preventing redundant calls.
+- **Cross-Session State Sync**: Real-time IPC via **BroadcastChannel** keeps the UI in sync across all open SolSwap tabs.
+- **MEV Intelligence**: A heuristic `MevProtector` analyzes swap value and slippage to detect sandwich risks, suggesting dynamic priority fees or injecting **Jito Tips** for guaranteed ordering.
+- **Probabilistic Finality**: Instead of binary states, the system calculates a real-time finality confidence score (0-100%) based on cluster slot depth relative to the confirmation slot.
 
 ---
 

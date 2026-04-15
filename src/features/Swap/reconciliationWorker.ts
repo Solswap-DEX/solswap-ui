@@ -16,6 +16,8 @@
  */
 
 import { Connection } from '@solana/web3.js'
+import { auditLog } from './eventLogger'
+import { syncManager } from './SyncManager'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -46,6 +48,8 @@ export interface TrackedTransaction {
   finalizedAt?: number
   pollCount: number
   lastPollAt: number
+  confirmations: number       // Number of slots since confirmation
+  probability: number         // finality score 0.0 to 1.0
   metadata: {
     inputToken: string
     outputToken: string
@@ -81,7 +85,8 @@ const FINALITY_LAG_WARNING_MS = 2 * 60 * 1000 // Warn if finality takes > 2 min
 
 const IDB_NAME = 'solswap_reconciliation'
 const IDB_STORE = 'tracked_transactions'
-const IDB_VERSION = 1
+const IDB_EVENT_STORE = 'event_log' // Shared with eventLogger
+const IDB_VERSION = 2 // Sync with eventLogger.ts
 
 class ReconciliationPersistence {
   private db: IDBDatabase | null = null
@@ -99,6 +104,15 @@ class ReconciliationPersistence {
           const db = (event.target as IDBOpenDBRequest).result
           if (!db.objectStoreNames.contains(IDB_STORE)) {
             db.createObjectStore(IDB_STORE, { keyPath: 'txId' })
+          }
+          if (!db.objectStoreNames.contains(IDB_EVENT_STORE)) {
+            const store = db.createObjectStore(IDB_EVENT_STORE, { 
+              keyPath: 'id', 
+              autoIncrement: true 
+            })
+            store.createIndex('timestamp', 'timestamp', { unique: false })
+            store.createIndex('sessionId', 'sessionId', { unique: false })
+            store.createIndex('txId', 'txId', { unique: false })
           }
         }
 
@@ -195,6 +209,9 @@ class ReconciliationWorker {
     this.recoverFromPersistence()
     // Start periodic pruning for memory pressure
     this.pruneTimer = setInterval(() => this.pruneStale(), ReconciliationWorker.PRUNE_INTERVAL_MS)
+    
+    // Subscribe to multi-tab sync updates
+    syncManager.subscribe((msg) => this.handleSyncUpdate(msg))
   }
 
   static getInstance(connectionGetter?: () => Connection): ReconciliationWorker {
@@ -235,6 +252,10 @@ class ReconciliationWorker {
         // Only recover non-terminal states
         if (entry.state === 'confirmed' || entry.state === 'unknown_confirmed') {
           entry.pollCount = 0 // Reset polls for fresh recovery
+          // Ensure new fields exist for legacy data
+          entry.confirmations = entry.confirmations || 0
+          entry.probability = entry.probability || 0
+          
           this.tracked.set(entry.txId, entry)
 
           if (this.activeWatchers < MAX_CONCURRENT_WATCHERS) {
@@ -310,6 +331,8 @@ class ReconciliationWorker {
       confirmedAt: Date.now(),
       pollCount: 0,
       lastPollAt: 0,
+      confirmations: 0,
+      probability: 0,
       metadata: meta
     }
 
@@ -317,6 +340,15 @@ class ReconciliationWorker {
 
     // Persist to IndexedDB for crash recovery
     this.persistence.save(entry)
+
+    auditLog.log({
+      topic: 'TX_TRACK_INIT',
+      message: `Started tracking transaction for finality`,
+      severity: 'info',
+      txId,
+      sessionId: swapSessionId,
+      metadata: { ...meta }
+    })
 
     console.log('[ReconciliationWorker] Tracking transaction', {
       txId,
@@ -348,11 +380,18 @@ class ReconciliationWorker {
   }
 
   private async spawnWatcher(txId: string): Promise<void> {
-    // Runtime lock — prevent duplicate watchers for same txId
+    // Runtime lock — prevent duplicate watchers for same txId in THIS tab
     if (this.watcherLocks.has(txId)) {
-      console.warn('[ReconciliationWorker] Watcher already running, skipping', { txId })
       return
     }
+
+    // Cross-tab lock — only one tab in the browser session performs active polling
+    const isLeader = await syncManager.acquireWatcherLock(txId)
+    if (!isLeader) {
+      console.log('[ReconciliationWorker] Another tab is already watching, following sync updates', { txId })
+      return
+    }
+
     this.watcherLocks.add(txId)
     this.activeWatchers++
     
@@ -363,7 +402,36 @@ class ReconciliationWorker {
     } finally {
       this.watcherLocks.delete(txId)
       this.activeWatchers--
+      syncManager.releaseLock(txId)
       this.trySpawnPendingWatchers()
+    }
+  }
+
+  private handleSyncUpdate(msg: any): void {
+    if (msg.type !== 'TX_STATE_UPDATE') return
+    
+    const entry = this.tracked.get(msg.txId)
+    if (!entry) return
+
+    // If another tab reports a more advanced state or probability, update local state
+    if (msg.payload.state && msg.payload.state !== entry.state) {
+      const prev = entry.state
+      entry.state = msg.payload.state
+      this.emit({
+        type: msg.payload.state === 'finalized' ? 'finalized' : 'state_change',
+        txId: msg.txId,
+        swapSessionId: entry.swapSessionId,
+        previousState: prev,
+        newState: entry.state,
+        metadata: { ...msg.payload, synced: true }
+      })
+    }
+
+    if (msg.payload.probability > entry.probability) {
+      entry.probability = msg.payload.probability
+      entry.confirmations = msg.payload.confirmations
+      // Note: we don't persistence.save here to avoid redundant I/O, 
+      // the leader tab already saved it.
     }
   }
 
@@ -432,6 +500,13 @@ class ReconciliationWorker {
 
       try {
         const connection = this.getConnection()
+        
+        // 1. Get current cluster slot for probability calculation
+        let currentSlot = 0
+        try {
+          currentSlot = await connection.getSlot('confirmed')
+        } catch (e) { /* ignore slot fetch error */ }
+
         const status = await connection.getSignatureStatus(txId, {
           searchTransactionHistory: false
         })
@@ -442,6 +517,15 @@ class ReconciliationWorker {
             const previousState = entry.state
             entry.state = 'unknown_pending'
             this.persistence.save(entry)
+
+            auditLog.log({
+              topic: 'DRIFT_DETECTED',
+              message: 'Transaction not found after 10+ polls',
+              severity: 'warn',
+              txId,
+              sessionId: entry.swapSessionId,
+              metadata: { driftType: 'rpc_conflict', pollCount: entry.pollCount }
+            })
 
             this.emit({
               type: 'drift_detected',
@@ -466,9 +550,20 @@ class ReconciliationWorker {
           const previousState = entry.state
           entry.state = 'finalized'
           entry.finalizedAt = Date.now()
+          entry.probability = 1.0
+          entry.confirmations = 32 // Cap for finality
 
           // Persist then clean up
           await this.persistence.remove(txId)
+
+          auditLog.log({
+            topic: 'TX_FINALIZED',
+            message: 'Transaction reached maximized finality',
+            severity: 'info',
+            txId,
+            sessionId: entry.swapSessionId,
+            metadata: { pollCount: entry.pollCount, slot: status.value.slot }
+          })
 
           this.emit({
             type: 'finalized',
@@ -513,7 +608,55 @@ class ReconciliationWorker {
             }
           })
 
+          auditLog.log({
+            topic: 'TX_FAILED',
+            message: `Transaction failed on-chain: ${JSON.stringify(status.value.err)}`,
+            severity: 'error',
+            txId,
+            sessionId: entry.swapSessionId,
+            metadata: { error: status.value.err, previousState }
+          })
+
           return
+        }
+
+        // 2. Calculate Probabilistic Finality Score
+        if (currentSlot > 0 && entry.metadata.slot) {
+          const diff = Math.max(0, currentSlot - entry.metadata.slot)
+          entry.confirmations = diff
+          // Solana finality is usually ~31 slots. 
+          // We use a sigmoid-like curve or simple linear cap for probability.
+          const newProb = Math.min(0.99, diff / 32)
+          
+          if (newProb > entry.probability) {
+            const prevProb = entry.probability
+            entry.probability = newProb
+            this.persistence.save(entry)
+
+            // Broadcast update to other tabs
+            syncManager.broadcastUpdate({
+              type: 'TX_STATE_UPDATE',
+              txId,
+              payload: {
+                state: entry.state,
+                probability: entry.probability,
+                confirmations: entry.confirmations
+              }
+            })
+
+            this.emit({
+              type: 'state_change',
+              txId,
+              swapSessionId: entry.swapSessionId,
+              previousState: entry.state,
+              newState: entry.state,
+              metadata: { 
+                probability: entry.probability, 
+                confirmations: entry.confirmations,
+                prevProbability: prevProb
+              }
+            })
+          }
         }
 
         // Still 'confirmed' or 'processed' — keep polling

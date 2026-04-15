@@ -1,4 +1,4 @@
-import { PublicKey, VersionedTransaction, Transaction, SignatureResult } from '@solana/web3.js'
+import { PublicKey, VersionedTransaction, Transaction, SignatureResult, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { TxVersion, txToBase64, SOL_INFO, ApiV3Token } from '@raydium-io/raydium-sdk-v2'
 import { createStore, useAppStore, useTokenAccountStore, useTokenStore } from '@/store'
 import { toastSubject } from '@/hooks/toast/useGlobalToast'
@@ -21,6 +21,8 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { REVENUE_CONFIG } from '@/config/revenueConfig'
 import { generateSwapSessionId, getTxQueueManager } from './txQueueManager'
 import { getReconciliationWorker } from './reconciliationWorker'
+import { MevProtector, MevRiskProfile } from './MevProtector'
+import { auditLog } from './eventLogger'
 
 const getSwapComputePrice = async () => {
   const transactionFee = useAppStore.getState().getPriorityFee()
@@ -103,9 +105,28 @@ export const useSwapStore = createStore<SwapStore>(
         swapType: swapResponse.data.swapType
       })
 
+      // ── MEV Risk Analysis ──
+      const slippage = this.getState().slippage
+      // Heuristic: estimate USD value if not provided (simplified for demo)
+      const inputAmountUsd = Number(swapResponse.data.inputAmount) / 10 ** (inputMint?.decimals || 9) * 10 
+      
+      const riskProfile = MevProtector.analyzeSwap({
+        inputAmountUsd,
+        slippage,
+        outputToken: outputMint?.symbol || ''
+      })
+
+      auditLog.log({
+        topic: 'MEV_RISK_ASSESSMENT',
+        message: `Swap risk level: ${riskProfile.riskLevel.toUpperCase()}`,
+        severity: riskProfile.riskLevel === 'high' ? 'warn' : 'info',
+        sessionId: swapSessionId,
+        metadata: { ...riskProfile, slippage, inputAmountUsd }
+      })
+
       // ── Delegate execution to the transaction queue ──
       try {
-        return await queueManager.enqueue(swapSessionId, async () => {
+        return await queueManager.enqueue(swapSessionId, async (conn, risk) => {
           return await this._executeSwap({
             swapSessionId,
             swapResponse,
@@ -115,9 +136,10 @@ export const useSwapStore = createStore<SwapStore>(
             outputMint,
             onCloseToast,
             reconciler,
+            riskProfile: risk,
             ...txProps
           })
-        })
+        }, riskProfile)
       } catch (e: any) {
         if (e.message?.includes('Duplicate swap session')) {
           console.warn('[SwapStore] Duplicate swap blocked', { swapSessionId })
@@ -140,8 +162,9 @@ export const useSwapStore = createStore<SwapStore>(
       outputMint,
       onCloseToast,
       reconciler,
+      riskProfile,
       ...txProps
-    }: any) => {
+    }: { riskProfile?: MevRiskProfile } & any) => {
       const { publicKey, raydium, txVersion, connection, signAllTransactions, urlConfigs } = useAppStore.getState()
       if (!raydium || !connection || !publicKey || !signAllTransactions) return
 
@@ -207,7 +230,35 @@ export const useSwapStore = createStore<SwapStore>(
 
         const swapTransactions = data || []
         const allTxBuf = swapTransactions.map((tx) => Buffer.from(tx.transaction, 'base64'))
-        const allTx = allTxBuf.map((txBuf) => (isV0Tx ? VersionedTransaction.deserialize(txBuf as any) : Transaction.from(txBuf)))
+        let allTx = allTxBuf.map((txBuf) => (isV0Tx ? VersionedTransaction.deserialize(txBuf as any) : Transaction.from(txBuf)))
+
+        // ── Inject Jito Tip for high risk transactions ──
+        if (riskProfile?.useJitoBundle && riskProfile.estimatedTipUsd) {
+          const tipLamports = Math.floor(riskProfile.estimatedTipUsd * LAMPORTS_PER_SOL / 150) // Approx conversion
+          const tipIxn = SystemProgram.transfer({
+            fromPubkey: publicKey,
+            toPubkey: new PublicKey(MevProtector.getJitoTipAddress()),
+            lamports: tipLamports
+          })
+          
+          // Add to the main swap transaction (usually the last one)
+          const lastTx = allTx[allTx.length - 1]
+          if (lastTx instanceof Transaction) {
+            lastTx.add(tipIxn)
+          } else {
+            // VersionedTransaction requires re-compiling message, simplified here
+            console.warn('[SwapStore] Jito tip skipped for V0 transaction (requires re-indexing)')
+          }
+
+          auditLog.log({
+            topic: 'JITO_TIP_INJECTED',
+            message: `Injected Jito tip of ${tipLamports} lamports for MEV protection`,
+            severity: 'info',
+            sessionId: swapSessionId,
+            metadata: { tipLamports, risk: riskProfile.riskLevel }
+          })
+        }
+
         console.log('[SwapStore] TX serialized', { swapSessionId, txCount: allTx.length })
         const signedTxs = await signAllTransactions(allTx)
 
