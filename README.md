@@ -20,6 +20,21 @@ with free, open alternatives.
 
 ---
 
+## Advanced Transaction Architecture
+
+SolSwap features a **CEX-lite Orchestration Layer** designed for maximum resilience under high network congestion and RPC instability.
+
+### 🛡️ Resilience Pillars
+- **Idempotency Layer**: Every swap generates a unique `swapSessionId`, preventing duplicate executions even in cases of double-clicks or UI re-renders.
+- **Transaction Queue (FIFO)**: Serialized swap execution with backpressure control (`maxConcurrency=1`) to prevent wallet collisions and RPC 429 throttling.
+- **Circuit Breaker RPC Failover**: A performance-weighted failover pool that dynamically rotates between endpoints based on latency, success rates, and health states (`healthy` → `degraded` → `cooldown`).
+- **Dual-Plane Finality Tracker**: 
+  - **Execution Plane**: Fast confirmation (60s timeout) with graceful unknown state handling.
+  - **Observability Plane**: Async background workers poll until `finalized`, with exponential backoff and normalized drift detection.
+- **Crash Recovery**: Persistent tracking state via **IndexedDB** allows the system to auto-resume finality monitoring even after a browser crash or page refresh.
+
+---
+
 ## Key Integrations
 
 | Feature | Provider |
@@ -28,8 +43,9 @@ with free, open alternatives.
 | Token list | Jupiter Token List |
 | Price data | Jupiter Price API + BirdEye |
 | Cross-chain | Li.Fi |
-| RPC | Helius |
+| RPC | Helius (Primary) + Circuit Breaker Failover |
 | Error tracking | GlitchTip |
+| Persistence | IndexedDB (Transaction Recovery) |
 
 ---
 
@@ -92,9 +108,10 @@ src/
 ├── config/       # Chain and wallet settings
 ├── features/     # Domain modules (Swap, Farm, Pool…)
 │   └── Swap/
-│       ├── index.tsx
-│       ├── useSwapStore.ts
-│       └── components/
+│       ├── useSwapStore.ts          # Main store & orchestration
+│       ├── txQueueManager.ts        # FIFO Queue & RPC Failover
+│       ├── reconciliationWorker.ts   # Async Finality & Persistence
+│       └── ...
 ├── hooks/        # Shared hooks
 ├── pages/        # Next.js entry points
 ├── store/        # Shared Zustand stores
