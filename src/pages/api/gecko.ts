@@ -63,8 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const pathParams = req.query.path as string[];
-    const subpath = pathParams ? pathParams.join('/') : '';
+    const subpath = req.query.path as string;
     
     // Reconstruct full query string precisely
     const urlObj = new URL(`https://api.geckoterminal.com/api/v2/${subpath}`);

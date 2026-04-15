@@ -40,7 +40,7 @@ export const birdeyePairVolumeApiAddress = ({
   timeTo: number
 }) => {
   const config = geckoTimeframe[timeType] || geckoTimeframe['4H']
-  return `/api/gecko/networks/solana/pools/${poolAddress}/ohlcv/${config.timeframe}?aggregate=${config.aggregate}&limit=1000&currency=usd&token=base`
+  return `/api/gecko?path=networks/solana/pools/${poolAddress}/ohlcv/${config.timeframe}&aggregate=${config.aggregate}&limit=1000&currency=usd&token=base`
 }
 
 /**
@@ -61,5 +61,5 @@ export const birdeyePairPriceApiAddress = ({
   return `gecko://solana/${baseMint}/So11111111111111111111111111111111111111112/${config.timeframe}/${config.aggregate}/1000/${timeType}`
 }
 
-export const birdeyePriceUrl = `/api/gecko/simple/networks/solana/token_price`
+export const birdeyePriceUrl = `/api/gecko?path=simple/networks/solana/token_price`
 

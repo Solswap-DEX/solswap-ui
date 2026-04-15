@@ -4,7 +4,7 @@
  */
 
 // GeckoTerminal Simple Price API
-export const JUP_PRICE_API = "/api/gecko/simple/networks/solana/token_price";
+export const JUP_PRICE_API = "/api/gecko?path=simple/networks/solana/token_price";
 
 /**
  * Fetch a single token price from Jupiter
@@ -42,5 +42,5 @@ export const getMultipleTokenPrices = async (mints: string[]): Promise<Record<st
 };
 
 export const TOKEN_LIST = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
-export const OHLCV_API = "/api/gecko/networks/solana";
+export const OHLCV_API = "/api/gecko?path=networks/solana";
 export const POOL_API = "https://api.dexscreener.com/latest/dex/tokens";
