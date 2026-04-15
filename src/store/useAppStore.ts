@@ -337,10 +337,28 @@ export const useAppStore = createStore<AppState>(
           checkAndSetRpcNode()
         }
       } catch {
-  // Raydium API blocked — use Helius directly
-  const heliusUrl = process.env.NEXT_PUBLIC_RPC_URL || 
-    "https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244"
-  await setRpcUrlAct(heliusUrl, true, true)
+        // Raydium API blocked — use Helius & public fallbacks
+        const heliusUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244"
+        const fallbackRpcs = [
+          { name: "Helius (Primary)", url: heliusUrl, weight: 100 },
+          { name: "Solana Mainnet", url: "https://api.mainnet-beta.solana.com/", weight: 80 },
+          { name: "QuickNode (Public)", url: "https://solana-api.syndica.io/access/api_key/rpc", weight: 60 }
+        ]
+        
+        set({ rpcs: fallbackRpcs }, false, { type: 'fetchRpcsAct_fallback' })
+        
+        // Initialize TxQueueManager failover pool with these endpoints
+        try {
+          const { getTxQueueManager } = require('../features/Swap/txQueueManager')
+          const queue = getTxQueueManager(heliusUrl)
+          fallbackRpcs.forEach(rpc => {
+            if (rpc.url !== heliusUrl) queue.addRpcEndpoint(rpc.url)
+          })
+        } catch (e) {
+          console.error('[Fallback] Failed to inject RPC failovers into tx queue', e)
+        }
+
+        await setRpcUrlAct(heliusUrl, true, true)
       } finally {
         rpcLoading = false
       }
