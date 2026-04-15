@@ -34,6 +34,11 @@ class SyncManager {
   private activeLocks = new Set<string>()
   private heartbeats = new Map<string, number>()
   private heartbeatTimers = new Map<string, ReturnType<typeof setInterval>>()
+  private tabId = Math.random().toString(36).substring(2, 11)
+
+  private static readonly LEASE_PREFIX = 'solswap_leader_lease_'
+  private static readonly LEASE_DURATION_MS = 10000 // 10s lease
+  private static readonly HEARTBEAT_INTERVAL_MS = 3000 // 3s renew
 
   private constructor() {
     this.channel = new BroadcastChannel('solswap_orchestration')
@@ -58,16 +63,21 @@ class SyncManager {
 
   /**
    * Attempt to acquire the active poller lock for a transaction.
-   * Only one tab across the entire browser session can hold this for a specific txId.
+   * Uses both Web Locks API and a storage-backed lease for redundancy.
    */
-  async acquireWatcherLock(txId: string, onLockLost?: () => void): Promise<boolean> {
+  async acquireWatcherLock(txId: string): Promise<boolean> {
     try {
-      // Use Web Locks API to ensure only one watcher polls per TX
-      // We use 'ifAvailable: true' to fail immediately if another tab has it
+      // 1. Check Lease-based Leadership (handles frozen tabs where Web Lock persists)
+      if (!this.canAcquireLease(txId)) {
+        return false
+      }
+
+      // 2. Use Web Locks API to ensure only one watcher polls per TX
       const lockAcquired = await new Promise<boolean>((resolve) => {
         navigator.locks.request(`tx_watcher_${txId}`, { ifAvailable: true }, async (lock) => {
           if (lock) {
             this.activeLocks.add(txId)
+            this.writeLease(txId) // Commit the lease to storage
             this.startHeartbeat(txId)
             resolve(true)
             return new Promise((_) => { /* Hold lock indefinitely */ })
@@ -75,6 +85,7 @@ class SyncManager {
             resolve(false)
           }
         })
+        // Short timeout for the lock request itself
         setTimeout(() => resolve(false), 2000)
       })
 
@@ -85,6 +96,33 @@ class SyncManager {
     }
   }
 
+  private canAcquireLease(txId: string): boolean {
+    try {
+      const leaseRaw = localStorage.getItem(`${SyncManager.LEASE_PREFIX}${txId}`)
+      if (!leaseRaw) return true
+
+      const lease = JSON.parse(leaseRaw)
+      const isExpired = Date.now() > lease.expiresAt
+      const isMe = lease.tabId === this.tabId
+
+      return isExpired || isMe
+    } catch {
+      return true // Corrupted lease, allow takeover
+    }
+  }
+
+  private writeLease(txId: string): void {
+    const expiresAt = Date.now() + SyncManager.LEASE_DURATION_MS
+    localStorage.setItem(
+      `${SyncManager.LEASE_PREFIX}${txId}`,
+      JSON.stringify({ tabId: this.tabId, expiresAt })
+    )
+  }
+
+  private clearLease(txId: string): void {
+    localStorage.removeItem(`${SyncManager.LEASE_PREFIX}${txId}`)
+  }
+
   private startHeartbeat(txId: string): void {
     if (this.heartbeatTimers.has(txId)) return
     
@@ -93,12 +131,15 @@ class SyncManager {
         this.stopHeartbeat(txId)
         return
       }
+      
+      this.writeLease(txId) // Renew the lease in storage
+      
       this.broadcastUpdate({
         type: 'LEADER_HEARTBEAT',
         txId,
         payload: { isFinalizedTruth: false }
       })
-    }, 3000) // 3s heartbeat
+    }, SyncManager.HEARTBEAT_INTERVAL_MS)
 
     this.heartbeatTimers.set(txId, timer)
   }
@@ -156,6 +197,7 @@ class SyncManager {
   releaseLock(txId: string): void {
     this.activeLocks.delete(txId)
     this.stopHeartbeat(txId)
+    this.clearLease(txId)
   }
 }
 

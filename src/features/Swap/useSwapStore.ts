@@ -58,7 +58,15 @@ interface SwapStore {
   ) => Promise<string | string[] | undefined>
   wrapSolAct: (amount: string) => Promise<string | undefined>
   txConfidence: Record<string, number> // txId -> 0.0-1.0 (UX Layer)
+  txConfidenceLevel: Record<string, 'propagating' | 'verifying' | 'secure' | 'finalized'>
   txFinalizedTruth: Record<string, boolean> // txId -> boolean (Truth Layer)
+}
+
+const getConfidenceBucket = (p: number): 'propagating' | 'verifying' | 'secure' | 'finalized' => {
+  if (p >= 1.0) return 'finalized'
+  if (p >= 0.9) return 'secure'
+  if (p >= 0.5) return 'verifying'
+  return 'propagating'
 }
 
 export interface ComputeParams {
@@ -76,6 +84,7 @@ export const useSwapStore = createStore<SwapStore>(
   () => ({
     ...initSwapState,
     txConfidence: {},
+    txConfidenceLevel: {},
     txFinalizedTruth: {},
 
     swapTokenAct: async ({ swapResponse, wrapSol, unwrapSol = false, inputMint, outputMint, onCloseToast, ...txProps }) => {
@@ -100,18 +109,19 @@ export const useSwapStore = createStore<SwapStore>(
         return useAppStore.getState().connection!
       })
 
-      // Register listeners only once (simplified logic)
-      reconciler.on('state_change', ({ txId, metadata }) => {
-        if (typeof metadata?.probability === 'number') {
-          useSwapStore.setState((s) => ({
-            txConfidence: { ...s.txConfidence, [txId]: metadata.probability }
-          }))
-        }
+      // Register listeners only once
+      reconciler.on('state_change', (event) => {
+        const { txId, metadata } = event as any
+        useSwapStore.setState((s) => ({
+          txConfidence: { ...s.txConfidence, [txId]: metadata?.probability ?? 0 },
+          txConfidenceLevel: { ...s.txConfidenceLevel, [txId]: getConfidenceBucket(metadata?.probability ?? 0) }
+        }))
       })
 
       reconciler.on('finalized', ({ txId }) => {
         useSwapStore.setState((s) => ({
           txConfidence: { ...s.txConfidence, [txId]: 1.0 },
+          txConfidenceLevel: { ...s.txConfidenceLevel, [txId]: 'finalized' },
           txFinalizedTruth: { ...s.txFinalizedTruth, [txId]: true }
         }))
       })
@@ -279,6 +289,22 @@ export const useSwapStore = createStore<SwapStore>(
         }
 
         console.log('[SwapStore] TX serialized', { swapSessionId, txCount: allTx.length })
+
+        // ── Step 4: Pre-trade Simulation ──
+        // Catch failures before signing to improve observability and user experience.
+        try {
+          for (const tx of allTx) {
+            const sim = await connection.simulateTransaction(tx as any)
+            if (sim.value.err) {
+              console.warn('[SwapStore] Simulation failed', { sessionId: swapSessionId, err: sim.value.err })
+              // We warn but don't strictly block if it's a transient RPC simulation error
+              // though in a stricter 'Institutional' mode we could abort here.
+            }
+          }
+        } catch (e) {
+          console.warn('[SwapStore] Simulation request error', e)
+        }
+
         const signedTxs = await signAllTransactions(allTx)
 
         // console.log('simulate tx string:', signedTxs.map(txToBase64))

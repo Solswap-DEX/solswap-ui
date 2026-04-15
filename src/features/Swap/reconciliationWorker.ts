@@ -401,11 +401,60 @@ class ReconciliationWorker {
     this.watcherLocks.add(txId)
     this.activeWatchers++
     
+    let subId: number | undefined
     try {
+      const connection = this.getConnection()
+      
+      // 1. Establish Event-driven Truth (WebSocket subscription)
+      // This provides immediate notification, bypassing polling lag.
+      subId = connection.onSignature(txId, (result) => {
+        if (result.err) {
+          console.warn('[ReconciliationWorker] Signature event reported error', { txId, err: result.err })
+          return
+        }
+        
+        const entry = this.tracked.get(txId)
+        if (entry && entry.state !== 'finalized') {
+          console.log('[ReconciliationWorker] Immediate finality signal (WebSocket)', { txId })
+          const prev = entry.state
+          entry.state = 'finalized'
+          entry.finalizedAt = Date.now()
+          entry.isFinalizedTruth = true
+          entry.probability = 1.0
+          
+          this.persistence.save(entry)
+          
+          this.emit({
+            type: 'finalized',
+            txId,
+            swapSessionId: entry.swapSessionId,
+            previousState: prev,
+            newState: 'finalized',
+            metadata: { method: 'websocket', ...entry.metadata }
+          })
+          
+          syncManager.broadcastUpdate({
+            type: 'TX_STATE_UPDATE',
+            txId,
+            payload: {
+              state: 'finalized',
+              isFinalizedTruth: true,
+              probability: 1.0
+            }
+          })
+        }
+      }, 'finalized')
+
+      // 2. Start Polling Fallback 
+      // (Handles cases where Websocket disconnects or drops events)
       await this.pollUntilFinalized(txId)
+      
     } catch (e) {
       console.error('[ReconciliationWorker] Watcher error', { txId, error: e })
     } finally {
+      if (subId !== undefined) {
+        this.getConnection().removeSignatureListener(subId).catch(() => {})
+      }
       this.watcherLocks.delete(txId)
       this.activeWatchers--
       syncManager.releaseLock(txId)
