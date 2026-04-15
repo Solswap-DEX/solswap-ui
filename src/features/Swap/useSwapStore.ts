@@ -19,6 +19,8 @@ import { handleMultiTxRetry } from '@/hooks/toast/retryTx'
 import { isSwapSlippageError } from '@/utils/tx/swapError'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { REVENUE_CONFIG } from '@/config/revenueConfig'
+import { generateSwapSessionId, getTxQueueManager } from './txQueueManager'
+import { getReconciliationWorker } from './reconciliationWorker'
 
 const getSwapComputePrice = async () => {
   const transactionFee = useAppStore.getState().getPriorityFee()
@@ -81,6 +83,67 @@ export const useSwapStore = createStore<SwapStore>(
         console.error('no wallet')
         return
       }
+
+      // ── CEX-lite orchestration: generate session ID ──
+      const swapSessionId = generateSwapSessionId()
+
+      // ── Initialize queue manager with current RPC ──
+      const queueManager = getTxQueueManager(connection.rpcEndpoint)
+
+      // ── Initialize reconciliation worker ──
+      const reconciler = getReconciliationWorker(() => {
+        return useAppStore.getState().connection!
+      })
+
+      console.log('[SwapStore] Swap initiated', {
+        swapSessionId,
+        inputMint: swapResponse.data.inputMint,
+        outputMint: swapResponse.data.outputMint,
+        amount: swapResponse.data.inputAmount,
+        swapType: swapResponse.data.swapType
+      })
+
+      // ── Delegate execution to the transaction queue ──
+      try {
+        return await queueManager.enqueue(swapSessionId, async () => {
+          return await this._executeSwap({
+            swapSessionId,
+            swapResponse,
+            wrapSol,
+            unwrapSol,
+            inputMint,
+            outputMint,
+            onCloseToast,
+            reconciler,
+            ...txProps
+          })
+        })
+      } catch (e: any) {
+        if (e.message?.includes('Duplicate swap session')) {
+          console.warn('[SwapStore] Duplicate swap blocked', { swapSessionId })
+          toastSubject.next({
+            title: 'Swap Already Processing',
+            description: 'Please wait for the current swap to complete.',
+            status: 'warning'
+          })
+        }
+        return ''
+      }
+    },
+
+    _executeSwap: async ({
+      swapSessionId,
+      swapResponse,
+      wrapSol,
+      unwrapSol = false,
+      inputMint,
+      outputMint,
+      onCloseToast,
+      reconciler,
+      ...txProps
+    }: any) => {
+      const { publicKey, raydium, txVersion, connection, signAllTransactions, urlConfigs } = useAppStore.getState()
+      if (!raydium || !connection || !publicKey || !signAllTransactions) return
 
       try {
         const tokenMap = useTokenStore.getState().tokenMap
@@ -145,7 +208,7 @@ export const useSwapStore = createStore<SwapStore>(
         const swapTransactions = data || []
         const allTxBuf = swapTransactions.map((tx) => Buffer.from(tx.transaction, 'base64'))
         const allTx = allTxBuf.map((txBuf) => (isV0Tx ? VersionedTransaction.deserialize(txBuf as any) : Transaction.from(txBuf)))
-        console.log('simulate tx string:', allTx.map(txToBase64))
+        console.log('[SwapStore] TX serialized', { swapSessionId, txCount: allTx.length })
         const signedTxs = await signAllTransactions(allTx)
 
         // console.log('simulate tx string:', signedTxs.map(txToBase64))
@@ -250,7 +313,8 @@ export const useSwapStore = createStore<SwapStore>(
             if (targetTxIdx > -1) processedId[targetTxIdx].status = 'error'
             const isSlippageError = isSwapSlippageError(confirmation.value)
             
-            console.error('Swap transaction failed', {
+            console.error('[SwapStore] Transaction failed', {
+              swapSessionId,
               txId,
               inputToken: inputToken.address,
               outputToken: outputToken.address,
@@ -291,15 +355,29 @@ export const useSwapStore = createStore<SwapStore>(
             }
             return ''
           } else {
-            console.log('Swap transaction success', {
+            console.log('[SwapStore] Transaction confirmed', {
+              swapSessionId,
               txId,
               inputToken: inputToken.address,
               outputToken: outputToken.address,
               amount: swapResponse.data.inputAmount,
-              status: 'success',
+              status: 'confirmed',
+              finalityState: 'confirmed',
               slot: confirmation.context?.slot,
               blockHeight: latestBlockhash.lastValidBlockHeight,
               rpcEndpoint: connection.rpcEndpoint
+            })
+
+            // ── Dispatch to reconciliation worker for finality tracking ──
+            reconciler.track({
+              txId,
+              swapSessionId,
+              inputToken: inputToken.address,
+              outputToken: outputToken.address,
+              amount: swapResponse.data.inputAmount,
+              rpcEndpoint: connection.rpcEndpoint,
+              blockHeight: latestBlockhash.lastValidBlockHeight,
+              slot: confirmation.context?.slot
             })
             if (targetTxIdx > -1) processedId[targetTxIdx].status = 'success'
             useTokenAccountStore.getState().fetchTokenAccountAct({ commitment: useAppStore.getState().commitment })
