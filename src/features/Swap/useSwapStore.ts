@@ -223,7 +223,7 @@ export const useSwapStore = createStore<SwapStore>(
 
           const latestBlockhash = await connection.getLatestBlockhash()
           
-          let confirmation: any = { value: { err: null } }
+          let confirmation: any = { value: { err: null }, context: { slot: 0 } }
           try {
             const timeoutPromise = new Promise((_, reject) =>
               setTimeout(() => reject(new Error('Transaction confirmation timeout')), 60000)
@@ -239,14 +239,9 @@ export const useSwapStore = createStore<SwapStore>(
             ])
           } catch (e: any) {
             if (e.message === 'Transaction confirmation timeout') {
-               const status = await connection.getSignatureStatus(txId)
-               if (status?.value?.confirmationStatus === 'confirmed' || status?.value?.confirmationStatus === 'finalized') {
-                 confirmation = { value: { err: null } }
-               } else {
-                 confirmation = { value: { err: e } }
-               }
+               confirmation = { value: { err: new Error('timeout_unknown_state') }, context: { slot: 0 } }
             } else {
-               confirmation = { value: { err: e } }
+               confirmation = { value: { err: e }, context: { slot: 0 } }
             }
           }
 
@@ -260,8 +255,10 @@ export const useSwapStore = createStore<SwapStore>(
               inputToken: inputToken.address,
               outputToken: outputToken.address,
               amount: swapResponse.data.inputAmount,
-              status: 'error',
-              error: confirmation.value.err
+              status: confirmation.value.err?.message === 'timeout_unknown_state' ? 'unknown' : 'error',
+              error: confirmation.value.err,
+              blockHeight: latestBlockhash.lastValidBlockHeight,
+              rpcEndpoint: connection.rpcEndpoint
             })
 
             if (signedTxs.length === 1) {
@@ -292,14 +289,17 @@ export const useSwapStore = createStore<SwapStore>(
                 onCloseToast
               })
             }
-            throw new Error(`Transaction failed: ${txId}`)
+            return ''
           } else {
             console.log('Swap transaction success', {
               txId,
               inputToken: inputToken.address,
               outputToken: outputToken.address,
               amount: swapResponse.data.inputAmount,
-              status: 'success'
+              status: 'success',
+              slot: confirmation.context?.slot,
+              blockHeight: latestBlockhash.lastValidBlockHeight,
+              rpcEndpoint: connection.rpcEndpoint
             })
             if (targetTxIdx > -1) processedId[targetTxIdx].status = 'success'
             useTokenAccountStore.getState().fetchTokenAccountAct({ commitment: useAppStore.getState().commitment })
