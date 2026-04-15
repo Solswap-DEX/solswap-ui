@@ -60,26 +60,14 @@ export function NetworkStatusBar() {
   }, [])
 
   useEffect(() => {
-    let subscriptionId: number
-    if (connection) {
-      try {
-        subscriptionId = connection.onSlotChange((slotInfo) => {
-          setSlot(slotInfo.slot)
-        })
-        connection.getSlot().then(setSlot).catch(() => {})
-      } catch (err) {
-        // Safe catch
-      }
+    if (!connection) return
+    // Poll slot via HTTP instead of WebSocket (WSS not available)
+    const fetchSlot = () => {
+      connection.getSlot().then(setSlot).catch(() => {})
     }
-    return () => {
-      if (connection && subscriptionId) {
-        try {
-          connection.removeSlotChangeListener(subscriptionId)
-        } catch (err) {
-            // safe catch
-        }
-      }
-    }
+    fetchSlot()
+    const slotInterval = setInterval(fetchSlot, 10000)
+    return () => clearInterval(slotInterval)
   }, [connection])
 
   useEffect(() => {
