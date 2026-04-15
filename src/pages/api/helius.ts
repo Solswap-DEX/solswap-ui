@@ -3,22 +3,31 @@ import { NextApiRequest, NextApiResponse } from 'next';
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '100kb', // 5. Limit payload size to avoid abuse
+      sizeLimit: '100kb', // Anti-Abuse padding limits
     },
   },
 };
 
-// 1. Basic Rate Limiting
-const requestCounts = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW_MS = 60000;
-const MAX_REQUESTS_PER_WINDOW = 300;
+// 1. Separated Read vs Write Rate Limiting & Logic
+const readRequestCounts = new Map<string, { count: number; resetTime: number }>();
+const writeRequestCounts = new Map<string, { count: number; resetTime: number }>();
 
-// 3. Simple In-Memory Caching (3 seconds TTL)
+const READ_RATE_LIMIT_WINDOW_MS = 60000;
+const READ_MAX_REQUESTS = 300;
+
+const WRITE_RATE_LIMIT_WINDOW_MS = 60000;
+const WRITE_MAX_REQUESTS = 30; // Very strict to avoid abuse
+
+// 3. Simple In-Memory Caching (3s)
 const cache = new Map<string, { data: any; expiresAt: number }>();
 const CACHE_TTL_MS = 3000;
-const CACHEABLE_METHODS = ['getBalance', 'getLatestBlockhash', 'getTokenAccountsByOwner', 'getAccountInfo'];
 
-// 2. Allowlist of methods strictly needed by widgets / swapping Dapps
+// getLatestBlockhash is PURPOSELY OMITTED to fix Transaction Freshness / Expired Blockhashes
+const CACHEABLE_METHODS = ['getBalance', 'getTokenAccountsByOwner', 'getAccountInfo'];
+
+const WRITE_METHODS = new Set(['sendTransaction', 'simulateTransaction']);
+
+// Strict Allowlist
 const ALLOWED_METHODS = new Set([
   'getBalance',
   'getAccountInfo',
@@ -41,69 +50,92 @@ function isMethodAllowed(method: string) {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // 4/5. Method and Headers check
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   const contentType = req.headers['content-type'];
   if (!contentType || !contentType.includes('application/json')) {
-    return res.status(400).json({ error: 'Invalid Content-Type, expected application/json' });
+    return res.status(400).json({ error: 'Invalid Content-Type' });
   }
 
   const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
   const ipStr = Array.isArray(ip) ? ip[0] : ip;
 
-  // Body Validation
   const isBatch = Array.isArray(req.body);
+
+  // 5. Anti-Abuse: Prevent gargantuan JSON-RPC batches
+  if (isBatch && req.body.length > 5) {
+    console.warn(`[Helius Proxy] BATCH ABUSE DENIED | IP: ${ipStr} | Size: ${req.body.length}`);
+    return res.status(400).json({ error: 'Batch request limit exceeded. Max 5 calls.' });
+  }
+
   const requests = isBatch ? req.body : [req.body];
 
   if (!requests.length || !requests.every(r => r && typeof r.method === 'string')) {
     return res.status(400).json({ error: 'Invalid RPC payload' });
   }
 
-  // 2. Check allowlist
   for (const r of requests) {
     if (!isMethodAllowed(r.method)) {
-      console.warn(`[Helius Proxy] ILLEGAL METHOD BLOCKED | IP: ${ipStr} | Method: ${r.method}`);
-      return res.status(403).json({ error: `Method ${r.method} is strictly forbidden` });
+      return res.status(403).json({ error: `Method ${r.method} is forbidden by policy` });
     }
   }
 
-  // Rate Limiting Evaluation
-  const now = Date.now();
-  const rateRecord = requestCounts.get(ipStr) || { count: 0, resetTime: now + RATE_LIMIT_WINDOW_MS };
-
-  if (now > rateRecord.resetTime) {
-    rateRecord.count = 0;
-    rateRecord.resetTime = now + RATE_LIMIT_WINDOW_MS;
-  }
-
-  rateRecord.count++;
-  requestCounts.set(ipStr, rateRecord);
-
-  if (rateRecord.count > MAX_REQUESTS_PER_WINDOW) {
-    console.warn(`[Helius Proxy] RATE LIMIT EXCEEDED | IP: ${ipStr}`);
-    return res.status(429).json({ error: 'Too Many Requests' });
-  }
-
+  const hasWrite = requests.some(r => WRITE_METHODS.has(r.method));
   const requestedMethods = requests.map(r => r.method).join(',');
 
-  // 3. Caching mechanism evaluation (for simple cacheable single requests)
-  let cacheKey = null;
-  if (!isBatch && CACHEABLE_METHODS.includes(req.body.method)) {
-    cacheKey = JSON.stringify(req.body);
-    const cached = cache.get(cacheKey);
-    if (cached && now < cached.expiresAt) {
-      console.info(`[Helius Proxy] CACHE HIT | IP: ${ipStr} | Method: ${requestedMethods}`);
-      return res.status(200).json(cached.data);
+  // Smart Routing Logic: Strict Rate-limiting for Writes 
+  const now = Date.now();
+  if (hasWrite) {
+    const rateRecord = writeRequestCounts.get(ipStr) || { count: 0, resetTime: now + WRITE_RATE_LIMIT_WINDOW_MS };
+    if (now > rateRecord.resetTime) {
+      rateRecord.count = 0;
+      rateRecord.resetTime = now + WRITE_RATE_LIMIT_WINDOW_MS;
+    }
+    rateRecord.count++;
+    writeRequestCounts.set(ipStr, rateRecord);
+
+    if (rateRecord.count > WRITE_MAX_REQUESTS) {
+      console.warn(`[Helius Proxy] WRITE RATE LIMIT HIT | IP: ${ipStr}`);
+      return res.status(429).json({ error: 'Too Many Write Requests' });
+    }
+  } else {
+    const rateRecord = readRequestCounts.get(ipStr) || { count: 0, resetTime: now + READ_RATE_LIMIT_WINDOW_MS };
+    if (now > rateRecord.resetTime) {
+      rateRecord.count = 0;
+      rateRecord.resetTime = now + READ_RATE_LIMIT_WINDOW_MS;
+    }
+    rateRecord.count++;
+    readRequestCounts.set(ipStr, rateRecord);
+
+    if (rateRecord.count > READ_MAX_REQUESTS) {
+      return res.status(429).json({ error: 'Too Many Read Requests' });
     }
   }
 
-  // RPC Fetching
+  // 2. Safely generate cache keys omitting identical requests with varying `id`
+  let cacheKey = null;
+  if (!isBatch && !hasWrite && CACHEABLE_METHODS.includes(req.body.method)) {
+    cacheKey = JSON.stringify({ method: req.body.method, params: req.body.params });
+    const cached = cache.get(cacheKey);
+    
+    if (cached && now < cached.expiresAt) {
+      console.info(`[Helius Proxy Metric] CACHE HIT | IP: ${ipStr} | Method: ${req.body.method}`);
+      // Re-attach original RPC `id` otherwise frontend Web3 providers will reject payload
+      return res.status(200).json({
+         ...cached.data,
+         id: req.body.id 
+      });
+    }
+  }
+
+  // 4. Latency measurement
+  const startTime = performance.now();
+
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds
 
     const response = await fetch('https://mainnet.helius-rpc.com/?api-key=d526019a-9e67-4638-9273-0490b4bfdb8a', {
       method: 'POST',
@@ -121,22 +153,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       data = JSON.parse(text);
     } catch (e) {
-      console.error(`[Helius Proxy] UPSTREAM PARSE ERROR | IP: ${ipStr} | Status: ${response.status}`);
       return res.status(502).json({ error: 'Invalid response from upstream RPC' });
     }
 
-    // 4. Structured logging on success
-    console.info(`[Helius Proxy] SUCCESS | IP: ${ipStr} | Methods: ${requestedMethods} | Status: ${response.status}`);
+    const durationMs = Math.round(performance.now() - startTime);
 
-    // Commit to cache if applicable
-    if (cacheKey && response.ok && !data.error) {
+    console.info(`[Helius Proxy Metric] MISS (FETCH) | Latency: ${durationMs}ms | IP: ${ipStr} | Methods: ${requestedMethods} | Status: ${response.status}`);
+
+    if (cacheKey && response.ok && !data.error && !isBatch) {
       cache.set(cacheKey, { data, expiresAt: now + CACHE_TTL_MS });
     }
 
     return res.status(response.status).json(data);
   } catch (err: any) {
-    // 4. Structured logging on failure
-    console.error(`[Helius Proxy] FETCH FAILED | IP: ${ipStr} | Methods: ${requestedMethods} | Error: ${err.message}`);
+    const durationMs = Math.round(performance.now() - startTime);
+    console.error(`[Helius Proxy Metric] ERROR | Latency: ${durationMs}ms | Error: ${err.message}`);
     return res.status(500).json({ error: 'RPC connection failed' });
   }
 }
