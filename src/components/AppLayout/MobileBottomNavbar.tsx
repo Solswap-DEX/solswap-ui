@@ -37,8 +37,9 @@ export function MobileBottomNavbar() {
       placeItems={'center'}
       height={'54px'}
       py={2}
-      bg={colors.backgroundLight}
-      borderTop={isLight ? `1px solid rgba(171, 196, 255, 0.2)` : `1px solid transparent`}
+      bg={colors.backgroundDark}
+      borderTop={`1px solid ${isLight ? 'rgba(0, 229, 160, 0.2)' : 'rgba(0, 229, 160, 0.1)'}`}
+      boxShadow="0px -4px 12px rgba(0, 229, 160, 0.05)"
     >
       <BottomNavbarItem
         href={swapHref}

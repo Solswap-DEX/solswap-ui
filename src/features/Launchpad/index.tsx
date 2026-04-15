@@ -189,7 +189,7 @@ export default function Launchpad() {
                       Share, Refer, Earn SOL! Share your link and get referral fees airdropped to you!
                     </Text>
                     <Link
-                      href="https://docs.solswap.cloud/raydium/pool-creation/launchlab/earn-referral-fees"
+                      href="https://docs.solswap.cloud/solswap/pool-creation/earn-referral-fees"
                       shallow
                       target="_blank"
                       rel="noopener noreferrer"
