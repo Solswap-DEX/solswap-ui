@@ -33,7 +33,7 @@ const poolAddressCache = new Map<string, string>()
 const fetcher = async (url: string): Promise<{ success: boolean; data: { items: RawVolumeDataItem[] } }> => {
   try {
     const isGeckoSchema = url.startsWith('gecko://')
-    const isDirectGecko = url.includes('/api/gecko?path=')
+    const isDirectGecko = url.includes('/api/gecko/')
 
     if (isGeckoSchema || isDirectGecko) {
       let finalUrl = url
@@ -53,12 +53,12 @@ const fetcher = async (url: string): Promise<{ success: boolean; data: { items: 
         let poolAddress = poolAddressCache.get(cacheKey)
 
         if (!poolAddress) {
-          const poolRes = (await axios.get(`/api/gecko?path=networks/${network}/tokens/${base}/pools`)) as any
+          const poolRes = (await axios.get(`/api/gecko/networks/${network}/tokens/${base}/pools`)) as any
           if (poolRes?.data?.[0]) {
             poolAddress = poolRes.data[0].attributes.address
             poolAddressCache.set(cacheKey, poolAddress)
           } else {
-            const poolResRev = (await axios.get(`/api/gecko?path=networks/${network}/tokens/${quote}/pools`)) as any
+            const poolResRev = (await axios.get(`/api/gecko/networks/${network}/tokens/${quote}/pools`)) as any
             if (poolResRev?.data?.[0]) {
               poolAddress = poolResRev.data[0].attributes.address
               poolAddressCache.set(cacheKey, poolAddress)
@@ -67,7 +67,7 @@ const fetcher = async (url: string): Promise<{ success: boolean; data: { items: 
         }
 
         if (!poolAddress) return { success: false, data: { items: [] } }
-        finalUrl = `/api/gecko?path=networks/${network}/pools/${poolAddress}/ohlcv/${timeframe}&aggregate=${aggregate}&limit=${limit}`
+        finalUrl = `/api/gecko/networks/${network}/pools/${poolAddress}/ohlcv/${timeframe}?aggregate=${aggregate}&limit=${limit}`
       }
 
       const ohlcvRes = (await axios.get(finalUrl)) as any
@@ -112,7 +112,7 @@ const priceFetcher = async (url: string): Promise<{ success: boolean; data: { it
       let poolAddress = poolAddressCache.get(cacheKey)
 
       if (!poolAddress) {
-        const poolRes = (await axios.get(`/api/gecko?path=networks/${network}/tokens/${base}/pools`)) as any
+        const poolRes = (await axios.get(`/api/gecko/networks/${network}/tokens/${base}/pools`)) as any
         if (poolRes?.data?.[0]) {
           poolAddress = poolRes.data[0].attributes.address
           poolAddressCache.set(cacheKey, poolAddress)
@@ -121,7 +121,7 @@ const priceFetcher = async (url: string): Promise<{ success: boolean; data: { it
 
       if (!poolAddress) return { success: false, data: { items: [] } }
 
-      const ohlcvUrl = `/api/gecko?path=networks/${network}/pools/${poolAddress}/ohlcv/${timeframe}&aggregate=${aggregate}&limit=${limit}`
+      const ohlcvUrl = `/api/gecko/networks/${network}/pools/${poolAddress}/ohlcv/${timeframe}?aggregate=${aggregate}&limit=${limit}`
       const ohlcvRes = (await axios.get(ohlcvUrl)) as any
 
       if (!ohlcvRes?.data?.attributes?.ohlcv_list) return { success: false, data: { items: [] } }

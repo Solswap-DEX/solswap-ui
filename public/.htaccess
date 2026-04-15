@@ -13,5 +13,9 @@ RewriteRule ^ - [L]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
+# Let /api/ paths pass through to Apache ProxyPass (bypass SPA fallback)
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^ - [L]
+
 # Everything else falls back to root index.html (true SPA routes only)
 RewriteRule ^ index.html [L]

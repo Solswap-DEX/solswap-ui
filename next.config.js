@@ -2,6 +2,8 @@
 const path = require('path')
 
 const nextConfig = {
+  output: 'export',
+  distDir: 'out',
   images: {
     unoptimized: true,
   },
