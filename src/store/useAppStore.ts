@@ -310,22 +310,34 @@ export const useAppStore = createStore<AppState>(
         const {
           data: { rpcs }
         } = await axios.get<{ rpcs: RpcItem[] }>(urlConfigs.BASE_HOST + urlConfigs.RPCS)
-        set({ rpcs }, false, { type: 'fetchRpcsAct' })
+        // Filter out nodes we know are WAF protected/internal (like rpcpool.com) 
+        // to avoid aggressive probing and console noise.
+        const cleanRpcs = rpcs.filter(r => !r.url.includes('rpcpool.com') && !r.url.includes('raydium.io'))
+        set({ rpcs: cleanRpcs }, false, { type: 'fetchRpcsAct' })
+
         const localRpcNode: { rpcNode?: RpcItem; url?: string } = JSON.parse(
           getStorageItem(isProdEnv() ? RPC_URL_PROD_KEY : RPC_URL_KEY) || '{}'
         )
 
         let i = 0
         const checkAndSetRpcNode = async () => {
-          const readyRpcs = [...rpcs]
+          const readyRpcs = [...cleanRpcs]
           if (localRpcNode?.rpcNode) readyRpcs.sort((a, b) => (a.name === localRpcNode.rpcNode!.name ? -1 : 1))
+          
+          if (!readyRpcs[i]) {
+            isRpcLoading = false
+            await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244', true, true)
+            return
+          }
+
           const success = await setRpcUrlAct(readyRpcs[i].url, true, true)
           if (!success) {
             i++
             if (i < readyRpcs.length) {
               checkAndSetRpcNode()
             } else {
-              isRpcLoading = false; await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244', true, true)
+              isRpcLoading = false
+              await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=690983ee-d6ad-49bb-880e-7a9673c12244', true, true)
             }
           }
         }
@@ -383,10 +395,14 @@ export const useAppStore = createStore<AppState>(
           return false
         }
         isRpcLoading = true
+        
+        // Passive validation mode: Do not aggressively retry unreachable endpoints.
+        // If it fails once during switch, abort instantly.
         await retry<Promise<EpochInfo>>(() => axios.post(url, { method: 'getEpochInfo' }, { skipError: true }), {
-          retryCount: 3,
+          retryCount: 0,
           onError: () => (isRpcLoading = false)
         })
+        
         isRpcLoading = false
         const rpcNode = get().rpcs.find((r) => r.url === url)
         set({ rpcNodeUrl: url, wsNodeUrl: rpcNode?.ws, tokenAccLoaded: false }, false, { type: 'setRpcUrlAct' })
