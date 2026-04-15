@@ -118,18 +118,26 @@ class RpcFailoverPool {
     }
 
     // Priority: healthy > degraded > cooldown-expired > failed
+    // Use composite performance score for dynamic weighting
     const candidates = this.endpoints
       .filter(e => e.state === 'healthy' || e.state === 'degraded')
-      .sort((a, b) => {
-        // Prefer healthy over degraded
-        if (a.state === 'healthy' && b.state !== 'healthy') return -1
-        if (b.state === 'healthy' && a.state !== 'healthy') return 1
-        // Among same state, prefer lowest latency
-        return a.avgLatency - b.avgLatency
-      })
 
     if (candidates.length > 0) {
-      return new Connection(candidates[0].url, { commitment: 'confirmed' })
+      // Dynamic weighting: composite score = state_weight + latency_penalty + error_penalty
+      const scored = candidates.map(ep => {
+        const stateWeight = ep.state === 'healthy' ? 0 : 50           // Healthy bias
+        const latencyPenalty = Math.min(ep.avgLatency / 100, 50)      // 0-50 scale
+        const errorPenalty = ep.consecutiveErrors * 20                 // 20 pts per recent error
+        const recencyBonus = ep.lastSuccess > 0
+          ? Math.max(0, 10 - (Date.now() - ep.lastSuccess) / 10_000) // Recent success bonus
+          : 0
+        return {
+          ep,
+          score: stateWeight + latencyPenalty + errorPenalty - recencyBonus
+        }
+      }).sort((a, b) => a.score - b.score) // Lower score = better
+
+      return new Connection(scored[0].ep.url, { commitment: 'confirmed' })
     }
 
     // All failed/cooldown — force primary as last resort

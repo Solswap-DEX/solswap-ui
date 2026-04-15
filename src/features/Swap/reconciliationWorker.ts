@@ -177,15 +177,24 @@ class ReconciliationWorker {
 
   private tracked = new Map<string, TrackedTransaction>()
   private activeWatchers = 0
+  private watcherLocks = new Set<string>() // Prevents duplicate watchers per txId
   private listeners: ReconciliationListener[] = []
   private getConnection: () => Connection
   private persistence = new ReconciliationPersistence()
   private recoveryDone = false
+  private pruneTimer: ReturnType<typeof setInterval> | null = null
+
+  // Hot/Cold separation thresholds
+  private static readonly HOT_TX_MAX_AGE_MS = 10 * 60 * 1000   // 10 min — actively watched
+  private static readonly COLD_TX_MAX_AGE_MS = 30 * 60 * 1000  // 30 min — kept for reference
+  private static readonly PRUNE_INTERVAL_MS = 5 * 60 * 1000    // Prune every 5 min
 
   private constructor(connectionGetter: () => Connection) {
     this.getConnection = connectionGetter
     // Fire recovery on init (non-blocking)
     this.recoverFromPersistence()
+    // Start periodic pruning for memory pressure
+    this.pruneTimer = setInterval(() => this.pruneStale(), ReconciliationWorker.PRUNE_INTERVAL_MS)
   }
 
   static getInstance(connectionGetter?: () => Connection): ReconciliationWorker {
@@ -198,7 +207,7 @@ class ReconciliationWorker {
     return ReconciliationWorker.instance
   }
 
-  /** Recover unfinalized transactions from IndexedDB after page reload */
+  /** Recover unfinalized transactions from IndexedDB after page reload (causal order) */
   private async recoverFromPersistence(): Promise<void> {
     try {
       await this.persistence.init()
@@ -209,9 +218,17 @@ class ReconciliationWorker {
         return
       }
 
-      console.log('[ReconciliationWorker] Recovering from persistence', {
+      // Sort by causal order: timestamp first, then slot for same-second TXs
+      saved.sort((a, b) => {
+        const timeDiff = a.confirmedAt - b.confirmedAt
+        if (timeDiff !== 0) return timeDiff
+        return (a.metadata.slot || 0) - (b.metadata.slot || 0)
+      })
+
+      console.log('[ReconciliationWorker] Recovering from persistence (causal order)', {
         count: saved.length,
-        txIds: saved.map(s => s.txId)
+        txIds: saved.map(s => s.txId),
+        order: saved.map(s => ({ txId: s.txId, confirmedAt: s.confirmedAt, slot: s.metadata.slot }))
       })
 
       for (const entry of saved) {
@@ -331,6 +348,12 @@ class ReconciliationWorker {
   }
 
   private async spawnWatcher(txId: string): Promise<void> {
+    // Runtime lock — prevent duplicate watchers for same txId
+    if (this.watcherLocks.has(txId)) {
+      console.warn('[ReconciliationWorker] Watcher already running, skipping', { txId })
+      return
+    }
+    this.watcherLocks.add(txId)
     this.activeWatchers++
     
     try {
@@ -338,6 +361,7 @@ class ReconciliationWorker {
     } catch (e) {
       console.error('[ReconciliationWorker] Watcher error', { txId, error: e })
     } finally {
+      this.watcherLocks.delete(txId)
       this.activeWatchers--
       this.trySpawnPendingWatchers()
     }
@@ -536,7 +560,7 @@ class ReconciliationWorker {
     }
   }
 
-  /** Cleanup old finalized entries (call periodically to prevent memory leak) */
+  /** Cleanup old entries (call periodically to prevent memory leak) */
   cleanup(maxAgeMs: number = 30 * 60 * 1000): void {
     const now = Date.now()
     for (const [txId, entry] of this.tracked.entries()) {
@@ -546,6 +570,47 @@ class ReconciliationWorker {
         this.tracked.delete(txId)
         this.persistence.remove(txId)
       }
+    }
+  }
+
+  /**
+   * Prune stale transactions based on hot/cold separation.
+   * Hot: actively being watched (< HOT_TX_MAX_AGE_MS)
+   * Cold: kept for reference but no longer actively polled (< COLD_TX_MAX_AGE_MS)
+   * Beyond cold: evicted from memory + persistence
+   */
+  private pruneStale(): void {
+    const now = Date.now()
+    let pruned = 0
+
+    for (const [txId, entry] of this.tracked.entries()) {
+      const age = now - entry.confirmedAt
+      const isTerminal = entry.state === 'finalized' || entry.state === 'failed' ||
+        entry.state === 'unknown_pending' || entry.state === 'unknown_finality'
+
+      // Cold eviction: terminal TXs older than COLD threshold
+      if (isTerminal && age > ReconciliationWorker.COLD_TX_MAX_AGE_MS) {
+        this.tracked.delete(txId)
+        this.persistence.remove(txId)
+        pruned++
+        continue
+      }
+
+      // Hot demotion: non-terminal TXs older than HOT threshold
+      // These are stuck — mark as unknown and stop watching
+      if (!isTerminal && age > ReconciliationWorker.HOT_TX_MAX_AGE_MS && !this.watcherLocks.has(txId)) {
+        entry.state = 'unknown_finality'
+        this.persistence.save(entry)
+        pruned++
+      }
+    }
+
+    if (pruned > 0) {
+      console.log('[ReconciliationWorker] Pruned stale transactions', {
+        pruned,
+        remaining: this.tracked.size,
+        activeWatchers: this.activeWatchers
+      })
     }
   }
 }
