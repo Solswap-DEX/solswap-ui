@@ -223,25 +223,59 @@ export const useSwapStore = createStore<SwapStore>(
 
           const latestBlockhash = await connection.getLatestBlockhash()
           
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Transaction confirmation timeout')), 60000)
-          )
+          let confirmation: any = { value: { err: null } }
+          try {
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Transaction confirmation timeout')), 60000)
+            )
 
-          const confirmation = (await Promise.race([
-            connection.confirmTransaction({
-              signature: txId,
-              blockhash: latestBlockhash.blockhash,
-              lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
-            }, 'confirmed'),
-            timeoutPromise
-          ])) as any
+            confirmation = await Promise.race([
+              connection.confirmTransaction({
+                signature: txId,
+                blockhash: latestBlockhash.blockhash,
+                lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+              }, 'confirmed'),
+              timeoutPromise
+            ])
+          } catch (e: any) {
+            if (e.message === 'Transaction confirmation timeout') {
+               const status = await connection.getSignatureStatus(txId)
+               if (status?.value?.confirmationStatus === 'confirmed' || status?.value?.confirmationStatus === 'finalized') {
+                 confirmation = { value: { err: null } }
+               } else {
+                 confirmation = { value: { err: e } }
+               }
+            } else {
+               confirmation = { value: { err: e } }
+            }
+          }
 
           const targetTxIdx = processedId.findIndex((t) => t.txId === txId)
           if (confirmation.value.err) {
             if (targetTxIdx > -1) processedId[targetTxIdx].status = 'error'
             const isSlippageError = isSwapSlippageError(confirmation.value)
             
-            if (signedTxs.length > 1) {
+            console.error('Swap transaction failed', {
+              txId,
+              inputToken: inputToken.address,
+              outputToken: outputToken.address,
+              amount: swapResponse.data.inputAmount,
+              status: 'error',
+              error: confirmation.value.err
+            })
+
+            if (signedTxs.length === 1) {
+              txStatusSubject.next({
+                txId,
+                status: 'error',
+                ...swapMeta,
+                signedTx: tx,
+                onClose: onCloseToast,
+                isSwap: true,
+                mintInfo: [inputToken, outputToken],
+                ...txProps
+              })
+            } else {
               handleMultiTxRetry(processedId)
               handleMultiTxToast({
                 toastId,
@@ -260,6 +294,13 @@ export const useSwapStore = createStore<SwapStore>(
             }
             throw new Error(`Transaction failed: ${txId}`)
           } else {
+            console.log('Swap transaction success', {
+              txId,
+              inputToken: inputToken.address,
+              outputToken: outputToken.address,
+              amount: swapResponse.data.inputAmount,
+              status: 'success'
+            })
             if (targetTxIdx > -1) processedId[targetTxIdx].status = 'success'
             useTokenAccountStore.getState().fetchTokenAccountAct({ commitment: useAppStore.getState().commitment })
             
