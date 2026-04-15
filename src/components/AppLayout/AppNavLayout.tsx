@@ -40,6 +40,7 @@ import { VersionedTransactionSettingField } from './components/VersionedTransact
 import { PriorityButton } from './components/PriorityButton'
 import DisclaimerModal from './components/DisclaimerModal'
 import AppVersion from './AppVersion'
+import { NetworkStatusBar } from '../NetworkStatusBar'
 import TagNewIcon from '@/icons/misc/TagNewIcon'
 import { useReferrerQuery } from '@/features/Launchpad/utils'
 // Torque rewards feature disabled in SolSwap cleanup
@@ -183,24 +184,8 @@ function AppNavLayout({
           }
         }}
       >
-        {children}
-        <Box as="footer" py={6} mt="auto" textAlign="center" borderTop={`1px solid ${colors.backgroundTransparent07}`}>
-          <VStack spacing={2}>
-            <HStack spacing={4} justify="center">
-              <Link href="/docs/disclaimer">
-                <Text fontSize="xs" color={colors.textTertiary} _hover={{ color: colors.textSecondary, textDecoration: 'underline' }}>
-                  Disclaimer
-                </Text>
-              </Link>
-              <Text fontSize="xs" color={colors.textTertiary}>|</Text>
-              <Text fontSize="xs" color={colors.textTertiary}>
-                Jose Reyes Dev | ArtLogic Labs
-              </Text>
-            </HStack>
-            <Text fontSize="x-small" color={colors.textQuaternary}>
-              SolSwap is an independent fork of the Raydium Protocol V3
-            </Text>
-          </VStack>
+        <Box pb="36px">
+          {children}
         </Box>
       </Box>
       <DisclaimerModal />
@@ -209,6 +194,9 @@ function AppNavLayout({
           <MobileBottomNavbar />
         </Box>
       </Mobile>
+      <Desktop>
+        <NetworkStatusBar />
+      </Desktop>
     </Flex>
   )
 }
