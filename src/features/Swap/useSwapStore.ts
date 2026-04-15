@@ -196,7 +196,18 @@ export const useSwapStore = createStore<SwapStore>(
             
           processedId.push({ txId, signedTx: tx, status: 'sent' })
 
-          if (signedTxs.length > 1) {
+          if (signedTxs.length === 1) {
+            txStatusSubject.next({
+              txId,
+              status: 'pending',
+              ...swapMeta,
+              signedTx: tx,
+              onClose: onCloseToast,
+              isSwap: true,
+              mintInfo: [inputToken, outputToken],
+              ...txProps
+            })
+          } else {
             handleMultiTxRetry(processedId)
             handleMultiTxToast({
               toastId,
@@ -211,11 +222,19 @@ export const useSwapStore = createStore<SwapStore>(
           }
 
           const latestBlockhash = await connection.getLatestBlockhash()
-          const confirmation = await connection.confirmTransaction({
-            signature: txId,
-            blockhash: latestBlockhash.blockhash,
-            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
-          }, 'confirmed')
+          
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Transaction confirmation timeout')), 60000)
+          )
+
+          const confirmation = (await Promise.race([
+            connection.confirmTransaction({
+              signature: txId,
+              blockhash: latestBlockhash.blockhash,
+              lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+            }, 'confirmed'),
+            timeoutPromise
+          ])) as any
 
           const targetTxIdx = processedId.findIndex((t) => t.txId === txId)
           if (confirmation.value.err) {
@@ -247,6 +266,7 @@ export const useSwapStore = createStore<SwapStore>(
             if (signedTxs.length === 1) {
               txStatusSubject.next({
                 txId,
+                status: 'success',
                 ...swapMeta,
                 signedTx: tx,
                 onClose: onCloseToast,
