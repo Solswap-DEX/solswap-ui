@@ -186,97 +186,89 @@ export const useSwapStore = createStore<SwapStore>(
             : 'transaction_history.name_swap'
         }
 
-        let i = 0
-        const checkSendTx = async (): Promise<void> => {
-          if (!signedTxs[i]) return
+        for (let i = 0; i < signedTxs.length; i++) {
           const tx = signedTxs[i]
-          const txId = !isV0Tx
-            ? await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0 })
-            : await connection.sendTransaction(tx as VersionedTransaction, { skipPreflight: true, maxRetries: 0 })
+          let txId = ''
+          
+          txId = !isV0Tx
+            ? await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 3 })
+            : await connection.sendTransaction(tx as VersionedTransaction, { skipPreflight: false, maxRetries: 3 })
+            
           processedId.push({ txId, signedTx: tx, status: 'sent' })
 
-          if (signedTxs.length === 1) {
-            txStatusSubject.next({
-              txId,
-              ...swapMeta,
-              signedTx: tx,
-              onClose: onCloseToast,
-              isSwap: true,
-              mintInfo: [inputToken, outputToken],
-              ...txProps
-            })
-            return
-          }
-          let timeout = 0
-          let intervalId = 0
-          let intervalCount = 0
-
-          const cbk = (signatureResult: SignatureResult) => {
-            window.clearTimeout(timeout)
-            window.clearInterval(intervalId)
-            const targetTxIdx = processedId.findIndex((tx) => tx.txId === txId)
-            if (targetTxIdx > -1) processedId[targetTxIdx].status = signatureResult.err ? 'error' : 'success'
+          if (signedTxs.length > 1) {
             handleMultiTxRetry(processedId)
-            const isSlippageError = isSwapSlippageError(signatureResult)
             handleMultiTxToast({
               toastId,
               processedId: processedId.map((p) => ({ ...p, status: p.status === 'sent' ? 'info' : p.status })),
               txLength,
-              meta: {
-                ...swapMeta,
-                title: isSlippageError ? i18n.t('error.error.swap_slippage_error_title')! : swapMeta.title,
-                description: isSlippageError ? i18n.t('error.error.swap_slippage_error_desc')! : swapMeta.description
-              },
+              meta: swapMeta,
               isSwap: true,
               handler,
               getSubTxTitle,
               onCloseToast
             })
-            if (!signatureResult.err) checkSendTx()
           }
 
-          const subId = connection.onSignature(txId, cbk, 'processed')
-          connection.getSignatureStatuses([txId])
+          const latestBlockhash = await connection.getLatestBlockhash()
+          const confirmation = await connection.confirmTransaction({
+            signature: txId,
+            blockhash: latestBlockhash.blockhash,
+            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+          }, 'confirmed')
 
-          intervalId = window.setInterval(async () => {
-            const targetTxIdx = processedId.findIndex((tx) => tx.txId === txId)
-            if (intervalCount++ > TOAST_DURATION / 2000 || processedId[targetTxIdx].status !== 'sent') {
-              window.clearInterval(intervalId)
-              return
+          const targetTxIdx = processedId.findIndex((t) => t.txId === txId)
+          if (confirmation.value.err) {
+            if (targetTxIdx > -1) processedId[targetTxIdx].status = 'error'
+            const isSlippageError = isSwapSlippageError(confirmation.value)
+            
+            if (signedTxs.length > 1) {
+              handleMultiTxRetry(processedId)
+              handleMultiTxToast({
+                toastId,
+                processedId: processedId.map((p) => ({ ...p, status: p.status === 'sent' ? 'info' : p.status })),
+                txLength,
+                meta: {
+                  ...swapMeta,
+                  title: isSlippageError ? i18n.t('error.error.swap_slippage_error_title')! : swapMeta.title,
+                  description: isSlippageError ? i18n.t('error.error.swap_slippage_error_desc')! : swapMeta.description
+                },
+                isSwap: true,
+                handler,
+                getSubTxTitle,
+                onCloseToast
+              })
             }
-            try {
-              const r = await connection.getTransaction(txId, { commitment: 'confirmed', maxSupportedTransactionVersion: TxVersion.V0 })
-              if (r) {
-                console.log('tx status from getTransaction:', txId)
-                cbk({ err: r.meta?.err || null })
-                window.clearInterval(intervalId)
-                useTokenAccountStore.getState().fetchTokenAccountAct({ commitment: useAppStore.getState().commitment })
-              }
-            } catch (e) {
-              console.error('getTransaction timeout:', e, txId)
-              window.clearInterval(intervalId)
+            throw new Error(`Transaction failed: ${txId}`)
+          } else {
+            if (targetTxIdx > -1) processedId[targetTxIdx].status = 'success'
+            useTokenAccountStore.getState().fetchTokenAccountAct({ commitment: useAppStore.getState().commitment })
+            
+            if (signedTxs.length === 1) {
+              txStatusSubject.next({
+                txId,
+                ...swapMeta,
+                signedTx: tx,
+                onClose: onCloseToast,
+                isSwap: true,
+                mintInfo: [inputToken, outputToken],
+                ...txProps
+              })
+            } else {
+              handleMultiTxRetry(processedId)
+              handleMultiTxToast({
+                toastId,
+                processedId: processedId.map((p) => ({ ...p, status: p.status === 'sent' ? 'info' : p.status })),
+                txLength,
+                meta: swapMeta,
+                isSwap: true,
+                handler,
+                getSubTxTitle,
+                onCloseToast
+              })
             }
-          }, 2000)
-
-          handleMultiTxRetry(processedId)
-          handleMultiTxToast({
-            toastId,
-            processedId: processedId.map((p) => ({ ...p, status: p.status === 'sent' ? 'info' : p.status })),
-            txLength,
-            meta: swapMeta,
-            isSwap: true,
-            handler,
-            getSubTxTitle,
-            onCloseToast
-          })
-
-          timeout = window.setTimeout(() => {
-            connection.removeSignatureListener(subId)
-          }, TOAST_DURATION)
-
-          i++
+          }
         }
-        checkSendTx()
       } catch (e: any) {
         txProps.onError?.()
         if (e.message !== 'tx failed')
