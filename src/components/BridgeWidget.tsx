@@ -44,7 +44,11 @@ export default function BridgeWidget() {
           fee: 0.01,
         },
         rpcUrls: {
-          1151111081099710: ['https://mainnet.helius-rpc.com/?api-key=d526019a-9e67-4638-9273-0490b4bfdb8a'],
+          1151111081099710: [
+            typeof window !== 'undefined' 
+              ? `${window.location.origin}/api/helius` 
+              : 'https://solswap.cloud/api/helius'
+          ],
         },
       },
 
