@@ -11,10 +11,15 @@ import Decimal from 'decimal.js'
 import { ApiSwapV1OutSuccess, ApiSwapV1OutError } from './type'
 import { REVENUE_CONFIG } from '@/config/revenueConfig'
 
-const fetcher = async (url: string): Promise<ApiSwapV1OutSuccess | ApiSwapV1OutError> =>
-  axios.get(url, {
-    skipError: true
-  })
+const fetcher = async (url: string): Promise<ApiSwapV1OutSuccess | ApiSwapV1OutError> => {
+  try {
+    const res = await axios.get(url, { skipError: true })
+    if (res && typeof res === 'object') return res
+    throw new Error('Invalid API response')
+  } catch (e) {
+    throw e
+  }
+}
 
 export default function useSwap(props: {
   shouldFetch?: boolean

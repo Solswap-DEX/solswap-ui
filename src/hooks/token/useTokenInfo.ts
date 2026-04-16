@@ -31,14 +31,18 @@ export default function useTokenInfo({
 
     if (!info) {
       setLoading(true)
-      getTokenInfo({ mint, connection, programId }).then((r) => {
-        if (r)
-          setTokenInfo({
-            ...r,
-            symbol: getMintSymbol({ mint: r })
-          })
-        setLoading(false)
-      })
+      getTokenInfo({ mint, connection, programId })
+        .then((r) => {
+          if (r)
+            setTokenInfo({
+              ...r,
+              symbol: getMintSymbol({ mint: r })
+            })
+          setLoading(false)
+        })
+        .catch(() => {
+          setLoading(false)
+        })
       return
     }
 

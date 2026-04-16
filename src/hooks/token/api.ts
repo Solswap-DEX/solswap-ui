@@ -62,6 +62,7 @@ export const getOnlineTokenInfo = async ({
     if (connection) {
       const address = new PublicKey(mint)
       const info = await connection.getAccountInfo(address, useAppStore.getState().commitment)
+      if (!info) return undefined
       const space = (info as AccountInfo<Buffer> & { space?: number })?.space ?? 0
       if (space === 82 || space >= 165) {
         const tags = []

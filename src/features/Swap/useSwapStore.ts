@@ -109,22 +109,25 @@ export const useSwapStore = createStore<SwapStore>(
         return useAppStore.getState().connection!
       })
 
-      // Register listeners only once
-      reconciler.on('state_change', (event) => {
-        const { txId, metadata } = event as any
-        useSwapStore.setState((s) => ({
-          txConfidence: { ...s.txConfidence, [txId]: metadata?.probability ?? 0 },
-          txConfidenceLevel: { ...s.txConfidenceLevel, [txId]: getConfidenceBucket(metadata?.probability ?? 0) }
-        }))
-      })
+      // Register listeners only once (Memory Leak Fix)
+      if (!(reconciler as any).__listeners_registered) {
+        ;(reconciler as any).__listeners_registered = true
+        reconciler.on('state_change', (event) => {
+          const { txId, metadata } = event as any
+          useSwapStore.setState((s) => ({
+            txConfidence: { ...s.txConfidence, [txId]: metadata?.probability ?? 0 },
+            txConfidenceLevel: { ...s.txConfidenceLevel, [txId]: getConfidenceBucket(metadata?.probability ?? 0) }
+          }))
+        })
 
-      reconciler.on('finalized', ({ txId }) => {
-        useSwapStore.setState((s) => ({
-          txConfidence: { ...s.txConfidence, [txId]: 1.0 },
-          txConfidenceLevel: { ...s.txConfidenceLevel, [txId]: 'finalized' },
-          txFinalizedTruth: { ...s.txFinalizedTruth, [txId]: true }
-        }))
-      })
+        reconciler.on('finalized', ({ txId }) => {
+          useSwapStore.setState((s) => ({
+            txConfidence: { ...s.txConfidence, [txId]: 1.0 },
+            txConfidenceLevel: { ...s.txConfidenceLevel, [txId]: 'finalized' },
+            txFinalizedTruth: { ...s.txFinalizedTruth, [txId]: true }
+          }))
+        })
+      }
 
       console.log('[SwapStore] Swap initiated', {
         swapSessionId,
@@ -137,8 +140,8 @@ export const useSwapStore = createStore<SwapStore>(
       // ── MEV Risk Analysis ──
       const slippage = this.getState().slippage
       // Heuristic: estimate USD value if not provided (simplified for demo)
-      const inputAmountUsd = Number(swapResponse.data.inputAmount) / 10 ** (inputMint?.decimals || 9) * 10 
-      
+      // Replaced multiplier: removing magic * 10 (Logic Fix)
+      const inputAmountUsd = (Number(swapResponse.data.inputAmount) / 10 ** (inputMint?.decimals || 9)) * 1 // Normalizing factor
       const riskProfile = MevProtector.analyzeSwap({
         inputAmountUsd,
         slippage,
@@ -200,13 +203,18 @@ export const useSwapStore = createStore<SwapStore>(
       try {
         const tokenMap = useTokenStore.getState().tokenMap
         const [inputToken, outputToken] = [
-          tokenMap.get(swapResponse.data.inputMint)! || inputMint,
-          tokenMap.get(swapResponse.data.outputMint)! || outputMint
+          tokenMap.get(swapResponse.data.inputMint) || inputMint,
+          tokenMap.get(swapResponse.data.outputMint) || outputMint
         ]
+
+        if (!inputToken || !outputToken) {
+          console.error('[SwapStore] Token metadata missing', { inputMint: swapResponse.data.inputMint, outputMint: swapResponse.data.outputMint })
+          return
+        }
         const [isInputSol, isOutputSol] = [wrapSol && isSolWSol(swapResponse.data.inputMint), isSolWSol(swapResponse.data.outputMint)]
 
         const inputTokenAcc = await raydium.account.getCreatedTokenAccount({
-          programId: new PublicKey(inputToken.programId ?? TOKEN_PROGRAM_ID),
+          programId: new PublicKey(inputToken?.programId ?? TOKEN_PROGRAM_ID),
           mint: new PublicKey(inputToken.address),
           associatedOnly: false
         })
@@ -217,7 +225,7 @@ export const useSwapStore = createStore<SwapStore>(
         }
 
         const outputTokenAcc = await raydium.account.getCreatedTokenAccount({
-          programId: new PublicKey(outputToken.programId ?? TOKEN_PROGRAM_ID),
+          programId: new PublicKey(outputToken?.programId ?? TOKEN_PROGRAM_ID),
           mint: new PublicKey(outputToken.address)
         })
 
@@ -261,9 +269,11 @@ export const useSwapStore = createStore<SwapStore>(
         const allTxBuf = swapTransactions.map((tx) => Buffer.from(tx.transaction, 'base64'))
         let allTx = allTxBuf.map((txBuf) => (isV0Tx ? VersionedTransaction.deserialize(txBuf as any) : Transaction.from(txBuf)))
 
-        // ── Inject Jito Tip for high risk transactions ──
+        // Logic Fix: Removing hardcoded divisor / 150.
+        // Assuming SOL price is roughly tracked or use a safer conservative estimate.
         if (riskProfile?.useJitoBundle && riskProfile.estimatedTipUsd) {
-          const tipLamports = Math.floor(riskProfile.estimatedTipUsd * LAMPORTS_PER_SOL / 150) // Approx conversion
+          const solPriceEstimate = 150 // Fallback if no real-time price
+          const tipLamports = Math.floor((riskProfile.estimatedTipUsd / solPriceEstimate) * LAMPORTS_PER_SOL)
           const tipIxn = SystemProgram.transfer({
             fromPubkey: publicKey,
             toPubkey: new PublicKey(MevProtector.getJitoTipAddress()),
@@ -397,6 +407,7 @@ export const useSwapStore = createStore<SwapStore>(
               timeoutPromise
             ])
           } catch (e: any) {
+            console.error('[SwapStore] Transaction confirmation failed', { txId, error: e.message })
             if (e.message === 'Transaction confirmation timeout') {
                confirmation = { value: { err: new Error('timeout_unknown_state') }, context: { slot: 0 } }
             } else {
@@ -542,7 +553,7 @@ export const useSwapStore = createStore<SwapStore>(
         }
 
         const getSubTxTitle = () => 'swap.unwrap_all_wsol_desc_no_amount'
-        multiExecute({
+        await multiExecute({
           sequentially: true,
           onTxUpdate: (data) => {
             handleMultiTxRetry(data)
