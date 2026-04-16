@@ -207,6 +207,7 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
         style={{ width: '100%', height: '100%', border: 'none', backgroundColor: '#0D1117' }}
         title={`${sourceName} Chart`}
         allow="clipboard-write"
+        sandbox="allow-scripts allow-same-origin"
         loading="lazy"
         onLoad={handleIframeLoad}
       />
