@@ -20,7 +20,7 @@ export function NetworkStatusBar() {
   const [utcTime, setUtcTime] = useState<string>('')
 
   // The actual URL used for the ping (defaulting to Helius Mainnet if missing)
-  const rpcUrl = rpcNodeUrl || 'https://mainnet.helius-rpc.com/?api-key=d526019a-9e67-4638-9273-0490b4bfdb8a'
+  const rpcUrl = rpcNodeUrl || process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com'
 
   // Determine provider name for display
   const providerName = rpcUrl.includes('helius')
