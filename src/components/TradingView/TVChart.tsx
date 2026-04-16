@@ -14,13 +14,24 @@ enum ChartState {
   LOADING = 'LOADING',
   EXACT = 'EXACT',
   FALLBACK = 'FALLBACK',
-  NO_DATA = 'NO_DATA'
+  NO_DATA = 'NO_DATA',
+  INVALID_PAIR = 'INVALID_PAIR'
 }
 
 const WSOL_MINT = 'So11111111111111111111111111111111111111112'
-const NULL_MINT = '11111111111111111111111111111111'
-const MIN_LIQUIDITY_USD = 100
+const NATIVE_SOL_MINT = '11111111111111111111111111111111'
+const MIN_LIQUIDITY_USD = 1000 // Upped to $1,000 for production stability
 const API_TIMEOUT_MS = 12000
+
+/**
+ * Normalizes SOL and WSOL to the same identity for matching purposes.
+ */
+const normalizeMint = (mint?: string) => {
+  if (!mint) return ''
+  const m = mint.trim()
+  if (m === WSOL_MINT || m === NATIVE_SOL_MINT) return 'SOL_IDENTITY'
+  return m.toLowerCase()
+}
 
 export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...rest }: TVChartProps) {
   const [pairAddress, setPairAddress] = useState<string | null>(null)
@@ -41,8 +52,8 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
     const parts = poolId.split('_').filter(Boolean)
     if (parts.length < 2) return null
     return {
-      base: parts[0] === NULL_MINT ? WSOL_MINT : parts[0],
-      quote: parts[1] === NULL_MINT ? WSOL_MINT : parts[1]
+      base: parts[0],
+      quote: parts[1]
     }
   }, [poolId])
 
@@ -52,6 +63,9 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
       return
     }
 
+    const normBase = normalizeMint(mints.base)
+    const normQuote = normalizeMint(mints.quote)
+
     setChartState(ChartState.LOADING)
     setPairAddress(null)
     setFallbackPair(null)
@@ -59,49 +73,65 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS)
 
+    // Using base token to find potential pools
     fetch(`https://api.dexscreener.com/latest/dex/tokens/${mints.base}`, { signal: controller.signal })
       .then(res => res.json())
       .then(data => {
         if (!isComponentMounted.current) return
         clearTimeout(timeoutId)
 
-        const allPairs = (data?.pairs || []) as any[]
+        const rawPairs = (data?.pairs || []) as any[]
 
-        // REQUIREMENTS 2: VALIDITY FILTER (Solana, Liquidity >= 100, Volume > 0)
-        const validPairs = allPairs.filter(p => 
-          p.chainId === 'solana' &&
-          (p.liquidity?.usd || 0) >= MIN_LIQUIDITY_USD &&
-          (p.volume?.h24 || 0) > 0
-        )
+        // Filter and Log Rejections
+        const validPairs = rawPairs.filter(p => {
+          if (p.chainId !== 'solana') {
+            console.log(`[Chart] REJECTED POOL ${p.pairAddress} \u2192 reason: wrong_chain (${p.chainId})`)
+            return false
+          }
+          if ((p.liquidity?.usd || 0) < MIN_LIQUIDITY_USD) {
+            console.log(`[Chart] REJECTED POOL ${p.pairAddress} \u2192 reason: low_liquidity ($${Math.round(p.liquidity?.usd || 0)})`)
+            return false
+          }
+          if ((p.volume?.h24 || 0) <= 0) {
+            console.log(`[Chart] REJECTED POOL ${p.pairAddress} \u2192 reason: zero_volume`)
+            return false
+          }
+          return true
+        })
 
         if (validPairs.length === 0) {
-          console.log(`[Chart] NO DATA \u2192 token: ${mints.base}`)
+          console.log(`[Chart] NO DATA \u2192 token: ${mints.base} | reason: no pools passed filters`)
           setChartState(ChartState.NO_DATA)
           return
         }
 
-        // REQUIREMENT 1: STRICT PAIR MATCH
-        const exactMatch = validPairs.find(p => 
-          (p.baseToken?.address === mints.base && p.quoteToken?.address === mints.quote) ||
-          (p.baseToken?.address === mints.quote && p.quoteToken?.address === mints.base)
-        )
+        // --- PRIORITY 1: EXACT NORMALIZED MATCH ---
+        const exactMatch = validPairs.find(p => {
+          const pBase = normalizeMint(p.baseToken?.address)
+          const pQuote = normalizeMint(p.quoteToken?.address)
+          return (pBase === normBase && pQuote === normQuote) || (pBase === normQuote && pQuote === normBase)
+        })
 
         if (exactMatch) {
-          console.log(`[Chart] EXACT MATCH \u2192 ${exactMatch.pairAddress}`)
+          console.log(`[Chart] EXACT MATCH (Normalized) \u2192 ${exactMatch.pairAddress}`)
           setPairAddress(exactMatch.pairAddress)
           setChartState(ChartState.EXACT)
           return
         }
 
-        // REQUIREMENT 4: FALLBACK LOGIC
-        // Step 1: Find best alternative pool for the TARGET TOKEN (quoteMint)
+        // --- PRIORITY 2: BEST QUOTE TOKEN FALLBACK ---
+        // Search for pools that include our target token (quote)
         const targetTokenPools = validPairs
-          .filter(p => p.baseToken?.address === mints.quote || p.quoteToken?.address === mints.quote)
+          .filter(p => {
+             const pBase = normalizeMint(p.baseToken?.address)
+             const pQuote = normalizeMint(p.quoteToken?.address)
+             return pBase === normQuote || pQuote === normQuote
+          })
           .sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))
 
         if (targetTokenPools.length > 0) {
           const fallback = targetTokenPools[0]
-          console.log(`[Chart] FALLBACK \u2192 ${fallback.pairAddress} | reason: no exact match`)
+          console.log(`[Chart] FALLBACK \u2192 ${fallback.pairAddress} | reason: no exact matching pair for SOL-identity`)
           
           setPairAddress(fallback.pairAddress)
           setFallbackPair({
@@ -110,13 +140,14 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
           })
           setChartState(ChartState.FALLBACK)
         } else {
-          console.log(`[Chart] NO DATA \u2192 token: ${mints.quote}`)
-          setChartState(ChartState.NO_DATA)
+          console.log(`[Chart] INVALID PAIR \u2192 token ${mints.quote} recognized but no liquid Solana pools found`)
+          setChartState(ChartState.INVALID_PAIR)
         }
       })
       .catch((err) => {
         if (!isComponentMounted.current) return
         clearTimeout(timeoutId)
+        if (err.name === 'AbortError') return
         console.warn("[Chart API Error]", err)
         setChartState(ChartState.NO_DATA)
       })
@@ -129,13 +160,15 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
 
   // --- RENDERIZADO ---
 
-  if (chartState === ChartState.NO_DATA) {
+  if (chartState === ChartState.NO_DATA || chartState === ChartState.INVALID_PAIR) {
     return (
       <Box w="100%" h={height} minH="300px" bg="#0D1117" borderRadius="xl" display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap={3}>
-        <Text fontSize="2xl" opacity={0.3}>📊</Text>
-        <Text color="#666" fontSize="sm" fontWeight="500">No chart data available for this pair</Text>
+        <Text fontSize="2xl" opacity={0.3}>\uD83D\uDCCA</Text>
+        <Text color="#666" fontSize="sm" fontWeight="500">
+           {chartState === ChartState.INVALID_PAIR ? 'Incoherent trading pair' : 'No chart data available for this pair'}
+        </Text>
         <Text color="#555" fontSize="xs" maxW="240px" textAlign="center">
-           Ensuring liquidity &gt; $100 and recent volume.
+           Requires liquidity &gt; $1,000 USD and active volume.
         </Text>
       </Box>
     )
