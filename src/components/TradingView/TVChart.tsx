@@ -73,8 +73,11 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS)
 
-    // Using base token to find potential pools
-    fetch(`https://api.dexscreener.com/latest/dex/tokens/${mints.base}`, { signal: controller.signal })
+    // Priority: Fetch by the non-SOL token because querying by Native SOL 
+    // returns only the top 30 SOL pairs globally (missing the exotic token).
+    const fetchMint = normBase === 'SOL_IDENTITY' ? mints.quote : mints.base
+
+    fetch(`https://api.dexscreener.com/latest/dex/tokens/${fetchMint}`, { signal: controller.signal })
       .then(res => res.json())
       .then(data => {
         if (!isComponentMounted.current) return
