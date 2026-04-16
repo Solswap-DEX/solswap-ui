@@ -101,14 +101,12 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS)
 
-    // Priority: Fetch by the non-SOL token because querying by Native SOL 
-    // returns only the top 30 SOL pairs globally (missing the exotic token).
-    const rawTarget = normBase === 'SOL_IDENTITY' ? mints.quote : mints.base
-    const fetchAddress = getMintAddress(rawTarget)
+    const baseAddress = getMintAddress(mints.base)
+    const quoteAddress = getMintAddress(mints.quote)
 
-    console.log(`[Chart] Querying \u2192 ${fetchAddress} | Base: ${normBase} | Quote: ${normQuote}`)
+    console.log(`[Chart] Searching \u2192 ${baseAddress} & ${quoteAddress}`)
 
-    fetch(`https://api.dexscreener.com/latest/dex/tokens/${fetchAddress}`, { signal: controller.signal })
+    fetch(`https://api.dexscreener.com/latest/dex/search?q=${baseAddress}%20${quoteAddress}`, { signal: controller.signal })
       .then(res => res.json())
       .then(data => {
         if (!isComponentMounted.current) return
@@ -157,17 +155,14 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
         }
 
         // --- PRIORITY 2: INTELLIGENT FALLBACK ---
-        // Since `validPairs` already only contains Solana pools for our exotic token (`fetchMint`),
-        // we prefer a pool that's paired with one of our selected tokens (base or quote) if possible,
-        // or just the most liquid one if not.
+        // Since `validPairs` could contain pairs that just loosely match the search heuristics,
+        // we strongly prefer a pool that contains at least one of our exact selected tokens.
         
         const preferredFallback = validPairs
           .filter(p => {
              const pBase = normalizeMint(p.baseToken?.address)
              const pQuote = normalizeMint(p.quoteToken?.address)
-             // Prefer the other token we actually have selected
-             const otherSide = rawTarget === mints.quote ? normBase : normQuote
-             return pBase === otherSide || pQuote === otherSide
+             return pBase === normBase || pQuote === normBase || pBase === normQuote || pQuote === normQuote
           })
           .sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0]
 
