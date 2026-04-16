@@ -148,7 +148,14 @@ export default forwardRef<
   }, [])
 
   const USDC = useMemo(() => orgTokenMap.get(USDCMint), [orgTokenMap])
-  const SOL = useMemo(() => orgTokenMap.get(SOLMint), [orgTokenMap])
+  const WSOL = useMemo(() => orgTokenMap.get('So11111111111111111111111111111111111111112'), [orgTokenMap])
+  const SOL = useMemo(() => orgTokenMap.get(SOLMint) || (WSOL ? { ...WSOL, address: SOLMint, symbol: 'SOL', name: 'Solana' } : {
+    address: SOLMint,
+    symbol: 'SOL',
+    name: 'Solana',
+    decimals: 9,
+    logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
+  } as unknown as TokenInfo), [orgTokenMap, WSOL])
   const RAY = useMemo(() => orgTokenMap.get(RAYMint), [orgTokenMap])
   const USDT = useMemo(() => orgTokenMap.get(USDTMint), [orgTokenMap])
 
