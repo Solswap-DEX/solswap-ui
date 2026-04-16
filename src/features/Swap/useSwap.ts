@@ -7,7 +7,7 @@ import { shallow } from "zustand/shallow"
 import { useCallback, useEffect, useState } from 'react'
 import { debounce } from '@/utils/functionMethods'
 import { isValidPublicKey } from '@/utils/publicKey'
-import Decimal from 'decimal.js'
+import { safeDecimal } from '@/utils/safeDecimal'
 import { ApiSwapV1OutSuccess, ApiSwapV1OutError } from './type'
 import { REVENUE_CONFIG } from '@/config/revenueConfig'
 
@@ -48,11 +48,11 @@ export default function useSwap(props: {
 
   const [txVersion, urlConfigs] = useAppStore((s) => [s.txVersion, s.urlConfigs], shallow)
   const slippage = useSwapStore((s) => s.slippage)
-  const slippageBps = new Decimal(propsSlippage || slippage * 10000).toFixed(0)
+  const slippageBps = safeDecimal(propsSlippage || slippage * 10000).toFixed(0)
 
   const apiTrail = swapType === 'BaseOut' ? 'swap-base-out' : 'swap-base-in'
   const url =
-    shouldFetch && inputMint && outputMint && !new Decimal(amount.trim() || 0).isZero()
+    shouldFetch && inputMint && outputMint && !safeDecimal(amount.trim() || 0).isZero()
       ? `${urlConfigs.SWAP_HOST}${
           urlConfigs.SWAP_COMPUTE
         }${apiTrail}?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}&txVersion=${

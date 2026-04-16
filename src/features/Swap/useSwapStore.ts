@@ -20,6 +20,7 @@ import { isSwapSlippageError } from '@/utils/tx/swapError'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { REVENUE_CONFIG } from '@/config/revenueConfig'
 import { generateSwapSessionId, getTxQueueManager } from './txQueueManager'
+import ReconciliationWorker, { ReconciliationEvent } from './reconciliationWorker'
 import { getReconciliationWorker } from './reconciliationWorker'
 import { MevProtector, MevRiskProfile } from './MevProtector'
 import { auditLog } from './eventLogger'
@@ -110,17 +111,19 @@ export const useSwapStore = createStore<SwapStore>(
       })
 
       // Register listeners only once (Memory Leak Fix)
-      if (!(reconciler as any).__listeners_registered) {
-        ;(reconciler as any).__listeners_registered = true
-        reconciler.on('state_change', (event) => {
-          const { txId, metadata } = event as any
+      // Use a typed property on the singleton to track registration
+      const reconcilerInstance = reconciler as ReconciliationWorker & { _listenersRegistered?: boolean }
+      if (!reconcilerInstance._listenersRegistered) {
+        reconcilerInstance._listenersRegistered = true
+        reconciler.on('state_change', (event: ReconciliationEvent) => {
+          const { txId, metadata } = event
           useSwapStore.setState((s) => ({
             txConfidence: { ...s.txConfidence, [txId]: metadata?.probability ?? 0 },
             txConfidenceLevel: { ...s.txConfidenceLevel, [txId]: getConfidenceBucket(metadata?.probability ?? 0) }
           }))
         })
 
-        reconciler.on('finalized', ({ txId }) => {
+        reconciler.on('finalized', ({ txId }: ReconciliationEvent) => {
           useSwapStore.setState((s) => ({
             txConfidence: { ...s.txConfidence, [txId]: 1.0 },
             txConfidenceLevel: { ...s.txConfidenceLevel, [txId]: 'finalized' },
@@ -392,9 +395,9 @@ export const useSwapStore = createStore<SwapStore>(
 
           const latestBlockhash = await connection.getLatestBlockhash()
           
-          let confirmation: any = { value: { err: null }, context: { slot: 0 } }
+          let confirmation: { value: { err: Error | null }; context: { slot: number } } = { value: { err: null }, context: { slot: 0 } }
           try {
-            const timeoutPromise = new Promise((_, reject) =>
+            const timeoutPromise = new Promise<never>((_, reject) =>
               setTimeout(() => reject(new Error('Transaction confirmation timeout')), 60000)
             )
 
@@ -406,12 +409,13 @@ export const useSwapStore = createStore<SwapStore>(
               }, 'confirmed'),
               timeoutPromise
             ])
-          } catch (e: any) {
-            console.error('[SwapStore] Transaction confirmation failed', { txId, error: e.message })
-            if (e.message === 'Transaction confirmation timeout') {
+          } catch (e: unknown) {
+            const error = e instanceof Error ? e : new Error(String(e))
+            console.error('[SwapStore] Transaction confirmation failed', { txId, error: error.message })
+            if (error.message === 'Transaction confirmation timeout') {
                confirmation = { value: { err: new Error('timeout_unknown_state') }, context: { slot: 0 } }
             } else {
-               confirmation = { value: { err: e }, context: { slot: 0 } }
+               confirmation = { value: { err: error }, context: { slot: 0 } }
             }
           }
 
