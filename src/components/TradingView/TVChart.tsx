@@ -122,30 +122,20 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
           return
         }
 
-        // --- PRIORITY 2: BEST QUOTE TOKEN FALLBACK ---
-        // Search for pools that include our target token (quote)
-        const targetTokenPools = validPairs
-          .filter(p => {
-             const pBase = normalizeMint(p.baseToken?.address)
-             const pQuote = normalizeMint(p.quoteToken?.address)
-             return pBase === normQuote || pQuote === normQuote
-          })
-          .sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))
+        // --- PRIORITY 2: MOST LIQUID POOL AS FALLBACK ---
+        // Since `validPairs` already only contains Solana pools for our exotic token (`fetchMint`),
+        // and we already know there's no exact match, we just take the most liquid one.
+        validPairs.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))
+        const fallback = validPairs[0]
 
-        if (targetTokenPools.length > 0) {
-          const fallback = targetTokenPools[0]
-          console.log(`[Chart] FALLBACK \u2192 ${fallback.pairAddress} | reason: no exact matching pair for SOL-identity`)
-          
-          setPairAddress(fallback.pairAddress)
-          setFallbackPair({
-             base: fallback.baseToken?.symbol || '?',
-             quote: fallback.quoteToken?.symbol || '?'
-          })
-          setChartState(ChartState.FALLBACK)
-        } else {
-          console.log(`[Chart] INVALID PAIR \u2192 token ${mints.quote} recognized but no liquid Solana pools found`)
-          setChartState(ChartState.INVALID_PAIR)
-        }
+        console.log(`[Chart] FALLBACK \u2192 ${fallback.pairAddress} | reason: no exact matching pair, using best available liquidity`)
+        
+        setPairAddress(fallback.pairAddress)
+        setFallbackPair({
+           base: fallback.baseToken?.symbol || '?',
+           quote: fallback.quoteToken?.symbol || '?'
+        })
+        setChartState(ChartState.FALLBACK)
       })
       .catch((err) => {
         if (!isComponentMounted.current) return
