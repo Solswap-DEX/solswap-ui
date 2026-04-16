@@ -23,14 +23,23 @@ const NATIVE_SOL_MINT = '11111111111111111111111111111111'
 const MIN_LIQUIDITY_USD = 1000 // Upped to $1,000 for production stability
 const API_TIMEOUT_MS = 12000
 
+const COMMON_MINTS = [
+  'SOL_IDENTITY',
+  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'.toLowerCase(), // USDC
+  'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'.toLowerCase(), // USDT
+]
+
 /**
  * Normalizes SOL and WSOL to the same identity for matching purposes.
+ * Handles both on-chain addresses and literal strings like "sol" or "SOL".
  */
 const normalizeMint = (mint?: string) => {
   if (!mint) return ''
-  const m = mint.trim()
-  if (m === WSOL_MINT || m === NATIVE_SOL_MINT) return 'SOL_IDENTITY'
-  return m.toLowerCase()
+  const m = mint.trim().toLowerCase()
+  if (m === WSOL_MINT.toLowerCase() || m === NATIVE_SOL_MINT.toLowerCase() || m === 'sol') {
+    return 'SOL_IDENTITY'
+  }
+  return m
 }
 
 export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...rest }: TVChartProps) {
@@ -122,11 +131,22 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
           return
         }
 
-        // --- PRIORITY 2: MOST LIQUID POOL AS FALLBACK ---
+        // --- PRIORITY 2: INTELLIGENT FALLBACK ---
         // Since `validPairs` already only contains Solana pools for our exotic token (`fetchMint`),
-        // and we already know there's no exact match, we just take the most liquid one.
-        validPairs.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))
-        const fallback = validPairs[0]
+        // we prefer a pool that's paired with one of our selected tokens (base or quote) if possible,
+        // or just the most liquid one if not.
+        
+        const preferredFallback = validPairs
+          .filter(p => {
+             const pBase = normalizeMint(p.baseToken?.address)
+             const pQuote = normalizeMint(p.quoteToken?.address)
+             // Prefer the other token we actually have selected
+             const otherSide = fetchMint === mints.quote ? normBase : normQuote
+             return pBase === otherSide || pQuote === otherSide
+          })
+          .sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0]
+
+        const fallback = preferredFallback || validPairs.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0]
 
         console.log(`[Chart] FALLBACK \u2192 ${fallback.pairAddress} | reason: no exact matching pair, using best available liquidity`)
         

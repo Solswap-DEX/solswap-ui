@@ -140,7 +140,6 @@ function TokenInput(props: TokenInputProps) {
   const { colorMode } = useColorMode()
   const isLight = colorMode === 'light'
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { isOpen: isOpenUnknownTokenConfirm, onOpen: onOpenUnknownTokenConfirm, onClose: onCloseUnknownTokenConfirm } = useDisclosure()
   const { isOpen: isOpenFreezeTokenConfirm, onOpen: onOpenFreezeTokenConfirm, onClose: onCloseFreezeTokenConfirm } = useDisclosure()
 
   const size = inputSize ?? isMobile ? 'sm' : 'md'
@@ -182,7 +181,6 @@ function TokenInput(props: TokenInputProps) {
 
   const displayTokenSettings = useAppStore((s) => s.displayTokenSettings)
 
-  const [unknownToken, setUnknownToken] = useState<TokenInfo | ApiV3Token>()
   const [freezeToken, setFreezeToken] = useState<TokenInfo | ApiV3Token>()
 
   const thousandSeparator = useMemo(() => (detectedSeparator === ',' ? '.' : ','), [])
@@ -260,29 +258,7 @@ function TokenInput(props: TokenInputProps) {
     onClose()
   })
 
-  const handleUnknownTokenConfirm = useEvent((token: TokenInfo | ApiV3Token) => {
-    setExtraTokenListAct({ token: { ...token, userAdded: true } as TokenInfo, addToStorage: true, update: true })
-    onCloseUnknownTokenConfirm()
-    const isFreeze = isFreezeToken(token)
-    if (isFreeze) {
-      if (name === 'swap') {
-        onOpenFreezeTokenConfirm()
-        return
-      } else {
-        // toastSubject.next({
-        //   title: t('token_selector.token_freeze_warning'),
-        //   description: t('token_selector.token_has_freeze_disable'),
-        //   status: 'warning'
-        // })
-      }
-      // return
-    }
-    onTokenChange?.(token)
-    setTimeout(() => {
-      onTokenChange?.(token)
-    }, 0)
-    onClose()
-  })
+
 
   const handleFreezeTokenConfirm = useEvent((token: TokenInfo | ApiV3Token) => {
     onTokenChange?.(token)
