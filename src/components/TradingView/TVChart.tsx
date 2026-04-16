@@ -29,17 +29,36 @@ const COMMON_MINTS = [
   'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'.toLowerCase(), // USDT
 ]
 
+const CANONICAL_MAP: Record<string, string> = {
+  'sol': 'SOL_IDENTITY',
+  'wsol': 'SOL_IDENTITY',
+  'usdc': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'.toLowerCase(),
+  'usdt': 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'.toLowerCase(),
+}
+
+const MINT_ADDRESSES: Record<string, string> = {
+  'sol': WSOL_MINT,
+  'wsol': WSOL_MINT,
+  'usdc': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+  'usdt': 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+}
+
 /**
  * Normalizes SOL and WSOL to the same identity for matching purposes.
- * Handles both on-chain addresses and literal strings like "sol" or "SOL".
+ * Handles both on-chain addresses and literal strings like "sol" or "usdc".
  */
 const normalizeMint = (mint?: string) => {
   if (!mint) return ''
   const m = mint.trim().toLowerCase()
-  if (m === WSOL_MINT.toLowerCase() || m === NATIVE_SOL_MINT.toLowerCase() || m === 'sol') {
+  if (m === WSOL_MINT.toLowerCase() || m === NATIVE_SOL_MINT.toLowerCase()) {
     return 'SOL_IDENTITY'
   }
-  return m
+  return CANONICAL_MAP[m] || m
+}
+
+const getMintAddress = (mint: string) => {
+  const m = mint.trim().toLowerCase()
+  return MINT_ADDRESSES[m] || mint
 }
 
 export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...rest }: TVChartProps) {
@@ -84,9 +103,12 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
 
     // Priority: Fetch by the non-SOL token because querying by Native SOL 
     // returns only the top 30 SOL pairs globally (missing the exotic token).
-    const fetchMint = normBase === 'SOL_IDENTITY' ? mints.quote : mints.base
+    const rawTarget = normBase === 'SOL_IDENTITY' ? mints.quote : mints.base
+    const fetchAddress = getMintAddress(rawTarget)
 
-    fetch(`https://api.dexscreener.com/latest/dex/tokens/${fetchMint}`, { signal: controller.signal })
+    console.log(`[Chart] Querying \u2192 ${fetchAddress} | Base: ${normBase} | Quote: ${normQuote}`)
+
+    fetch(`https://api.dexscreener.com/latest/dex/tokens/${fetchAddress}`, { signal: controller.signal })
       .then(res => res.json())
       .then(data => {
         if (!isComponentMounted.current) return
@@ -96,8 +118,11 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
 
         // Filter and Log Rejections
         const validPairs = rawPairs.filter(p => {
+          const pBase = normalizeMint(p.baseToken?.address)
+          const pQuote = normalizeMint(p.quoteToken?.address)
+
           if (p.chainId !== 'solana') {
-            console.log(`[Chart] REJECTED POOL ${p.pairAddress} \u2192 reason: wrong_chain (${p.chainId})`)
+            console.log(`[Chart] REJECTED POOL ${p.pairAddress} (${pBase}/${pQuote}) \u2192 reason: wrong_chain (${p.chainId})`)
             return false
           }
           if ((p.liquidity?.usd || 0) < MIN_LIQUIDITY_USD) {
@@ -141,7 +166,7 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
              const pBase = normalizeMint(p.baseToken?.address)
              const pQuote = normalizeMint(p.quoteToken?.address)
              // Prefer the other token we actually have selected
-             const otherSide = fetchMint === mints.quote ? normBase : normQuote
+             const otherSide = rawTarget === mints.quote ? normBase : normQuote
              return pBase === otherSide || pQuote === otherSide
           })
           .sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0]
