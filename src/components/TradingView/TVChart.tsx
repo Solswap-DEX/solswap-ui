@@ -16,7 +16,7 @@ const MIN_LIQUIDITY_USD = 100
 const API_TIMEOUT_MS = 12000
 const IFRAME_TIMEOUT_MS = 10000
 
-type ChartProvider = 'dexscreener' | 'gecko' | null
+type ChartProvider = 'dexscreener' | 'birdeye' | null
 type State = 'LOADING' | 'SWAPPING' | 'RENDER' | 'CANT_RENDER'
 
 const problematicPoolCache = new Map<string, number>()
@@ -103,8 +103,8 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
         const badPoolTs = problematicPoolCache.get(chosenPair.pairAddress)
 
         if (badPoolTs && (now - badPoolTs < CACHE_TTL)) {
-           // Usamos Gecko directamente
-           setCurrentProvider('gecko')
+           // Usamos Birdeye directamente
+           setCurrentProvider('birdeye')
         } else {
            setCurrentProvider('dexscreener')
         }
@@ -139,14 +139,14 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
       iframeTimeout.current = setTimeout(() => {
         if (!isComponentMounted.current) return
         
-        // Timer vencido: HARD SWAP a geckoterminal
+        // Timer vencido: HARD SWAP a birdeye
         problematicPoolCache.set(pairAddress, Date.now())
         setUiState('SWAPPING')
         setLoadMsg('Cargando desde proveedor alternativo...')
 
         setTimeout(() => {
           if (!isComponentMounted.current) return
-          setCurrentProvider('gecko')
+          setCurrentProvider('birdeye')
           setUiState('RENDER')
         }, 1200) // Transición visual
 
@@ -186,13 +186,17 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
     )
   }
 
-  const isGecko = currentProvider === 'gecko'
-  const sourceName = isGecko ? "GeckoTerminal" : "DexScreener"
-  const embedUrl = isGecko 
-    ? `https://www.geckoterminal.com/solana/pools/${pairAddress}?embed=1&info=0&swaps=0`
+  const isBirdeye = currentProvider === 'birdeye'
+  const sourceName = isBirdeye ? "Birdeye" : "DexScreener"
+  
+  // Para Birdeye, usamos el mint del token (priorizando el que no sea WSOL)
+  const targetCoint = mints?.base === WSOL_MINT ? mints?.quote : mints?.base;
+
+  const embedUrl = isBirdeye 
+    ? `https://embed.birdeye.so/tv-widget/${targetCoint}?chain=solana&viewMode=pair&theme=dark`
     : `https://dexscreener.com/solana/${pairAddress}?embed=1&info=0&trades=0&theme=dark`
-  const externalUrl = isGecko 
-    ? `https://www.geckoterminal.com/solana/pools/${pairAddress}`
+  const externalUrl = isBirdeye 
+    ? `https://birdeye.so/token/${targetCoint}?chain=solana`
     : `https://dexscreener.com/solana/${pairAddress}`
 
   return (
