@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react'
-import { Box, Spinner, Text, Flex, Link } from '@chakra-ui/react'
+import { Box, Spinner, Text, Flex, Link, Badge } from '@chakra-ui/react'
 
 interface TVChartProps {
   id?: string
@@ -10,37 +10,32 @@ interface TVChartProps {
   [key: string]: any
 }
 
+enum ChartState {
+  LOADING = 'LOADING',
+  EXACT = 'EXACT',
+  FALLBACK = 'FALLBACK',
+  NO_DATA = 'NO_DATA'
+}
+
 const WSOL_MINT = 'So11111111111111111111111111111111111111112'
 const NULL_MINT = '11111111111111111111111111111111'
 const MIN_LIQUIDITY_USD = 100
 const API_TIMEOUT_MS = 12000
-const IFRAME_TIMEOUT_MS = 10000
-
-type ChartProvider = 'dexscreener' | 'birdeye' | null
-type State = 'LOADING' | 'SWAPPING' | 'RENDER' | 'CANT_RENDER'
-
-const problematicPoolCache = new Map<string, number>()
-const CACHE_TTL = 1000 * 60 * 15 // 15 mins
 
 export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...rest }: TVChartProps) {
   const [pairAddress, setPairAddress] = useState<string | null>(null)
-  const [currentProvider, setCurrentProvider] = useState<ChartProvider>(null)
-  const [uiState, setUiState] = useState<State>('LOADING')
-  const [loadMsg, setLoadMsg] = useState('Resolviendo pares...')
-
-  const iframeTimeout = useRef<NodeJS.Timeout | null>(null)
+  const [fallbackPair, setFallbackPair] = useState<{ base: string; quote: string } | null>(null)
+  const [chartState, setChartState] = useState<ChartState>(ChartState.LOADING)
   const isComponentMounted = useRef(true)
 
-  // 1. Limpiar timers en unmount
   useEffect(() => {
     isComponentMounted.current = true
     return () => {
       isComponentMounted.current = false
-      if (iframeTimeout.current) clearTimeout(iframeTimeout.current)
     }
   }, [])
 
-  // Mints resolution
+  // Resolve mints from poolId
   const mints = useMemo(() => {
     if (!poolId) return null
     const parts = poolId.split('_').filter(Boolean)
@@ -51,16 +46,15 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
     }
   }, [poolId])
 
-  // 2. Load API & Pick provider
   useEffect(() => {
     if (!mints) {
-      setUiState('CANT_RENDER')
+      setChartState(ChartState.NO_DATA)
       return
     }
 
-    setUiState('LOADING')
-    setLoadMsg('Resolviendo liquidez en el proveedor...')
+    setChartState(ChartState.LOADING)
     setPairAddress(null)
+    setFallbackPair(null)
 
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS)
@@ -71,133 +65,93 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
         if (!isComponentMounted.current) return
         clearTimeout(timeoutId)
 
-        let pairs = (data?.pairs || []) as any[]
+        const allPairs = (data?.pairs || []) as any[]
 
-        // FILTRO ESTRICTO: Solana, Liquidez >100, Volumen >0
-        pairs = pairs.filter(p => 
+        // REQUIREMENTS 2: VALIDITY FILTER (Solana, Liquidity >= 100, Volume > 0)
+        const validPairs = allPairs.filter(p => 
           p.chainId === 'solana' &&
           (p.liquidity?.usd || 0) >= MIN_LIQUIDITY_USD &&
           (p.volume?.h24 || 0) > 0
         )
 
-        // SELECCIÓN INTELIGENTE
-        if (pairs.length === 0) {
-          setUiState('CANT_RENDER')
+        if (validPairs.length === 0) {
+          console.log(`[Chart] NO DATA \u2192 token: ${mints.base}`)
+          setChartState(ChartState.NO_DATA)
           return
         }
 
-        // Ordenamos por mayor liquidez
-        pairs.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))
-
-        // Si existe un pool que encaje nuestro layout base/quote exacto, le damos prioridad
-        let chosenPair = pairs.find(p => 
-           (p.baseToken?.address === mints.base && p.quoteToken?.address === mints.quote) ||
-           (p.baseToken?.address === mints.quote && p.quoteToken?.address === mints.base)
+        // REQUIREMENT 1: STRICT PAIR MATCH
+        const exactMatch = validPairs.find(p => 
+          (p.baseToken?.address === mints.base && p.quoteToken?.address === mints.quote) ||
+          (p.baseToken?.address === mints.quote && p.quoteToken?.address === mints.base)
         )
-        if (!chosenPair) chosenPair = pairs[0]
 
-        setPairAddress(chosenPair.pairAddress)
-
-        // Comprobamos cache problemática
-        const now = Date.now()
-        const badPoolTs = problematicPoolCache.get(chosenPair.pairAddress)
-
-        if (badPoolTs && (now - badPoolTs < CACHE_TTL)) {
-           // Usamos Birdeye directamente
-           setCurrentProvider('birdeye')
-        } else {
-           setCurrentProvider('dexscreener')
+        if (exactMatch) {
+          console.log(`[Chart] EXACT MATCH \u2192 ${exactMatch.pairAddress}`)
+          setPairAddress(exactMatch.pairAddress)
+          setChartState(ChartState.EXACT)
+          return
         }
-        setUiState('RENDER')
 
+        // REQUIREMENT 4: FALLBACK LOGIC
+        // Step 1: Find best alternative pool for the TARGET TOKEN (quoteMint)
+        const targetTokenPools = validPairs
+          .filter(p => p.baseToken?.address === mints.quote || p.quoteToken?.address === mints.quote)
+          .sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))
+
+        if (targetTokenPools.length > 0) {
+          const fallback = targetTokenPools[0]
+          console.log(`[Chart] FALLBACK \u2192 ${fallback.pairAddress} | reason: no exact match`)
+          
+          setPairAddress(fallback.pairAddress)
+          setFallbackPair({
+             base: fallback.baseToken?.symbol || '?',
+             quote: fallback.quoteToken?.symbol || '?'
+          })
+          setChartState(ChartState.FALLBACK)
+        } else {
+          console.log(`[Chart] NO DATA \u2192 token: ${mints.quote}`)
+          setChartState(ChartState.NO_DATA)
+        }
       })
       .catch((err) => {
         if (!isComponentMounted.current) return
         clearTimeout(timeoutId)
         console.warn("[Chart API Error]", err)
-        setUiState('CANT_RENDER')
+        setChartState(ChartState.NO_DATA)
       })
 
-      return () => {
-        controller.abort()
-        clearTimeout(timeoutId)
-      }
+    return () => {
+      controller.abort()
+      clearTimeout(timeoutId)
+    }
   }, [mints?.base, mints?.quote])
 
-  // 3. Iframe Timeout Logic
-  const handleIframeLoad = () => {
-    // Si la capa html inicial carga bien, limpiamos el trigger automático 
-    // Nota: Aunque esto no atrapa los fallos de JS internos de DexScreener,
-    // con el filtro de liquidez previo evitamos el 99% de gráficos "colgados".
-    if (iframeTimeout.current) clearTimeout(iframeTimeout.current)
-  }
+  // --- RENDERIZADO ---
 
-  useEffect(() => {
-    if (uiState === 'RENDER' && currentProvider === 'dexscreener' && pairAddress) {
-      if (iframeTimeout.current) clearTimeout(iframeTimeout.current)
-      
-      iframeTimeout.current = setTimeout(() => {
-        if (!isComponentMounted.current) return
-        
-        // Timer vencido: HARD SWAP a birdeye
-        problematicPoolCache.set(pairAddress, Date.now())
-        setUiState('SWAPPING')
-        setLoadMsg('Cargando desde proveedor alternativo...')
-
-        setTimeout(() => {
-          if (!isComponentMounted.current) return
-          setCurrentProvider('birdeye')
-          setUiState('RENDER')
-        }, 1200) // Transición visual
-
-      }, IFRAME_TIMEOUT_MS)
-    }
-
-    return () => {
-      if (iframeTimeout.current) clearTimeout(iframeTimeout.current)
-    }
-  }, [uiState, currentProvider, pairAddress])
-
-  // --- RENDERIZADO INTERFACES ---
-
-  if (uiState === 'CANT_RENDER') {
+  if (chartState === ChartState.NO_DATA) {
     return (
       <Box w="100%" h={height} minH="300px" bg="#0D1117" borderRadius="xl" display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap={3}>
         <Text fontSize="2xl" opacity={0.3}>📊</Text>
-        <Text color="#666" fontSize="sm" fontWeight="500">Gráfico No Disponible</Text>
+        <Text color="#666" fontSize="sm" fontWeight="500">No chart data available for this pair</Text>
         <Text color="#555" fontSize="xs" maxW="240px" textAlign="center">
-           Volumen muy bajo o token no indexado (Liquidez &lt; $100).
+           Ensuring liquidity &gt; $100 and recent volume.
         </Text>
-        {pairAddress && (
-          <Link mt={2} href={`https://dexscreener.com/solana/${pairAddress}`} isExternal color="#00D1FF" fontSize="12px">
-            Revisar estado en DexScreener <Box as="span" display="inline-block" pb="2px">🚀</Box>
-          </Link>
-        )}
       </Box>
     )
   }
 
-  if (uiState === 'LOADING' || uiState === 'SWAPPING' || !pairAddress || !currentProvider) {
+  if (chartState === ChartState.LOADING || !pairAddress) {
     return (
       <Box w="100%" h={height} minH="300px" bg="#0D1117" borderRadius="xl" display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap={3}>
         <Spinner color="#00D1FF" size="lg" />
-        <Text color="#555" fontSize="sm">{loadMsg}</Text>
+        <Text color="#555" fontSize="sm">Loading chart...</Text>
       </Box>
     )
   }
 
-  const isBirdeye = currentProvider === 'birdeye'
-  const sourceName = isBirdeye ? "Birdeye" : "DexScreener"
-  
-  // Para Birdeye, usamos el mint del token (priorizando el que no sea WSOL)
-  const targetCoint = mints?.base === WSOL_MINT ? mints?.quote : mints?.base;
-
-  const embedUrl = isBirdeye 
-    ? `https://embed.birdeye.so/tv-widget/${targetCoint}?chain=solana&viewMode=pair&theme=dark`
-    : `https://dexscreener.com/solana/${pairAddress}?embed=1&info=0&trades=0&theme=dark`
-  const externalUrl = isBirdeye 
-    ? `https://birdeye.so/token/${targetCoint}?chain=solana`
-    : `https://dexscreener.com/solana/${pairAddress}`
+  const embedUrl = `https://dexscreener.com/solana/${pairAddress}?embed=1&info=0&trades=0&theme=dark`
+  const externalUrl = `https://dexscreener.com/solana/${pairAddress}`
 
   return (
     <Box w="100%" h={height} minH="300px" borderRadius="xl" overflow="hidden" position="relative">
@@ -205,19 +159,27 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
         id={id}
         src={embedUrl}
         style={{ width: '100%', height: '100%', border: 'none', backgroundColor: '#0D1117' }}
-        title={`${sourceName} Chart`}
+        title="DexScreener Chart"
         allow="clipboard-write"
         sandbox="allow-scripts allow-same-origin"
         loading="lazy"
-        onLoad={handleIframeLoad}
       />
       
-      {/* Etiqueta de fuente y apertura externa */}
+      {/* Fallback Label */}
+      {chartState === ChartState.FALLBACK && fallbackPair && (
+        <Flex position="absolute" top="12px" left="12px" pointerEvents="none">
+          <Badge bg="rgba(255, 171, 0, 0.9)" color="black" px={2} borderRadius="md" fontSize="10px" fontWeight="700">
+            Chart: {fallbackPair.base}/{fallbackPair.quote} (fallback)
+          </Badge>
+        </Flex>
+      )}
+
+      {/* Provider & Action Label */}
       <Flex 
          position="absolute" 
          bottom="8px" 
          right="8px" 
-         bg="rgba(13, 17, 23, 0.7)"
+         bg="rgba(13, 17, 23, 0.85)"
          px={3} py="5px" 
          borderRadius="md" 
          fontSize="11px" 
@@ -226,12 +188,12 @@ export default function TVChart({ id, height = '100%', poolId, mintBInfo, ...res
          gap={2}
          border="1px solid rgba(255,255,255,0.05)"
          transition="0.2s"
-         _hover={{ bg: "rgba(13, 17, 23, 0.9)", color: "#fff" }}
+         _hover={{ bg: "rgba(13, 17, 23, 0.95)", color: "#fff" }}
        >
-         <Text>Fuente: {sourceName}</Text>
+         <Text fontWeight="600">Source: DexScreener</Text>
          <Box w="1px" h="10px" bg="rgba(255,255,255,0.2)" />
-         <Link href={externalUrl} isExternal display="flex" alignItems="center" gap={1}>
-           Abrir externo
+         <Link href={externalUrl} isExternal display="flex" alignItems="center" gap={1} _hover={{ color: "#00D1FF", textDecoration: 'none' }}>
+           Open in DexScreener <Box as="span" fontSize="10px">\uD83D\uDE80</Box>
          </Link>
        </Flex>
     </Box>
