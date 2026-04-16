@@ -27,7 +27,6 @@ import { t } from 'i18next'
 import Button from './Button'
 import TokenAvatar from './TokenAvatar'
 import TokenSelectDialog, { TokenSelectDialogProps } from './TokenSelectDialog'
-import TokenUnknownAddDialog from './TokenSelectDialog/components/TokenUnknownAddDialog'
 import TokenFreezeDialog from './TokenSelectDialog/components/TokenFreezeDialog'
 import { TokenListHandles } from './TokenSelectDialog/components/TokenList'
 import useResponsive from '@/hooks/useResponsive'
@@ -239,11 +238,10 @@ function TokenInput(props: TokenInputProps) {
     if (isFreeze) {
       setFreezeToken(token)
     }
-    const shouldShowUnknownTokenConfirm = isUnknownToken(token)
-    if (shouldShowUnknownTokenConfirm) {
-      setUnknownToken(token)
-      onOpenUnknownTokenConfirm()
-      return
+    // Auto-acknowledge unknown tokens without prompt
+    const isUnknown = isUnknownToken(token)
+    if (isUnknown) {
+      setExtraTokenListAct({ token: { ...token, userAdded: true } as TokenInfo, addToStorage: true, update: true })
     }
     if (isFreeze) {
       if (name === 'swap') {
@@ -436,14 +434,7 @@ function TokenInput(props: TokenInputProps) {
         </GridItem>
       </Grid>
       <TokenSelectDialog isOpen={isOpen} onClose={onClose} onSelectValue={handleSelectToken} filterFn={filterFn} ref={tokenListRef} />
-      {unknownToken !== undefined && (
-        <TokenUnknownAddDialog
-          isOpen={isOpenUnknownTokenConfirm}
-          onClose={onCloseUnknownTokenConfirm}
-          token={unknownToken}
-          onConfirm={handleUnknownTokenConfirm}
-        />
-      )}
+
       {freezeToken !== undefined && (
         <TokenFreezeDialog
           isOpen={isOpenFreezeTokenConfirm}
