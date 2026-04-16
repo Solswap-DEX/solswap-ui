@@ -221,6 +221,9 @@ function TokenInput(props: TokenInputProps) {
   })
 
   const isUnknownToken = useEvent((token: TokenInfo) => {
+    const isOfficial = useTokenStore.getState().mintGroup.official.has(token.address)
+    if (isOfficial) return false
+
     const isUnknown = !token.type || token.type === 'unknown' || !!token.tags?.includes('unknown')
     const isTrusted = isUnknown && !!tokenMap.get(token.address)?.userAdded
     const isUserAddedTokenEnable = displayTokenSettings.userAdded
