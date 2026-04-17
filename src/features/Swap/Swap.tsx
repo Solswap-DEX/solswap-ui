@@ -123,6 +123,8 @@ export default function Swap() {
       height={!isMobile && !showChart ? '100vh' : 'auto'}
       justifyContent={!isMobile && !showChart ? 'center' : 'flex-start'}
       alignItems="center"
+      px={4}
+      position="relative"
     >
       <Grid
         width="full"
@@ -140,17 +142,11 @@ export default function Swap() {
         ]}
         columnGap={[3, showChart ? 4 : 0]}
         rowGap={2}
+        alignItems={!showChart ? "center" : "start"}
       >
         <GridItem gridArea="controls">
           <HStack justifyContent="space-between" my={[1, 0]}>
-            <MoonpayBuy>
-              <HStack gap={1}>
-                <CreditCardIcon />
-                <Text color={colors.textLink} fontWeight="medium">
-                  Buy
-                </Text>
-              </HStack>
-            </MoonpayBuy>
+            <Box></Box>
             <HStack>
               <SlippageAdjuster />
               <Tooltip
@@ -210,7 +206,9 @@ export default function Swap() {
           {...(!showChart && !isMobile ? { 
             maxWidth: '480px', 
             width: '100%',
-            margin: '0 auto'
+            margin: '0 auto',
+            alignSelf: 'center',
+            justifySelf: 'center'
           } : {})}
         >
           <PanelCard p={[3, 6]} flexGrow={['1', 'unset']}>
