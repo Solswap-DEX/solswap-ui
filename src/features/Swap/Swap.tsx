@@ -1,4 +1,4 @@
-import { Box, Grid, GridItem, HStack, Text, VStack, useClipboard } from '@chakra-ui/react'
+import { Box, Grid, GridItem, HStack, Text, VStack, useClipboard, Button } from '@chakra-ui/react'
 import { RAYMint, SOLMint } from '@raydium-io/raydium-sdk-v2'
 import { PublicKey } from '@solana/web3.js'
 import { useMemo, useState, useRef, useEffect } from 'react'
@@ -35,7 +35,7 @@ export default function Swap() {
   // const { inputMint: cacheInput, outputMint: cacheOutput } = getSwapPairCache()
   const [inputMint, setInputMint] = useState<string>(PublicKey.default.toBase58())
   const [outputMint, setOutputMint] = useState<string>('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
-  const [isPCChartShown, setIsPCChartShown] = useState<boolean>(true)
+  const [showChart, setShowChart] = useState<boolean>(false)
   const [isMobileChartShown, setIsMobileChartShown] = useState<boolean>(false)
   const [isChartLeft, setIsChartLeft] = useState<boolean>(false)
   const { isMobile } = useResponsive()
@@ -119,7 +119,10 @@ export default function Swap() {
     <VStack
       mx={['unset', 'auto']}
       mt={[0, getVHExpression([0, 800], [32, 1300])]}
-      width={!isMobile && isPCChartShown ? 'min(100%, 1300px)' : undefined}
+      width={!isMobile && showChart ? 'min(100%, 1300px)' : '100%'}
+      height={!isMobile && !showChart ? '100vh' : 'auto'}
+      justifyContent={!isMobile && !showChart ? 'center' : 'flex-start'}
+      alignItems="center"
     >
       <Grid
         width="full"
@@ -129,13 +132,13 @@ export default function Swap() {
             "panel" auto
             "kline" auto / auto
           `,
-          isPCChartShown
+          showChart
             ? isChartLeft
               ? `". controls" auto "kline  panel" auto / 1.5fr 1fr`
               : `". controls" auto "panel kline" auto / 1fr 1.5fr`
             : `"controls" auto "panel" auto / auto`
         ]}
-        columnGap={[3, isPCChartShown ? 4 : 0]}
+        columnGap={[3, showChart ? 4 : 0]}
         rowGap={2}
       >
         <GridItem gridArea="controls">
@@ -172,7 +175,7 @@ export default function Swap() {
                 </Box>
               </Tooltip>
 
-              {!isMobile && isPCChartShown && (
+              {!isMobile && showChart && (
                 <Box
                   cursor="pointer"
                   onClick={() => {
@@ -186,13 +189,13 @@ export default function Swap() {
                 cursor="pointer"
                 onClick={() => {
                   if (!isMobile) {
-                    setIsPCChartShown((b) => !b)
+                    setShowChart((b) => !b)
                   } else {
                     setIsMobileChartShown(true)
                   }
                 }}
               >
-                {isMobile || isPCChartShown ? (
+                {isMobile || showChart ? (
                   <SwapChatIcon />
                 ) : (
                   <Box color={colors.textSecondary}>
@@ -203,7 +206,13 @@ export default function Swap() {
             </HStack>
           </HStack>
         </GridItem>
-        <GridItem ref={swapPanelRef} gridArea="panel">
+        <GridItem ref={swapPanelRef} gridArea="panel" 
+          {...(!showChart && !isMobile ? { 
+            maxWidth: '480px', 
+            width: '100%',
+            margin: '0 auto'
+          } : {})}
+        >
           <PanelCard p={[3, 6]} flexGrow={['1', 'unset']}>
             <SwapPanel
               onInputMintChange={setInputMint}
@@ -214,37 +223,39 @@ export default function Swap() {
         </GridItem>
 
         <GridItem gridArea="kline" {...(isMobile ? { mb: 3 } : {})} overflow="hidden">
-          <PanelCard ref={klineRef} p={[3, 3]} gap={4} height="100%" {...(isMobile || !isPCChartShown ? { display: 'none' } : {})}>
-            <HStack spacing={2}>
-              <TokenAvatarPair token1={baseToken} token2={quoteToken} />
-              <HStack>
-                <Text fontSize="20px" fontWeight="500">
-                  {baseToken?.symbol} / {quoteToken?.symbol}
-                </Text>
-                <Box cursor="pointer" onClick={() => setDirectionReverse((b) => !b)}>
-                  <SwapIcon />
-                </Box>
-                <Text fontSize="sm" color={colors.textTertiary}>
-                  {dayjs().utc().format('YY/MM/DD HH:MM')}
-                </Text>
+          {showChart && !isMobile && (
+            <PanelCard ref={klineRef} p={[3, 3]} gap={4} height="100%">
+              <HStack spacing={2}>
+                <TokenAvatarPair token1={baseToken} token2={quoteToken} />
+                <HStack>
+                  <Text fontSize="20px" fontWeight="500">
+                    {baseToken?.symbol} / {quoteToken?.symbol}
+                  </Text>
+                  <Box cursor="pointer" onClick={() => setDirectionReverse((b) => !b)}>
+                    <SwapIcon />
+                  </Box>
+                  <Text fontSize="sm" color={colors.textTertiary}>
+                    {dayjs().utc().format('YY/MM/DD HH:MM')}
+                  </Text>
+                </HStack>
               </HStack>
-            </HStack>
-            <TVChart
-              id="swap-tv-chart"
-              height="100%"
-              birdeye
-              poolId={chartPoolId}
-              mintBInfo={quoteToken}
-            />
-            {/* <SwapKlinePanel
-              untilDate={untilDate.current}
-              baseToken={baseToken}
-              quoteToken={quoteToken}
-              timeType={selectedTimeType}
-              onDirectionToggle={() => setDirectionReverse((b) => !b)}
-              onTimeTypeChange={setSelectedTimeType}
-            /> */}
-          </PanelCard>
+              <TVChart
+                id="swap-tv-chart"
+                height="100%"
+                birdeye
+                poolId={chartPoolId}
+                mintBInfo={quoteToken}
+              />
+              {/* <SwapKlinePanel
+                untilDate={untilDate.current}
+                baseToken={baseToken}
+                quoteToken={quoteToken}
+                timeType={selectedTimeType}
+                onDirectionToggle={() => setDirectionReverse((b) => !b)}
+                onTimeTypeChange={setSelectedTimeType}
+              /> */}
+            </PanelCard>
+          )}
           {isMobile && (
             <PanelCard
               p={[3, 6]}
