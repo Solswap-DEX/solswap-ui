@@ -120,7 +120,7 @@ export default function Swap() {
       mx={['unset', 'auto']}
       mt={[0, !isMobile && !showChart ? 0 : getVHExpression([0, 800], [32, 1300])]}
       width={!isMobile && showChart ? 'min(100%, 1300px)' : '100%'}
-      height={!isMobile && !showChart ? 'calc(100vh - 160px)' : 'auto'}
+      minHeight={!isMobile && !showChart ? 'calc(100vh - 160px)' : undefined}
       justifyContent={!isMobile && !showChart ? 'center' : 'flex-start'}
       alignItems="center"
       px={4}
