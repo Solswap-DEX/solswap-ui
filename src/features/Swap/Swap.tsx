@@ -96,7 +96,7 @@ export default function Swap() {
       const height = Number(swapPanelHeight) > 500 ? `${swapPanelHeight}px` : '522px'
       klineRef.current.style.height = height
     }
-  }, [])
+  }, [showChart])
 
   useEffect(() => {
     // inputMint === solMintAddress || outputMint === solMintAddress ? setIsBlinkReferralActive(true) : setIsBlinkReferralActive(false)
@@ -222,7 +222,7 @@ export default function Swap() {
 
         <GridItem gridArea="kline" {...(isMobile ? { mb: 3 } : {})} overflow="hidden">
           {showChart && !isMobile && (
-            <PanelCard ref={klineRef} p={[3, 3]} gap={4} height="100%">
+            <PanelCard ref={klineRef} p={[3, 3]} gap={4} height="100%" minHeight="500px">
               <HStack spacing={2}>
                 <TokenAvatarPair token1={baseToken} token2={quoteToken} />
                 <HStack>
