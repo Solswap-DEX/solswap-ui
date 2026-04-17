@@ -138,7 +138,7 @@ export default function Swap() {
             ? isChartLeft
               ? `". controls" auto "kline  panel" auto / 1.5fr 1fr`
               : `". controls" auto "panel kline" auto / 1fr 1.5fr`
-            : `"controls" auto "panel" auto / auto`
+            : `"controls" auto "panel" auto / 1fr`
         ]}
         columnGap={[3, showChart ? 4 : 0]}
         rowGap={2}
