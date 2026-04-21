@@ -65,6 +65,9 @@ async function enrichToken(
   const sells_1m = dexData?.sells_1m || 0;
   const detected_at = dexData?.detected_at || Date.now();
   
+  const finalName = birdeyeData?.name || dexData?.name || discoveredName || 'Unknown';
+  const finalSymbol = birdeyeData?.symbol || dexData?.symbol || discoveredSymbol || '???';
+  
   const age_seconds = Math.floor((Date.now() - detected_at) / 1000);
   const volume_velocity = volume_1m / Math.max(age_seconds / 60, 1);
   const holder_growth_rate = (birdeyeData?.holders || 0) / Math.max(age_seconds / 60, 1);
@@ -79,8 +82,8 @@ async function enrichToken(
     sells_1m,
     detected_at,
     holders: birdeyeData?.holders || 0,
-    name: birdeyeData?.name || discoveredName,
-    symbol: birdeyeData?.symbol || discoveredSymbol,
+    name: finalName,
+    symbol: finalSymbol,
     mint_authority_active: heliusData,
     age_seconds,
     volume_velocity,
@@ -109,7 +112,9 @@ async function fetchDexScreener(mint: string): Promise<Partial<EnrichedToken> | 
       volume_5m: pair.volume?.h5 || 0,
       buys_1m: pair.txns?.h1?.buys || 0,
       sells_1m: pair.txns?.h1?.sells || 0,
-      detected_at: pair.pairCreatedAt ? new Date(pair.pairCreatedAt).getTime() : Date.now()
+      detected_at: pair.pairCreatedAt ? new Date(pair.pairCreatedAt).getTime() : Date.now(),
+      name: pair.baseToken?.name,
+      symbol: pair.baseToken?.symbol
     };
   } catch (err: any) {
     console.error('[RADAR ERROR] DexScreener fetch failed:', err.message);
@@ -169,7 +174,7 @@ async function fetchMintAuthority(mint: string): Promise<boolean> {
 function buildRadarToken(enriched: EnrichedToken): RadarToken {
   const momentum = calculateMomentum(enriched);
   const { score: riskScore, level: riskLevel } = calculateRisk(enriched);
-  const alphaScore = calculateAlpha(momentum, riskScore);
+  const alphaScore = calculateAlpha(momentum, riskScore, enriched.age_seconds);
   const rugSignal = detectRug(enriched, []);
 
   const token: RadarToken = {

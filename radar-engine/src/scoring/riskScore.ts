@@ -6,7 +6,7 @@ export function calculateRisk(token: EnrichedToken): { score: number; level: Ris
   if (token.mint_authority_active) score += 40;
   if (token.wallet_concentration > 0.5) score += 30;
   else if (token.wallet_concentration > 0.2) score += 15;
-  if (!token.lp_locked) score += 20;
+  if (!token.lp_locked) score += 10;  // reducido de 20 a 10
   if (token.sells_1m > token.buys_1m * 3) score += 25;
   if (token.age_seconds < 60) score += 10;
 
