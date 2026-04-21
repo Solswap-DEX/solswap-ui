@@ -1,13 +1,8 @@
-import { Box, Flex, Grid, Text, keyframes, Spinner, VStack } from '@chakra-ui/react'
+import { Box, Flex, Grid, Text, Spinner, VStack } from '@chakra-ui/react'
 import { useRadarSocket } from './hooks/useRadarSocket'
 import { LiveFeed } from './LiveFeed'
 import { HotBoard } from './HotBoard'
 import { AlertFeed } from './AlertFeed'
-
-const livePulse = keyframes`
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.6; }
-`
 
 export function RadarPage() {
   const { tokens, alerts, isConnected, isLoading } = useRadarSocket()
@@ -26,6 +21,13 @@ export function RadarPage() {
 
   return (
     <Box p={4} minH="100vh" bg="#0d0d0d">
+      <style>{`
+        @keyframes livePulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.4); opacity: 0.6; }
+        }
+      `}</style>
+
       <Box mb={6}>
         <Flex align="center" gap={3}>
           <Text
@@ -44,7 +46,7 @@ export function RadarPage() {
                 h={2}
                 borderRadius="full"
                 bg="#00c853"
-                animation={`${livePulse} 2s ease-in-out infinite`}
+                style={{ animation: 'livePulse 2s ease-in-out infinite' }}
               />
               <Text fontSize="xs" color="#00c853" fontWeight="bold">
                 LIVE

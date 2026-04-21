@@ -1,11 +1,6 @@
-import { Box, Flex, Text, keyframes } from '@chakra-ui/react'
+import { Box, Flex, Text } from '@chakra-ui/react'
 import { RadarToken, RadarAlert } from './radar.types'
 import { TokenCard } from './TokenCard'
-
-const slideIn = keyframes`
-  from { transform: translateY(-20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-`
 
 export function LiveFeed({
   tokens,
@@ -25,6 +20,17 @@ export function LiveFeed({
       p={3}
       overflow="hidden"
     >
+      <style>{`
+        @keyframes livePulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.4); opacity: 0.6; }
+        }
+        @keyframes slideIn {
+          from { transform: translateY(-20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
+
       <Flex align="center" gap={2} mb={3}>
         <Text fontWeight="bold" color="white" fontSize="sm">
           ⚡ Live Feed
@@ -34,13 +40,7 @@ export function LiveFeed({
           h={2}
           borderRadius="full"
           bg={isConnected ? '#00c853' : '#666'}
-          animation={isConnected ? 'livePulse 2s ease-in-out infinite' : undefined}
-          sx={{
-            '@keyframes livePulse': {
-              '0%, 100%': { transform: 'scale(1)', opacity: 1 },
-              '50%': { transform: 'scale(1.4)', opacity: 0.6 }
-            }
-          }}
+          style={{ animation: isConnected ? 'livePulse 2s ease-in-out infinite' : undefined }}
         />
       </Flex>
 
@@ -59,7 +59,7 @@ export function LiveFeed({
           gap={2}
           sx={{
             '& > *': {
-              animation: `${slideIn} 0.3s ease-out`
+              animation: 'slideIn 0.3s ease-out'
             }
           }}
         >

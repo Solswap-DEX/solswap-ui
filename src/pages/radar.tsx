@@ -1,15 +1,19 @@
 import dynamic from 'next/dynamic'
+import { GetStaticProps } from 'next'
 
-const Radar = dynamic(() => import('@/components/Radar/RadarPage'))
+const RadarPage = dynamic(
+  () => import('@/components/Radar/RadarPage').then(mod => {
+    if (typeof mod.RadarPage === 'function') return { default: mod.RadarPage }
+    if (typeof mod.default === 'function') return { default: mod.default }
+    throw new Error('[RADAR] RadarPage component not found in module')
+  }),
+  { ssr: false }
+)
 
-function RadarPageRoute() {
-  return <Radar />
+export default function Radar() {
+  return <RadarPage />
 }
 
-export default RadarPageRoute
-
-export async function getStaticProps() {
-  return {
-    props: { title: 'RADAR' }
-  }
+export const getStaticProps: GetStaticProps = async () => {
+  return { props: { title: 'RADAR | SolSwap' } }
 }
