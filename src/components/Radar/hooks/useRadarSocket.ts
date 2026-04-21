@@ -117,7 +117,8 @@ export function useRadarSocket() {
       if (cancelled) return
 
       try {
-        ws = new WebSocket(RADAR_WS_URL)
+        const wsUrl = 'wss://solswap.cloud/radar-ws/socket.io/' + '?EIO=4&transport=websocket'
+        ws = new WebSocket(wsUrl)
 
         timeoutRef.current = setTimeout(() => {
           if (ws && ws.readyState !== WebSocket.OPEN) {

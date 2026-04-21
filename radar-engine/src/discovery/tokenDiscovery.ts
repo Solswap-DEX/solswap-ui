@@ -32,14 +32,20 @@ function startDexScreenerPolling(): void {
   setInterval(async () => {
     try {
       const response = await axios.get(
-        `${DEXSCREENER_URL}/latest/dex/pairs/solana`,
+        `${DEXSCREENER_URL}/latest/dex/search?q=solana`,
         { timeout: 10000 }
       );
 
-      const pairs = response.data.pairs || [];
+      const data = response.data;
+      console.log('[RADAR DEBUG] DexScreener response:', JSON.stringify(data).slice(0, 500));
+
+      const pairs = data.pairs || [];
       const fiveMinAgo = Date.now() - 300000;
 
       for (const pair of pairs) {
+        // Filter for Solana chain only
+        if (pair.chainId !== 'solana') continue;
+
         const pairCreatedAt = pair.pairCreatedAt ? new Date(pair.pairCreatedAt).getTime() : 0;
         
         if (pairCreatedAt > fiveMinAgo && pair.baseToken?.address) {

@@ -85,6 +85,7 @@ export interface HeliusWebhookEvent {
 }
 
 export interface EnrichedToken {
+  mint: string;
   price_usd: number;
   liquidity: number;
   volume_1m: number;

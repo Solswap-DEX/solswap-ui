@@ -87,7 +87,8 @@ async function enrichToken(
     holder_growth_rate,
     tx_spike_ratio,
     wallet_concentration: 0,
-    lp_locked: false
+    lp_locked: false,
+    mint
   };
 }
 
@@ -172,7 +173,7 @@ function buildRadarToken(enriched: EnrichedToken): RadarToken {
   const rugSignal = detectRug(enriched, []);
 
   const token: RadarToken = {
-    mint: '',
+    mint: enriched.mint,
     name: enriched.name,
     symbol: enriched.symbol,
     age_seconds: enriched.age_seconds,
