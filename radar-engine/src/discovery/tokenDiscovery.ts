@@ -32,45 +32,36 @@ function startDexScreenerPolling(): void {
   setInterval(async () => {
     try {
       const response = await axios.get(
-        `${DEXSCREENER_URL}/latest/dex/search?q=solana`,
+        `${DEXSCREENER_URL}/token-profiles/latest/v1`,
         { timeout: 10000 }
       );
 
       const data = response.data;
-      console.log('[RADAR DEBUG] DexScreener response:', JSON.stringify(data).slice(0, 500));
+      const profiles = Array.isArray(data) ? data : [];
 
-      const pairs = data.pairs || [];
-      const fiveMinAgo = Date.now() - 300000;
+      for (const profile of profiles) {
+        if (profile.chainId !== 'solana') continue;
 
-      for (const pair of pairs) {
-        // Filter for Solana chain only
-        if (pair.chainId !== 'solana') continue;
-
-        const pairCreatedAt = pair.pairCreatedAt ? new Date(pair.pairCreatedAt).getTime() : 0;
+        const mint = profile.tokenAddress;
+        if (!mint || !shouldProcessMint(mint)) continue;
         
-        if (pairCreatedAt > fiveMinAgo && pair.baseToken?.address) {
-          const mint = pair.baseToken.address;
-          
-          if (!shouldProcessMint(mint)) continue;
-          
-          seenMints.add(mint);
-          mintTimestamps.set(mint, Date.now());
+        seenMints.add(mint);
+        mintTimestamps.set(mint, Date.now());
 
-          const token: DiscoveredToken = {
-            mint,
-            name: pair.baseToken.name || pair.baseToken.symbol,
-            symbol: pair.baseToken.symbol,
-            source: 'dexscreener'
-          };
+        const token: DiscoveredToken = {
+          mint,
+          name: '',
+          symbol: '',
+          source: 'dexscreener'
+        };
 
-          console.log(`[RADAR DISCOVERY] New token: ${token.symbol} (${mint}) via dexscreener`);
-          discoveryEmitter?.emit('token:discovered', token);
-        }
+        console.log(`[RADAR DISCOVERY] New token: ${mint} via dexscreener fallback`);
+        discoveryEmitter?.emit('token:discovered', token);
       }
     } catch (err: any) {
       console.error('[RADAR ERROR] Discovery: DexScreener polling error:', err.message);
     }
-  }, 15000);
+  }, 60000); // Polling extended to 60s as fallback
 }
 
 function shouldProcessMint(mint: string): boolean {
@@ -79,48 +70,44 @@ function shouldProcessMint(mint: string): boolean {
   return Date.now() - lastSeen > 30000;
 }
 
-export async function handleHeliusWebhook(payload: any): Promise<DiscoveredToken | null> {
-  const signature = payload.signature || '';
+export async function handleHeliusWebhook(payload: any): Promise<void> {
+  const transactions = Array.isArray(payload) ? payload : [payload];
   
-  if (HELIUS_WEBHOOK_SECRET && signature) {
-    const isValid = crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(HELIUS_WEBHOOK_SECRET)
-    );
-    if (!isValid) {
-      console.error('[RADAR ERROR] Discovery: Invalid Helius signature');
-      return null;
+  for (const tx of transactions) {
+    // Only process mints and swaps from known programs
+    const isMint = tx.type === 'TOKEN_MINT';
+    const isSwap = tx.type === 'SWAP';
+    
+    if (!isMint && !isSwap) continue;
+
+    const tokenTransfers = tx.tokenTransfers || [];
+    for (const transfer of tokenTransfers) {
+      const mint = transfer.mint;
+      if (!mint) continue;
+
+      const programIds = [RAYDIUM_MINT, PUMPFUN_MINT];
+      const isRelevant = programIds.some(id => 
+        tx.instructions?.some((ix: any) => ix.programId === id) ||
+        tx.events?.swap?.innerSwaps?.some((s: any) => s.programId === id)
+      );
+      
+      if (!isRelevant && !isMint) continue;
+      if (!shouldProcessMint(mint)) continue;
+
+      seenMints.add(mint);
+      mintTimestamps.set(mint, Date.now());
+
+      const token: DiscoveredToken = {
+        mint,
+        name: transfer.symbol || 'Unknown',
+        symbol: transfer.symbol || '???',
+        source: 'helius'
+      };
+
+      console.log(`[RADAR DISCOVERY] New token: ${token.symbol} (${mint}) via helius real-time`);
+      discoveryEmitter?.emit('token:discovered', token);
     }
   }
-
-  const tokenTransfers = payload.tokenTransfers || [];
-  
-  for (const transfer of tokenTransfers) {
-    const mint = transfer.mint;
-    if (!mint) continue;
-
-    const programIds = [RAYDIUM_MINT, PUMPFUN_MINT];
-    const isRelevant = programIds.includes(transfer.toUserAccount?.slice(0, 44) || '');
-    
-    if (!isRelevant) continue;
-    if (!shouldProcessMint(mint)) continue;
-
-    seenMints.add(mint);
-    mintTimestamps.set(mint, Date.now());
-
-    const token: DiscoveredToken = {
-      mint,
-      name: transfer.symbol || 'Unknown',
-      symbol: transfer.symbol || '???',
-      source: 'helius'
-    };
-
-    console.log(`[RADAR DISCOVERY] New token: ${token.symbol} (${mint}) via helius`);
-    discoveryEmitter?.emit('token:discovered', token);
-    return token;
-  }
-
-  return null;
 }
 
 export async function getTokenPrice(mint: string): Promise<number | null> {

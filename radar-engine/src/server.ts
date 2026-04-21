@@ -52,8 +52,15 @@ app.get('/radar/rugs', async (req, res) => {
 
 app.post('/webhook/helius', async (req, res) => {
   try {
+    const authHeader = req.headers['authorization'];
+    if (authHeader !== 'radar_secret_2024') {
+      console.warn('[RADAR WARNING] Unauthorized webhook attempt');
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
     const payload = req.body;
-    console.log('[RADAR] Helius webhook received:', payload.type);
+    console.log('[RADAR] Helius webhook received:', Array.isArray(payload) ? payload.length + ' txs' : 'single tx');
     
     await handleHeliusWebhook(payload);
     
