@@ -5,7 +5,7 @@ import { HotBoard } from './HotBoard'
 import { AlertFeed } from './AlertFeed'
 
 export function RadarPage() {
-  const { tokens, alerts, isConnected, isLoading } = useRadarSocket()
+  const { tokens, alerts, isConnected, isLoading, isDemoMode } = useRadarSocket()
 
   const tokenCount = tokens.length
   const rugCount = tokens.filter((t: any) => t.risk_level === 'RUG PROBABLE').length
@@ -45,17 +45,19 @@ export function RadarPage() {
                 w={2}
                 h={2}
                 borderRadius="full"
-                bg="#00c853"
+                bg={isDemoMode ? '#ffd600' : '#00c853'}
                 style={{ animation: 'livePulse 2s ease-in-out infinite' }}
               />
-              <Text fontSize="xs" color="#00c853" fontWeight="bold">
-                LIVE
+              <Text fontSize="xs" color={isDemoMode ? '#ffd600' : '#00c853'} fontWeight="bold">
+                {isDemoMode ? 'DEMO' : 'LIVE'}
               </Text>
             </Flex>
           )}
         </Flex>
         <Text color="gray.500" fontSize="sm">
-          Real-time token intelligence for Solana
+          {isDemoMode
+            ? 'Preview mode — RADAR backend offline. Showing sample data.'
+            : 'Real-time token intelligence for Solana'}
         </Text>
       </Box>
 
