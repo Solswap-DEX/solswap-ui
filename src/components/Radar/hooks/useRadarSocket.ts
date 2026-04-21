@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { RadarToken, RadarAlert } from '../radar.types'
 
-const RADAR_WS_URL = process.env.NEXT_PUBLIC_RADAR_WS_URL || 'wss://solswap.cloud:3333'
-const RADAR_API_URL = process.env.NEXT_PUBLIC_RADAR_API_URL || RADAR_WS_URL.replace('wss', 'https').replace('ws', 'http')
+const RADAR_HTTP = 'https://solswap.cloud/radar-api'
+const RADAR_WS = 'wss://solswap.cloud/radar-ws/socket.io/?EIO=4&transport=websocket'
 const CONNECTION_TIMEOUT_MS = 6000
 const MAX_RECONNECT_ATTEMPTS = 3
 
@@ -95,7 +95,7 @@ export function useRadarSocket() {
     try {
       const controller = new AbortController()
       const fetchTimeout = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT_MS)
-      const res = await fetch(`${RADAR_API_URL}/radar/recent`, { signal: controller.signal })
+      const res = await fetch(`${RADAR_HTTP}/radar/recent`, { signal: controller.signal })
       clearTimeout(fetchTimeout)
       const data = await res.json()
       if (data.tokens && Array.isArray(data.tokens)) {
@@ -117,8 +117,7 @@ export function useRadarSocket() {
       if (cancelled) return
 
       try {
-        const wsUrl = 'wss://solswap.cloud/radar-ws/socket.io/' + '?EIO=4&transport=websocket'
-        ws = new WebSocket(wsUrl)
+        ws = new WebSocket(RADAR_WS)
 
         timeoutRef.current = setTimeout(() => {
           if (ws && ws.readyState !== WebSocket.OPEN) {
