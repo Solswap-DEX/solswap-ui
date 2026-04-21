@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import { createServer } from 'http';
 import { StopLossWatch } from './types/radar.types';
 import { handleHeliusWebhook } from './discovery/tokenDiscovery';
+import { getTopAlpha, getRecentTokens, getRugTokens } from './db/mongo';
 
 const app = express();
 const http = createServer(app);
@@ -17,6 +18,36 @@ app.use(express.json());
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
+});
+
+app.get('/radar/top', async (req, res) => {
+  try {
+    const tokens = await getTopAlpha(20);
+    res.json({ tokens });
+  } catch (err: any) {
+    console.error('[RADAR ERROR] /radar/top:', err.message);
+    res.status(500).json({ error: 'Failed to fetch top tokens' });
+  }
+});
+
+app.get('/radar/recent', async (req, res) => {
+  try {
+    const tokens = await getRecentTokens(30);
+    res.json({ tokens });
+  } catch (err: any) {
+    console.error('[RADAR ERROR] /radar/recent:', err.message);
+    res.status(500).json({ error: 'Failed to fetch recent tokens' });
+  }
+});
+
+app.get('/radar/rugs', async (req, res) => {
+  try {
+    const tokens = await getRugTokens();
+    res.json({ tokens });
+  } catch (err: any) {
+    console.error('[RADAR ERROR] /radar/rugs:', err.message);
+    res.status(500).json({ error: 'Failed to fetch rug tokens' });
+  }
 });
 
 app.post('/webhook/helius', async (req, res) => {

@@ -6,6 +6,7 @@ import { calculateMomentum } from '../scoring/momentumScore';
 import { calculateRisk } from '../scoring/riskScore';
 import { calculateAlpha, getAlphaLabel } from '../scoring/alphaScore';
 import { detectRug } from '../rug/rugDetector';
+import { upsertToken } from '../db/mongo';
 
 const DEXSCREENER_URL = process.env.DEXSCREENER_BASE_URL || 'https://api.dexscreener.com';
 const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY || '';
@@ -25,6 +26,10 @@ export function initEnricher(emitter: EventEmitter, io: Server): void {
         const radarToken = buildRadarToken(enriched);
         
         io.emit('radar:token', radarToken);
+
+        upsertToken(radarToken).catch(err =>
+          console.error('[RADAR ERROR] Failed to persist token:', err)
+        );
 
         console.log(
           `[RADAR] ${radarToken.symbol} | ` +
