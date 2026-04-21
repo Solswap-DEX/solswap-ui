@@ -1,10 +1,8 @@
-import { Box, Flex, Grid, Text, keyframes } from '@chakra-ui/react'
+import { Box, Flex, Grid, Text, keyframes, Spinner, VStack } from '@chakra-ui/react'
 import { useRadarSocket } from './hooks/useRadarSocket'
 import { LiveFeed } from './LiveFeed'
 import { HotBoard } from './HotBoard'
 import { AlertFeed } from './AlertFeed'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { useEffect, useState } from 'react'
 
 const livePulse = keyframes`
   0%, 100% { transform: scale(1); opacity: 1; }
@@ -12,18 +10,19 @@ const livePulse = keyframes`
 `
 
 export function RadarPage() {
-  const { tokens, alerts, isConnected } = useRadarSocket()
-  const { publicKey } = useWallet()
-  const [walletAddress, setWalletAddress] = useState<string>()
-
-  useEffect(() => {
-    if (publicKey) {
-      setWalletAddress(publicKey.toBase58())
-    }
-  }, [publicKey])
+  const { tokens, alerts, isConnected, isLoading } = useRadarSocket()
 
   const tokenCount = tokens.length
-  const rugCount = tokens.filter((t) => t.risk_level === 'RUG PROBABLE').length
+  const rugCount = tokens.filter((t: any) => t.risk_level === 'RUG PROBABLE').length
+
+  if (isLoading) {
+    return (
+      <VStack py={20} justify="center">
+        <Spinner size="xl" color="green.400" />
+        <Text color="gray.500">Loading RADAR...</Text>
+      </VStack>
+    )
+  }
 
   return (
     <Box p={4} minH="100vh" bg="#0d0d0d">
@@ -93,10 +92,10 @@ export function RadarPage() {
         h="calc(100vh - 200px)"
       >
         <Box>
-          <LiveFeed tokens={tokens} isConnected={isConnected} walletAddress={walletAddress} alerts={alerts} />
+          <LiveFeed tokens={tokens} isConnected={isConnected} alerts={alerts} />
         </Box>
         <Box>
-          <HotBoard tokens={tokens} walletAddress={walletAddress} />
+          <HotBoard tokens={tokens} />
         </Box>
         <Box>
           <AlertFeed alerts={alerts} />

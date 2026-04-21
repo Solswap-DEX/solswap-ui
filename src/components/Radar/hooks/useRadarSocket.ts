@@ -1,82 +1,77 @@
 import { useEffect, useState, useRef } from 'react'
 import { RadarToken, RadarAlert } from '../radar.types'
 
-const RADAR_WS_URL =
-  typeof window !== 'undefined'
-    ? (process.env.NEXT_PUBLIC_RADAR_WS_URL || 'wss://solswap.cloud/radar-ws').replace('http', 'ws')
-    : 'wss://solswap.cloud/radar-ws'
+const RADAR_API_URL = 'https://solswap.cloud'
 
 export function useRadarSocket() {
   const [tokens, setTokens] = useState<RadarToken[]>([])
   const [alerts, setAlerts] = useState<RadarAlert[]>([])
   const [isConnected, setIsConnected] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const wsRef = useRef<WebSocket | null>(null)
 
-  useEffect(() => {
-    fetch(`${RADAR_WS_URL.replace('ws', 'http')}/radar/recent`)
-      .then((r) => r.json())
-      .then((data) => setTokens(data.tokens || []))
-      .catch(() => {})
+  const fetchTokens = async () => {
+    try {
+      const res = await fetch(`${RADAR_API_URL}:3333/radar/recent`)
+      const data = await res.json()
+      if (data.tokens) {
+        setTokens(data.tokens)
+      }
+    } catch {
+      console.log('[RADAR] Using fallback mode')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-    const wsUrl = `${RADAR_WS_URL}?EIO=4&transport=websocket`
-    const ws = new WebSocket(wsUrl)
+  useEffect(() => {
+    fetchTokens()
+
+    let ws: WebSocket | null = null
+    try {
+      ws = new WebSocket(`wss://solswap.cloud:3333`)
+
+      ws.onopen = () => {
+        setIsConnected(true)
+      }
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = event.data as string
+          if (msg.startsWith('42')) {
+            const parsed = JSON.parse(msg.slice(2))
+            const eventType = parsed[0]
+            const payload = parsed[1]
+
+            if (eventType === 'radar:token') {
+              setTokens(prev => {
+                const filtered = prev.filter((t: RadarToken) => t.mint !== payload.mint)
+                return [payload, ...filtered].slice(0, 50)
+              })
+            } else if (eventType === 'radar:alert') {
+              setAlerts(prev => [payload, ...prev].slice(0, 20))
+            }
+          }
+        } catch {}
+      }
+
+      ws.onclose = () => {
+        setIsConnected(false)
+      }
+
+      ws.onerror = () => {
+        setIsConnected(false)
+      }
+    } catch {
+      console.log('[RADAR] WebSocket not available')
+    }
+
     wsRef.current = ws
 
-    ws.onopen = () => {
-      setIsConnected(true)
-      ws.send('40')
-    }
-
-    ws.onmessage = (event) => {
-      try {
-        const data = event.data
-        if (!data || typeof data !== 'string') return
-
-        if (data.startsWith('42')) {
-          const parsed = JSON.parse(data.slice(2))
-          const eventType = parsed[0]
-          const payload = parsed[1]
-
-          if (eventType === 'radar:token') {
-            onRadarToken(payload)
-          } else if (eventType === 'radar:alert') {
-            onRadarAlert(payload)
-          } else if (eventType === 'radar:stop_loss') {
-            onStopLoss(payload)
-          }
-        }
-      } catch {}
-    }
-
-    ws.onclose = () => {
-      setIsConnected(false)
-    }
-
     return () => {
-      ws.close()
+      if (ws) ws.close()
     }
   }, [])
 
-  const onRadarToken = (token: RadarToken) => {
-    setTokens((prev) => {
-      const filtered = prev.filter((t) => t.mint !== token.mint)
-      return [token, ...filtered].slice(0, 50)
-    })
-  }
-
-  const onRadarAlert = (alert: RadarAlert) => {
-    setAlerts((prev) => [alert, ...prev].slice(0, 20))
-  }
-
-  const onStopLoss = (data: any) => {
-    onRadarAlert({
-      type: 'STOP_LOSS_TRIGGERED',
-      mint: data.mint,
-      message: data.message,
-      severity: 'CRITICAL',
-      timestamp: new Date()
-    })
-  }
-
-  return { tokens, alerts, isConnected }
+  return { tokens, alerts, isConnected, isLoading }
 }

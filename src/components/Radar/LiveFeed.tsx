@@ -1,8 +1,6 @@
 import { Box, Flex, Text, keyframes } from '@chakra-ui/react'
 import { RadarToken, RadarAlert } from './radar.types'
 import { TokenCard } from './TokenCard'
-import { StopLossModal } from './StopLossModal'
-import { useState, useRef } from 'react'
 
 const slideIn = keyframes`
   from { transform: translateY(-20px); opacity: 0; }
@@ -12,22 +10,12 @@ const slideIn = keyframes`
 export function LiveFeed({
   tokens,
   isConnected,
-  walletAddress,
   alerts
 }: {
   tokens: RadarToken[]
   isConnected: boolean
-  walletAddress?: string
   alerts: RadarAlert[]
 }) {
-  const [selectedToken, setSelectedToken] = useState<RadarToken | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-
-  const handleStopLossClick = (token: RadarToken) => {
-    setSelectedToken(token)
-    setIsModalOpen(true)
-  }
-
   return (
     <Box
       h="100%"
@@ -60,6 +48,10 @@ export function LiveFeed({
         <Text color="gray.500" fontSize="sm">
           Connecting to RADAR...
         </Text>
+      ) : tokens.length === 0 ? (
+        <Text color="gray.500" fontSize="sm">
+          No tokens detected yet. Waiting for data...
+        </Text>
       ) : (
         <Box
           display="flex"
@@ -72,21 +64,10 @@ export function LiveFeed({
           }}
         >
           {tokens.slice(0, 20).map((token) => (
-            <TokenCard
-              key={token.mint}
-              token={token}
-              onStopLossClick={() => handleStopLossClick(token)}
-            />
+            <TokenCard key={token.mint} token={token} />
           ))}
         </Box>
       )}
-
-      <StopLossModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        token={selectedToken}
-        walletAddress={walletAddress}
-      />
     </Box>
   )
 }

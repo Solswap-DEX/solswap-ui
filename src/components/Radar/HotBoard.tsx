@@ -1,10 +1,8 @@
-import { Box, Table, Thead, Tbody, Tr, Th, Td, Flex, Text, Button, keyframes } from '@chakra-ui/react'
+import { Box, Table, Thead, Tbody, Tr, Th, Td, Flex, Text, Button } from '@chakra-ui/react'
 import { useRouter } from 'next/router'
 import { RadarToken } from './radar.types'
 import { RiskBadge } from './RiskBadge'
 import { AlphaBar } from './AlphaBar'
-import { useState } from 'react'
-import { StopLossModal } from './StopLossModal'
 
 function formatUsd(value: number): string {
   if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`
@@ -19,15 +17,11 @@ function formatAge(seconds: number): string {
 }
 
 export function HotBoard({
-  tokens,
-  walletAddress
+  tokens
 }: {
   tokens: RadarToken[]
-  walletAddress?: string
 }) {
   const router = useRouter()
-  const [selectedToken, setSelectedToken] = useState<RadarToken | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const sortedTokens = [...tokens].sort((a, b) => b.alpha_score - a.alpha_score).slice(0, 20)
 
@@ -74,7 +68,7 @@ export function HotBoard({
                       {token.symbol}
                     </Text>
                     <Text fontSize="xs" color="gray.500">
-                      {token.name.slice(0, 8)}
+                      {token.name?.slice(0, 8) || 'Unknown'}
                     </Text>
                   </Box>
                 </Td>
@@ -99,43 +93,24 @@ export function HotBoard({
                   {formatAge(token.age_seconds)}
                 </Td>
                 <Td>
-                  <Flex gap={1}>
-                    <Button
-                      size="xs"
-                      variant="outline"
-                      colorScheme="green"
-                      onClick={() =>
-                        router.push(
-                          `/swap?inputMint=So11111111111111111111111111111111111111112&outputMint=${token.mint}`
-                        )
-                      }
-                    >
-                      Swap →
-                    </Button>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      onClick={() => {
-                        setSelectedToken(token)
-                        setIsModalOpen(true)
-                      }}
-                    >
-                      🔔
-                    </Button>
-                  </Flex>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    colorScheme="green"
+                    onClick={() =>
+                      router.push(
+                        `/swap?inputMint=So11111111111111111111111111111111111111112&outputMint=${token.mint}`
+                      )
+                    }
+                  >
+                    Swap →
+                  </Button>
                 </Td>
               </Tr>
             )
           })}
         </Tbody>
       </Table>
-
-      <StopLossModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        token={selectedToken}
-        walletAddress={walletAddress}
-      />
     </Box>
   )
 }
