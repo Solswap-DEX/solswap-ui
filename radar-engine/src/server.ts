@@ -2,6 +2,7 @@ import express from 'express';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import { StopLossWatch } from './types/radar.types';
+import { handleHeliusWebhook } from './discovery/tokenDiscovery';
 
 const app = express();
 const http = createServer(app);
@@ -18,13 +19,16 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
 });
 
-app.post('/webhook/helius', (req, res) => {
+app.post('/webhook/helius', async (req, res) => {
   try {
-    const event = req.body;
-    console.log('[RADAR] Helius webhook received:', event.type);
+    const payload = req.body;
+    console.log('[RADAR] Helius webhook received:', payload.type);
+    
+    await handleHeliusWebhook(payload);
+    
     res.json({ received: true });
-  } catch (err) {
-    console.error('[RADAR ERROR] Helius webhook failed:', err);
+  } catch (err: any) {
+    console.error('[RADAR ERROR] Helius webhook failed:', err.message);
     res.status(500).json({ error: 'Processing failed' });
   }
 });
@@ -61,8 +65,8 @@ app.post('/radar/watch', (req, res) => {
     });
 
     res.json({ success: true });
-  } catch (err) {
-    console.error('[RADAR ERROR] Register watch failed:', err);
+  } catch (err: any) {
+    console.error('[RADAR ERROR] Register watch failed:', err.message);
     res.status(500).json({ error: 'Registration failed' });
   }
 });

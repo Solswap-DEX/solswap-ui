@@ -1,13 +1,10 @@
 import dotenv from 'dotenv';
+import { EventEmitter } from 'events';
 import { connectMongo } from './db/mongo';
-import { http, io, getWatchMap } from './server';
+import { http, io } from './server';
 import { initStopLossMonitor } from './alerts/stopLossMonitor';
-import { discoverNewTokens } from './discovery/tokenDiscovery';
-import { enrichTokenData } from './enrichment/tokenEnricher';
-import { calculateMomentumScore } from './scoring/momentumScore';
-import { calculateRiskScore, determineRiskLevel } from './scoring/riskScore';
-import { calculateAlphaScore } from './scoring/alphaScore';
-import { detectRugPull } from './rug/rugDetector';
+import { initDiscovery } from './discovery/tokenDiscovery';
+import { initEnricher } from './enrichment/tokenEnricher';
 
 dotenv.config();
 
@@ -22,49 +19,18 @@ async function main(): Promise<void> {
   initStopLossMonitor(io, watchMap);
   console.log('[RADAR] Stop Loss Monitor active ✓');
 
-  startDiscoveryLoop();
+  const discoveryEmitter = new EventEmitter();
+  initDiscovery(discoveryEmitter);
+  initEnricher(discoveryEmitter, io);
   console.log('[RADAR] Discovery layer active ✓');
+  console.log('[RADAR] Enrichment layer active ✓');
 
   http.listen(PORT, () => {
     console.log(`[RADAR] WebSocket server started on port ${PORT} ✓`);
   });
 }
 
-function startDiscoveryLoop(): void {
-  setInterval(async () => {
-    try {
-      const rawTokens = await discoverNewTokens();
-
-      for (const token of rawTokens) {
-        const enriches = enrichTokenData(token);
-        const withMomentum = {
-          ...enriches,
-          momentum_score: calculateMomentumScore(enriches)
-        };
-        const withRisk = {
-          ...withMomentum,
-          risk_score: calculateRiskScore(withMomentum),
-          risk_level: determineRiskLevel(calculateRiskScore(withMomentum))
-        };
-        const final = {
-          ...withRisk,
-          alpha_score: calculateAlphaScore(withRisk)
-        };
-
-        io.emit('radar:token', final);
-
-        const rugAlert = detectRugPull(final);
-        if (rugAlert) {
-          io.emit('radar:alert', rugAlert);
-        }
-      }
-    } catch (err) {
-      console.error('[RADAR ERROR] Discovery loop error:', err);
-    }
-  }, 30000);
-}
-
-main().catch((err) => {
-  console.error('[RADAR ERROR] Startup failed:', err);
+main().catch((err: Error) => {
+  console.error('[RADAR ERROR] Startup failed:', err.message);
   process.exit(1);
 });
