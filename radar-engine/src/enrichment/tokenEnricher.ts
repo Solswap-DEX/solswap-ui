@@ -1,34 +1,16 @@
 import { EventEmitter } from 'events';
 import { Server } from 'socket.io';
 import axios from 'axios';
-import { RadarToken } from '../types/radar.types';
-import { calculateMomentumScore } from '../scoring/momentumScore';
-import { calculateRiskScore, determineRiskLevel } from '../scoring/riskScore';
-import { calculateAlphaScore } from '../scoring/alphaScore';
-import { detectRugPull } from '../rug/rugDetector';
+import { RadarToken, EnrichedToken } from '../types/radar.types';
+import { calculateMomentum } from '../scoring/momentumScore';
+import { calculateRisk } from '../scoring/riskScore';
+import { calculateAlpha, getAlphaLabel } from '../scoring/alphaScore';
+import { detectRug } from '../rug/rugDetector';
 
 const DEXSCREENER_URL = process.env.DEXSCREENER_BASE_URL || 'https://api.dexscreener.com';
 const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY || '';
 const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '';
 const HELIUS_RPC = process.env.HELIUS_RPC || 'https://mainnet.helius-rpc.com';
-
-interface EnrichedData {
-  price_usd: number;
-  liquidity: number;
-  volume_1m: number;
-  volume_5m: number;
-  buys_1m: number;
-  sells_1m: number;
-  detected_at: number;
-  holders: number;
-  name: string;
-  symbol: string;
-  mint_authority_active: boolean;
-  age_seconds: number;
-  tx_spike_ratio: number;
-  holder_growth_rate: number;
-  volume_velocity: number;
-}
 
 const pendingEnrichments = new Set<string>();
 
@@ -44,10 +26,12 @@ export function initEnricher(emitter: EventEmitter, io: Server): void {
         
         io.emit('radar:token', radarToken);
 
-        const rugAlert = detectRugPull(radarToken);
-        if (rugAlert) {
-          io.emit('radar:alert', rugAlert);
-        }
+        console.log(
+          `[RADAR] ${radarToken.symbol} | ` +
+          `Alpha: ${radarToken.alpha_score} (${radarToken.alpha_label}) | ` +
+          `Risk: ${radarToken.risk_level} | ` +
+          `Liq: $${radarToken.liquidity.toFixed(0)}`
+        );
       }
     } catch (err: any) {
       console.error('[RADAR ERROR] Enrichment failed:', err.message);
@@ -61,7 +45,7 @@ async function enrichToken(
   mint: string,
   discoveredName: string,
   discoveredSymbol: string
-): Promise<EnrichedData | null> {
+): Promise<EnrichedToken | null> {
   const [dexData, birdeyeData, heliusData] = await Promise.all([
     fetchDexScreener(mint),
     fetchBirdeye(mint),
@@ -96,11 +80,13 @@ async function enrichToken(
     age_seconds,
     volume_velocity,
     holder_growth_rate,
-    tx_spike_ratio
+    tx_spike_ratio,
+    wallet_concentration: 0,
+    lp_locked: false
   };
 }
 
-async function fetchDexScreener(mint: string): Promise<Partial<EnrichedData> | null> {
+async function fetchDexScreener(mint: string): Promise<Partial<EnrichedToken> | null> {
   try {
     const response = await axios.get(
       `${DEXSCREENER_URL}/latest/dex/tokens/${mint}`,
@@ -125,7 +111,7 @@ async function fetchDexScreener(mint: string): Promise<Partial<EnrichedData> | n
   }
 }
 
-async function fetchBirdeye(mint: string): Promise<Partial<EnrichedData> | null> {
+async function fetchBirdeye(mint: string): Promise<Partial<EnrichedToken> | null> {
   if (!BIRDEYE_API_KEY) return null;
   
   try {
@@ -174,33 +160,37 @@ async function fetchMintAuthority(mint: string): Promise<boolean> {
   }
 }
 
-function buildRadarToken(data: EnrichedData): RadarToken {
+function buildRadarToken(enriched: EnrichedToken): RadarToken {
+  const momentum = calculateMomentum(enriched);
+  const { score: riskScore, level: riskLevel } = calculateRisk(enriched);
+  const alphaScore = calculateAlpha(momentum, riskScore);
+  const rugSignal = detectRug(enriched, []);
+
   const token: RadarToken = {
     mint: '',
-    name: data.name,
-    symbol: data.symbol,
-    age_seconds: data.age_seconds,
-    liquidity: data.liquidity,
-    volume_1m: data.volume_1m,
-    volume_5m: data.volume_5m,
-    holders: data.holders,
-    tx_count: data.buys_1m + data.sells_1m,
-    alpha_score: 0,
-    momentum_score: 0,
-    risk_score: 0,
-    risk_level: 'MEDIUM',
-    wallet_concentration: 0,
-    lp_locked: false,
-    mint_authority_active: data.mint_authority_active,
-    price_usd: data.price_usd,
+    name: enriched.name,
+    symbol: enriched.symbol,
+    age_seconds: enriched.age_seconds,
+    liquidity: enriched.liquidity,
+    volume_1m: enriched.volume_1m,
+    volume_5m: enriched.volume_5m,
+    holders: enriched.holders,
+    tx_count: enriched.buys_1m + enriched.sells_1m,
+    buys_1m: enriched.buys_1m,
+    sells_1m: enriched.sells_1m,
+    alpha_score: alphaScore,
+    momentum_score: momentum,
+    risk_score: riskScore,
+    risk_level: rugSignal.isRug ? 'RUG PROBABLE' : riskLevel,
+    wallet_concentration: enriched.wallet_concentration,
+    lp_locked: enriched.lp_locked,
+    mint_authority_active: enriched.mint_authority_active,
+    price_usd: enriched.price_usd,
     last_update: new Date(),
-    detected_at: new Date(data.detected_at)
+    detected_at: new Date(enriched.detected_at),
+    alpha_label: getAlphaLabel(alphaScore),
+    rug_signals: rugSignal.signals
   };
-
-  token.momentum_score = calculateMomentumScore(token);
-  token.risk_score = calculateRiskScore(token);
-  token.risk_level = determineRiskLevel(token.risk_score);
-  token.alpha_score = calculateAlphaScore(token);
 
   return token;
 }

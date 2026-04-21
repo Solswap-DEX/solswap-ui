@@ -1,27 +1,29 @@
-import { RadarToken, RiskLevel } from '../types/radar.types';
+import { EnrichedToken, RiskLevel } from '../types/radar.types';
 
-export function calculateRiskScore(token: RadarToken): number {
-  let risk = 0;
+export function calculateRisk(token: EnrichedToken): { score: number; level: RiskLevel } {
+  let score = 0;
 
-  if (!token.lp_locked) risk += 30;
-  if (token.mint_authority_active) risk += 25;
-  if (token.wallet_concentration > 0.5) risk += 20;
-  if (token.age_seconds < 3600) risk += 25;
-  else if (token.age_seconds < 86400) risk += 15;
+  if (token.mint_authority_active) score += 40;
+  if (token.wallet_concentration > 0.5) score += 30;
+  else if (token.wallet_concentration > 0.2) score += 15;
+  if (!token.lp_locked) score += 20;
+  if (token.sells_1m > token.buys_1m * 3) score += 25;
+  if (token.age_seconds < 60) score += 10;
 
-  if (token.liquidity < 1000) risk += 25;
-  else if (token.liquidity < 10000) risk += 15;
-  else if (token.liquidity < 50000) risk += 5;
+  score = Math.min(100, score);
 
-  if (token.holders < 10) risk += 20;
-  else if (token.holders < 50) risk += 10;
+  const level = mapToRiskLevel(score);
 
-  return Math.min(100, risk);
+  return { score, level };
+}
+
+function mapToRiskLevel(score: number): RiskLevel {
+  if (score > 70) return 'RUG PROBABLE';
+  if (score >= 46) return 'HIGH';
+  if (score >= 21) return 'MEDIUM';
+  return 'LOW';
 }
 
 export function determineRiskLevel(score: number): RiskLevel {
-  if (score >= 75) return 'RUG PROBABLE';
-  if (score >= 60) return 'HIGH';
-  if (score >= 40) return 'MEDIUM';
-  return 'LOW';
+  return mapToRiskLevel(score);
 }

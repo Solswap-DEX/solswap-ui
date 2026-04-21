@@ -18,6 +18,10 @@ export interface RadarToken {
   price_usd: number;
   last_update: Date;
   detected_at: Date;
+  alpha_label: 'HIGH ALPHA' | 'WATCH' | 'NEUTRAL' | 'IGNORE';
+  rug_signals: string[];
+  buys_1m: number;
+  sells_1m: number;
 }
 
 export interface StopLossWatch {
@@ -78,4 +82,34 @@ export interface HeliusWebhookEvent {
     toTokenAccount: string;
     tokenAmount: number;
   }>;
+}
+
+export interface EnrichedToken {
+  price_usd: number;
+  liquidity: number;
+  volume_1m: number;
+  volume_5m: number;
+  buys_1m: number;
+  sells_1m: number;
+  detected_at: number;
+  holders: number;
+  name: string;
+  symbol: string;
+  mint_authority_active: boolean;
+  age_seconds: number;
+  tx_spike_ratio: number;
+  holder_growth_rate: number;
+  volume_velocity: number;
+  wallet_concentration: number;
+  lp_locked: boolean;
+}
+
+export interface PricePoint {
+  price: number;
+  timestamp: number;
+}
+
+export interface RugSignal {
+  isRug: boolean;
+  signals: string[];
 }
