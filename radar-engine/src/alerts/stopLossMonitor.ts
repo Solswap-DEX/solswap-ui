@@ -12,7 +12,7 @@ export function initStopLossMonitor(
     for (const [wallet, watches] of watchMap.entries()) {
       for (const watch of watches) {
         try {
-          await checkStopLoss(io, wallet, watch);
+          await checkStopLoss(io, wallet, watch, watchMap);
         } catch (err) {
           console.error('[RADAR ERROR] Stop loss check failed:', err);
         }
@@ -24,7 +24,8 @@ export function initStopLossMonitor(
 async function checkStopLoss(
   io: Server,
   wallet: string,
-  watch: StopLossWatch
+  watch: StopLossWatch,
+  watchMap: Map<string, StopLossWatch[]>
 ): Promise<void> {
   try {
     const response = await axios.get<DexScreenerResponse>(
@@ -56,7 +57,7 @@ async function checkStopLoss(
 
       const walletWatches = watchMap.get(wallet);
       if (walletWatches) {
-        const idx = walletWatches.findIndex(w => w.mint === watch.mint);
+        const idx = walletWatches.findIndex((w: StopLossWatch) => w.mint === watch.mint);
         if (idx > -1) walletWatches.splice(idx, 1);
         if (walletWatches.length === 0) watchMap.delete(wallet);
       }
