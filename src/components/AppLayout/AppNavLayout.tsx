@@ -135,6 +135,25 @@ function AppNavLayout({
               }
             />
             <RouteLink href="/portfolio" isActive={pathname === '/portfolio'} title={t('portfolio.title')} />
+            <RouteLink
+              href="/radar"
+              isActive={pathname === '/radar'}
+              title="RADAR"
+              slotAfter={
+                <Box
+                  ml={1}
+                  px={1}
+                  py={0.5}
+                  bg="linear-gradient(135deg, #9945ff, #14f195)"
+                  borderRadius="sm"
+                  fontSize="9px"
+                  fontWeight="bold"
+                  color="white"
+                >
+                  NEW
+                </Box>
+              }
+            />
             <RouteLink href="https://perps.solswap.cloud" isActive={false} title={t('perpetuals.title')} />
 
             <Menu size="lg">
