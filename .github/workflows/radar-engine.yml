@@ -27,7 +27,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./radar-engine
-        run: npm ci
+        run: npm install --legacy-peer-deps
         
       - name: Type check
         working-directory: ./radar-engine
@@ -43,6 +43,6 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
           ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@$SSH_HOST "
-            cd /var/www/solswap.cloud/radar-engine && git pull && npm ci && npm run build && pm2 restart radar-engine
+            cd /var/www/solswap.cloud/radar-engine && git pull && npm install --legacy-peer-deps && npm run build && pm2 restart radar-engine
           "
           rm private_key.pem
