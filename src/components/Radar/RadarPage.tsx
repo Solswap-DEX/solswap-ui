@@ -3,21 +3,30 @@ import { useRadarSocket } from './hooks/useRadarSocket'
 import { LiveFeed } from './LiveFeed'
 import { HotBoard } from './HotBoard'
 import { AlertFeed } from './AlertFeed'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { useEffect, useState } from 'react'
 
 const livePulse = keyframes`
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.4); opacity: 0.6; }
 `
 
-export function RadarPage({ walletAddress }: { walletAddress?: string }) {
+export function RadarPage() {
   const { tokens, alerts, isConnected } = useRadarSocket()
+  const { publicKey } = useWallet()
+  const [walletAddress, setWalletAddress] = useState<string>()
+
+  useEffect(() => {
+    if (publicKey) {
+      setWalletAddress(publicKey.toBase58())
+    }
+  }, [publicKey])
 
   const tokenCount = tokens.length
   const rugCount = tokens.filter((t) => t.risk_level === 'RUG PROBABLE').length
 
   return (
     <Box p={4} minH="100vh" bg="#0d0d0d">
-      {/* Header */}
       <Box mb={6}>
         <Flex align="center" gap={3}>
           <Text
@@ -49,7 +58,6 @@ export function RadarPage({ walletAddress }: { walletAddress?: string }) {
         </Text>
       </Box>
 
-      {/* Stats */}
       <Box mb={4} p={3} bg="rgba(255,255,255,0.03)" borderRadius="lg">
         <Flex gap={6} wrap="wrap">
           <Box>
@@ -79,7 +87,6 @@ export function RadarPage({ walletAddress }: { walletAddress?: string }) {
         </Flex>
       </Box>
 
-      {/* Grid */}
       <Grid
         templateColumns={{ base: '1fr', lg: '30% 45% 25%' }}
         gap={4}
