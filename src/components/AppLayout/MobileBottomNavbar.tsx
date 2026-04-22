@@ -9,6 +9,7 @@ import MorePageThumbnailIcon from '@/icons/pageNavigation/MoreThumbnailIcon'
 import PortfolioPageThumbnailIcon from '@/icons/pageNavigation/PortfolioPageThumbnailIcon'
 import PerpetualsPageThumbnailIcon from '@/icons/pageNavigation/PerpetualsPageThumbnailIcon'
 import SwapPageThumbnailIcon from '@/icons/pageNavigation/SwapPageThumbnailIcon'
+import RadarPageThumbnailIcon from '@/icons/pageNavigation/RadarPageThumbnailIcon'
 import { colors } from '@/theme/cssVariables'
 import { NavMoreButtonMenuPanel } from './components/NavMoreButtonMenuPanel'
 import { shrinkToValue } from '@/utils/shrinkToValue'
@@ -28,6 +29,8 @@ export function MobileBottomNavbar() {
   const isLaunchpadActive = pathname.startsWith(launchpadHref)
   const protfolioHref = '/portfolio'
   const isPortfolioActive = pathname === protfolioHref
+  const radarHref = '/radar'
+  const isRadarActive = pathname === radarHref
   const isMoreActive = pathname === '/bridge'
 
   return (
@@ -64,6 +67,12 @@ export function MobileBottomNavbar() {
         text={t('portfolio.title')}
         icon={(colorMode) => <PortfolioPageThumbnailIcon colorMode={colorMode} isActive={isPortfolioActive} />}
         isActive={isPortfolioActive}
+      />
+      <BottomNavbarItem
+        href={radarHref}
+        text="RADAR"
+        icon={(colorMode) => <RadarPageThumbnailIcon colorMode={colorMode} isActive={isRadarActive} />}
+        isActive={isRadarActive}
       />
       <BottomNavbarItem
         href="https://perps.solswap.cloud"
