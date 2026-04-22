@@ -124,7 +124,6 @@ export interface EnrichedToken {
   delta_top10: number;
   delta_volume: number;
   liquidity_velocity: number;
-  volume_velocity: number;
 }
 
 export type AlphaLabel = 

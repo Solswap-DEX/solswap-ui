@@ -9,6 +9,7 @@ interface TokenSnapshot {
 // In-memory store — Map<mint, snapshot>
 const snapshots = new Map<string, TokenSnapshot>()
 const previousLabels = new Map<string, string>()
+const firstSeen = new Map<string, number>()
 
 export function updateSnapshot(
   mint: string,
@@ -26,6 +27,13 @@ export function updatePreviousLabel(
 
 export function getPreviousLabel(mint: string): string | undefined {
   return previousLabels.get(mint)
+}
+
+export function getFirstSeen(mint: string, fallback: number): number {
+  const existing = firstSeen.get(mint)
+  if (existing) return existing
+  firstSeen.set(mint, fallback)
+  return fallback
 }
 
 export function getDeltas(
@@ -79,6 +87,7 @@ export function cleanupSnapshots(): void {
     if (snap.timestamp < cutoff) {
       snapshots.delete(mint)
       previousLabels.delete(mint)
+      firstSeen.delete(mint)
     }
   }
 }

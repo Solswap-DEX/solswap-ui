@@ -7,7 +7,7 @@ import { calculateRisk } from '../scoring/riskScore';
 import { calculateAlpha, getAlphaLabel } from '../scoring/alphaScore';
 import { detectRug } from '../rug/rugDetector';
 import { upsertToken } from '../db/mongo';
-import { updateSnapshot, getDeltas, getPreviousLabel, updatePreviousLabel } from '../state/tokenStateTracker';
+import { updateSnapshot, getDeltas, getPreviousLabel, updatePreviousLabel, getFirstSeen } from '../state/tokenStateTracker';
 
 const DEXSCREENER_URL = process.env.DEXSCREENER_BASE_URL || 'https://api.dexscreener.com';
 const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY || '';
@@ -103,7 +103,9 @@ async function enrichToken(
   const volume_5m = dexData?.volume_5m || 0;
   const buys_1m = dexData?.buys_1m || 0;
   const sells_1m = dexData?.sells_1m || 0;
-  const detected_at = dexData?.detected_at || Date.now();
+  
+  // Stabilize detected_at using in-memory firstSeen if API has no data
+  const detected_at = getFirstSeen(mint, dexData?.detected_at || Date.now());
   
   const finalName = birdeyeData?.name || dexData?.name || discoveredName || 'Unknown';
   const finalSymbol = birdeyeData?.symbol || dexData?.symbol || discoveredSymbol || '???';
@@ -148,7 +150,6 @@ async function enrichToken(
     symbol: finalSymbol,
     mint_authority_active: heliusData,
     age_seconds,
-    volume_velocity,
     holder_growth_rate,
     tx_spike_ratio,
     wallet_concentration: walletData.top1,
@@ -160,7 +161,9 @@ async function enrichToken(
     delta_liquidity: deltas.delta_liquidity,
     delta_holders: deltas.delta_holders,
     delta_top10: deltas.delta_top10,
-    delta_volume: deltas.delta_volume
+    delta_volume: deltas.delta_volume,
+    liquidity_velocity: deltas.liquidity_velocity,
+    volume_velocity: deltas.volume_velocity
   };
 }
 
@@ -383,7 +386,9 @@ function buildRadarToken(enriched: EnrichedToken, dataPending = false): RadarTok
     delta_liquidity: enriched.delta_liquidity,
     delta_holders: enriched.delta_holders,
     delta_top10: enriched.delta_top10,
-    delta_volume: enriched.delta_volume
+    delta_volume: enriched.delta_volume,
+    liquidity_velocity: enriched.liquidity_velocity,
+    volume_velocity: enriched.volume_velocity
   };
 
   return token;
