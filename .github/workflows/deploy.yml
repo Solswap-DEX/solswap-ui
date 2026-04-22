@@ -25,6 +25,7 @@ jobs:
         env:
           NEXT_PUBLIC_RPC_URL: ${{ secrets.RPC_URL }}
           NEXT_PUBLIC_HELIUS_RPC_URL: ${{ secrets.HELIUS_RPC_URL }}
+          NEXT_PUBLIC_RPC: ${{ secrets.HELIUS_RPC_URL }}
           NEXT_PUBLIC_BIRDEYE_API_KEY: ${{ secrets.BIRDEYE_API_KEY }}
           NEXT_PUBLIC_ONRAMPER_API_KEY: ${{ secrets.ONRAMPER_API_KEY }}
           NEXT_PUBLIC_GLITCHTIP_DSN: ${{ secrets.GLITCHTIP_DSN }}
