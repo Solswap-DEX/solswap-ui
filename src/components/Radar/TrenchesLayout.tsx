@@ -53,7 +53,7 @@ function Column({
       minW={0}
       h="100%"
       overflow="hidden"
-      bg="#0a0a0a"
+      bg="#0d0d0d"
       borderRight="1px solid rgba(255,255,255,0.05)"
       _last={{ borderRight: 'none' }}
     >
@@ -81,7 +81,7 @@ function Column({
             <Text fontSize="xs" color="gray.600">No tokens yet...</Text>
           </Box>
         ) : (
-          <Flex direction="column" gap={2}>
+          <Flex direction="column" gap={1.5}>
             {filtered.slice(0, 50).map(token => (
               <TrenchCard key={token.mint} token={token} />
             ))}

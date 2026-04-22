@@ -18,7 +18,7 @@ const TABS: { key: TabKey; label: string; icon: string }[] = [
 export function RadarPage() {
   const { tokens, alerts, isConnected, isLoading, isDemoMode } = useRadarSocket()
   const [activeTab, setActiveTab] = useState<TabKey>('feed')
-  const isDesktop = useBreakpointValue({ base: false, lg: true })
+  const isDesktop = useBreakpointValue({ base: false, md: true })
 
   const tokenCount = tokens.length
   const rugCount = tokens.filter((t: any) => t.risk_level === 'RUG PROBABLE').length
