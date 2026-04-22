@@ -1,6 +1,6 @@
 import { Box, Flex, Text } from '@chakra-ui/react'
 import { RadarToken, RadarAlert } from './radar.types'
-import { TokenFeedCard } from './TokenFeedCard'
+import { TrenchCard } from './TrenchCard'
 
 export function LiveFeed({
   tokens,
@@ -11,6 +11,9 @@ export function LiveFeed({
   isConnected: boolean
   alerts: RadarAlert[]
 }) {
+  // Show "fresh" tokens first (youngest), then building
+  const sorted = [...tokens].sort((a, b) => a.age_seconds - b.age_seconds)
+
   return (
     <Box h="100%" overflow="auto">
       <style>{`
@@ -25,46 +28,31 @@ export function LiveFeed({
       `}</style>
 
       <Flex align="center" gap={2} mb={3} px={1}>
-        <Text fontWeight="bold" color="white" fontSize="sm">
-          ⚡ Live Feed
-        </Text>
+        <Text fontWeight="bold" color="white" fontSize="sm">🆕 Fresh Feed</Text>
         <Box
-          w={2}
-          h={2}
-          borderRadius="full"
+          w={2} h={2} borderRadius="full"
           bg={isConnected ? '#00c853' : '#666'}
           style={{ animation: isConnected ? 'livePulse 2s ease-in-out infinite' : undefined }}
         />
-        <Text fontSize="xs" color="gray.600">
-          {tokens.length} tokens
-        </Text>
+        <Text fontSize="xs" color="gray.600">{tokens.length} tokens</Text>
       </Flex>
 
       {!isConnected ? (
         <Box py={10} textAlign="center">
-          <Text color="gray.500" fontSize="sm">
-            Connecting to RADAR...
-          </Text>
+          <Text color="gray.500" fontSize="sm">Connecting to RADAR...</Text>
         </Box>
       ) : tokens.length === 0 ? (
         <Box py={10} textAlign="center">
-          <Text color="gray.500" fontSize="sm">
-            No tokens detected yet. Waiting for data...
-          </Text>
+          <Text color="gray.500" fontSize="sm">No tokens detected yet. Waiting for data...</Text>
         </Box>
       ) : (
         <Flex direction="column" gap={2}>
-          {tokens.slice(0, 30).map((token, idx) => (
+          {sorted.slice(0, 30).map((token, idx) => (
             <Box
               key={token.mint}
-              style={{
-                animation: idx < 3 ? `slideIn 0.3s ease-out` : undefined
-              }}
+              style={{ animation: idx < 3 ? `slideIn 0.3s ease-out` : undefined }}
             >
-              <TokenFeedCard
-                token={token}
-                rank={idx + 1}
-              />
+              <TrenchCard token={token} />
             </Box>
           ))}
         </Flex>

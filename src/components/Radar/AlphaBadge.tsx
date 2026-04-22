@@ -10,7 +10,8 @@ export function AlphaBadge({ label }: { label: AlphaLabel }) {
     '👀 WATCH': { bg: 'rgba(255,152,0,0.15)', border: '#ff9800' },
     '🧪 SPECULATIVE': { bg: 'rgba(156,39,176,0.15)', border: '#9c27b0' },
     '😴 NEUTRAL': { bg: 'rgba(100,100,100,0.15)', border: '#666' },
-    '☠️ RUG PROBABLE': { bg: 'rgba(255,23,68,0.15)', border: '#ff1744', pulse: true }
+    '☠️ RUG PROBABLE': { bg: 'rgba(255,23,68,0.15)', border: '#ff1744', pulse: true },
+    '🚀 GRADUATING': { bg: 'rgba(0,230,118,0.2)', border: '#00e676', pulse: true },
   };
 
   const style = styles[label];

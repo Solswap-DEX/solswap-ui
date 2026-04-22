@@ -40,6 +40,15 @@ function generateDemoTokens(): RadarToken[] {
       rug_signals: riskIdx >= 3 ? ['High concentration', 'Mint active'] : [],
       buys_1m: Math.floor(Math.random() * 200),
       sells_1m: Math.floor(Math.random() * 150),
+      price_at_detection: Math.random() * 0.01,
+      market_cap: Math.floor(Math.random() * 500000) + 5000,
+      bonding_curve_pct: Math.floor(Math.random() * 100),
+      is_pumpfun: Math.random() > 0.3,
+      is_graduated: Math.random() > 0.8,
+      price_change_5m: (Math.random() - 0.4) * 100,
+      price_change_1h: (Math.random() - 0.5) * 200,
+      ds_listing_age_seconds: Math.floor(Math.random() * 86400 * 30),
+      delta_liquidity: (Math.random() - 0.5) * 50000,
     }
   })
 }

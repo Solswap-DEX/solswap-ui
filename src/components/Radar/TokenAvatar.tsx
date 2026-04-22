@@ -14,14 +14,16 @@ function mintToGradient(mint: string): string {
 export function TokenAvatar({
   mint,
   symbol,
-  size = 48
+  size = 48,
+  imageUrl
 }: {
   mint: string
   symbol: string
   size?: number
+  imageUrl?: string
 }) {
   const [imgError, setImgError] = useState(false)
-  const imgUrl = `https://dd.dexscreener.com/ds-data/tokens/solana/${mint}.png`
+  const imgUrl = imageUrl || `https://dd.dexscreener.com/ds-data/tokens/solana/${mint}.png`
 
   if (imgError) {
     return (
