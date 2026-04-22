@@ -1,3 +1,4 @@
+import React from 'react'
 import { Box, Text } from '@chakra-ui/react'
 
 const AVATAR_COLORS = ['#14f195', '#ffd700', '#ff3b5c', '#bf5af2', '#0d9ddb', '#ff9500']

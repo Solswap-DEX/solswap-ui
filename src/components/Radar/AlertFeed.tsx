@@ -1,13 +1,11 @@
+import React, { useEffect, useState } from 'react'
 import { Box, Text, VStack, Flex } from '@chakra-ui/react'
-import { useEffect, useState } from 'react'
 import { RadarAlert } from './radar.types'
 
 export function AlertFeed({ alerts }: { alerts: RadarAlert[] }) {
   const [visibleAlerts, setVisibleAlerts] = useState<RadarAlert[]>([])
 
   useEffect(() => {
-    // Only show alerts that happened in the last 60 seconds initially, 
-    // but the component will manage them with an 8s timeout
     setVisibleAlerts(alerts.slice(0, 5))
   }, [alerts])
 
@@ -36,7 +34,7 @@ function AlertToast({ alert }: { alert: RadarAlert }) {
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(false), 8000)
-    return () => clearInterval(timer)
+    return () => clearTimeout(timer)
   }, [])
 
   if (!visible) return null
@@ -76,7 +74,7 @@ function AlertToast({ alert }: { alert: RadarAlert }) {
             {alert.type.replace('_', ' ')}
           </Text>
           <Text fontSize="8px" color="var(--radar-text-dim)">
-            {new Date(alert.timestamp).toLocaleTimeString([], { hour: '2min', minute: '2-digit', second: '2-digit' })}
+            {new Date(alert.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </Text>
         </Flex>
         <Text fontSize="11px" color="white" fontFamily="var(--radar-mono)" lineHeight="1.3">

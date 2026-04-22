@@ -1,4 +1,5 @@
-import { Box, SimpleGrid, Flex } from '@chakra-ui/react'
+import React from 'react'
+import { Box, SimpleGrid } from '@chakra-ui/react'
 import { RadarToken, RadarAlert } from './radar.types'
 import { LiveFeed } from './LiveFeed'
 import { HotBoard } from './HotBoard'

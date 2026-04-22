@@ -1,3 +1,4 @@
+import React from 'react'
 import { Box, Flex, Text, Tooltip } from '@chakra-ui/react'
 import { useRouter } from 'next/router'
 import { RadarToken } from './radar.types'
@@ -99,8 +100,8 @@ export function TrenchCard({ token }: { token: RadarToken }) {
               <Text fontSize="10px" color="var(--radar-text-dim)" fontFamily="var(--radar-mono)">
                 {formatAge(token.age_seconds)}
               </Text>
-              <Text color={token.delta_volume >= 0 ? 'var(--radar-green)' : 'var(--radar-red)'} fontSize="12px">
-                {token.delta_volume >= 0 ? '↗' : '↘'}
+              <Text color={(token.delta_volume ?? 0) >= 0 ? 'var(--radar-green)' : 'var(--radar-red)'} fontSize="12px">
+                {(token.delta_volume ?? 0) >= 0 ? '↗' : '↘'}
               </Text>
             </Flex>
             <Text 

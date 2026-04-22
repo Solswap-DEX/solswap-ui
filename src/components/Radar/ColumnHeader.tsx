@@ -1,3 +1,4 @@
+import React from 'react'
 import { Box, Flex, Input, Text, Select } from '@chakra-ui/react'
 
 export type SortKey = 'alpha' | 'volume' | 'age' | 'mcap' | 'bonding_curve'
