@@ -3,18 +3,23 @@ import { RadarToken, RadarAlert } from './radar.types'
 import { LiveFeed } from './LiveFeed'
 import { HotBoard } from './HotBoard'
 
+function toMs(d: Date | string | undefined): number {
+  if (!d) return 0
+  return new Date(d).getTime()
+}
+
 export function TrenchesLayout({ tokens, alerts }: { tokens: RadarToken[]; alerts: RadarAlert[] }) {
   // Logic to group tokens by category
   const freshTokens = tokens
-    .filter(t => t.age_seconds < 300) // First 5 mins
-    .sort((a, b) => b.detected_at.getTime() - a.detected_at.getTime())
+    .filter(t => t.age_seconds < 300)
+    .sort((a, b) => toMs(b.detected_at) - toMs(a.detected_at))
 
   const buildingTokens = tokens
-    .filter(t => t.age_seconds >= 300 && t.age_seconds < 3600) // 5m to 1h
+    .filter(t => t.age_seconds >= 300 && t.age_seconds < 3600)
     .sort((a, b) => b.alpha_score - a.alpha_score)
 
   const hotTokens = tokens
-    .filter(t => t.age_seconds >= 3600 || t.alpha_score > 70) // > 1h or very high alpha
+    .filter(t => t.age_seconds >= 3600 || t.alpha_score > 70)
     .sort((a, b) => b.alpha_score - a.alpha_score)
 
   return (
