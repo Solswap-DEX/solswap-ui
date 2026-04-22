@@ -52,3 +52,4 @@ tsconfig.tsbuildinfo
 /public_html
 /public_html_backup_*
 .env.production
+\n# Private Engine\nradar-engine/
