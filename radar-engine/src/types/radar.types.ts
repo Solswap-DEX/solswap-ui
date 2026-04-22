@@ -25,6 +25,8 @@ export interface RadarToken {
   delta_holders: number;
   delta_top10: number;
   delta_volume: number;
+  liquidity_velocity: number;
+  volume_velocity: number;
   alpha_label: AlphaLabel;
   rug_signals: string[];
   buys_1m: number;
@@ -121,6 +123,8 @@ export interface EnrichedToken {
   delta_holders: number;
   delta_top10: number;
   delta_volume: number;
+  liquidity_velocity: number;
+  volume_velocity: number;
 }
 
 export type AlphaLabel = 

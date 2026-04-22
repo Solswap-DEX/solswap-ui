@@ -7,7 +7,7 @@ import { calculateRisk } from '../scoring/riskScore';
 import { calculateAlpha, getAlphaLabel } from '../scoring/alphaScore';
 import { detectRug } from '../rug/rugDetector';
 import { upsertToken } from '../db/mongo';
-import { updateSnapshot, getDeltas } from '../state/tokenStateTracker';
+import { updateSnapshot, getDeltas, getPreviousLabel, updatePreviousLabel } from '../state/tokenStateTracker';
 
 const DEXSCREENER_URL = process.env.DEXSCREENER_BASE_URL || 'https://api.dexscreener.com';
 const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY || '';
@@ -48,6 +48,19 @@ export function initEnricher(emitter: EventEmitter, io: Server): void {
         const isStillEmpty = isEmpty(enriched);
         const radarToken = buildRadarToken(enriched, isStillEmpty);
         
+        const prevLabel = getPreviousLabel(radarToken.mint);
+        if (prevLabel && prevLabel !== radarToken.alpha_label && radarToken.alpha_label !== '❌ IGNORE' && prevLabel !== '🔥 HIGH ALPHA') {
+          console.log(`[TRANSITION] ${radarToken.symbol}: ${prevLabel} → ${radarToken.alpha_label}`);
+          io.emit('radar:alert', {
+            type: 'ALPHA_SURGE',
+            mint: radarToken.mint,
+            message: `🚀 ${radarToken.symbol} upgraded: ${prevLabel} → ${radarToken.alpha_label}`,
+            severity: 'INFO',
+            timestamp: new Date()
+          });
+        }
+        updatePreviousLabel(radarToken.mint, radarToken.alpha_label);
+
         io.emit('radar:token', radarToken);
 
         upsertToken(radarToken).catch(err =>
@@ -328,7 +341,7 @@ async function fetchLPConcentration(
 function buildRadarToken(enriched: EnrichedToken, dataPending = false): RadarToken {
   const momentum = calculateMomentum(enriched);
   const { score: riskScore, level: riskLevel } = calculateRisk(enriched);
-  const alphaScore = calculateAlpha(momentum, riskScore, enriched.age_seconds);
+  const alphaScore = calculateAlpha(momentum, riskScore, enriched.age_seconds, enriched.liquidity_velocity);
   const rugSignal = detectRug(enriched, []);
 
   const token: RadarToken = {
