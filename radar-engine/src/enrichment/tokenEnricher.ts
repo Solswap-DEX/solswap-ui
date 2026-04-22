@@ -57,7 +57,8 @@ export function initEnricher(emitter: EventEmitter, io: Server): void {
           `[RADAR] ${radarToken.symbol} | ` +
           `Alpha: ${radarToken.alpha_score} (${radarToken.alpha_label}) | ` +
           `Risk: ${radarToken.risk_level} | ` +
-          `Liq: $${radarToken.liquidity.toFixed(0)}${isStillEmpty ? ' (PENDING)' : ''}`
+          `Liq: $${radarToken.liquidity.toFixed(0)}${isStillEmpty ? ' (PENDING)' : ''} | ` +
+          `Top holder: ${(radarToken.wallet_concentration * 100).toFixed(2)}%`
         );
       }
     } catch (err: any) {
@@ -73,10 +74,11 @@ async function enrichToken(
   discoveredName: string,
   discoveredSymbol: string
 ): Promise<EnrichedToken | null> {
-  const [dexData, birdeyeData, heliusData] = await Promise.all([
+  const [dexData, birdeyeData, heliusData, concentration] = await Promise.all([
     fetchDexScreener(mint),
     fetchBirdeye(mint),
-    fetchMintAuthority(mint)
+    fetchMintAuthority(mint),
+    fetchTopHolders(mint)
   ]);
 
   const price_usd = dexData?.price_usd || 0;
@@ -111,7 +113,7 @@ async function enrichToken(
     volume_velocity,
     holder_growth_rate,
     tx_spike_ratio,
-    wallet_concentration: 0,
+    wallet_concentration: concentration,
     lp_locked: false,
     mint
   };
@@ -190,6 +192,31 @@ async function fetchMintAuthority(mint: string): Promise<boolean> {
   } catch (err: any) {
     console.error('[RADAR ERROR] Helius mint authority check failed:', err.message);
     return false;
+  }
+}
+
+async function fetchTopHolders(mint: string): Promise<number> {
+  if (!BIRDEYE_API_KEY) return 0;
+  try {
+    const response = await axios.get(
+      `https://public-api.birdeye.so/defi/token_holder?address=${mint}&offset=0&limit=10`,
+      {
+        headers: { 'X-API-KEY': BIRDEYE_API_KEY },
+        timeout: 5000
+      }
+    );
+
+    const items = response.data?.data?.items;
+    if (!items || !Array.isArray(items) || items.length === 0) return 0;
+
+    const totalVisible = items.reduce((acc: number, item: any) => acc + (parseFloat(item.amount) || 0), 0);
+    if (totalVisible === 0) return 0;
+
+    const topHolderAmount = parseFloat(items[0].amount) || 0;
+    return parseFloat((topHolderAmount / totalVisible).toFixed(4));
+  } catch (err: any) {
+    console.error(`[RADAR] Could not fetch holders for ${mint}:`, err.message);
+    return 0;
   }
 }
 
