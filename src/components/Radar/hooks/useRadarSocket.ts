@@ -145,6 +145,10 @@ export function useRadarSocket() {
               const payload = parsed[1]
 
               if (eventType === 'radar:token') {
+                // Skip tokens with no data yet
+                if (payload.alpha_score === 0 && payload.liquidity === 0 && 
+                    payload.volume_1m === 0) return
+
                 setTokens(prev => {
                   const filtered = prev.filter((t: RadarToken) => t.mint !== payload.mint)
                   return [payload, ...filtered].slice(0, 50)

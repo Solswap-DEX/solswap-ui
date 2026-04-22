@@ -21,9 +21,31 @@ export function initEnricher(emitter: EventEmitter, io: Server): void {
     pendingEnrichments.add(token.mint);
     
     try {
-      const enriched = await enrichToken(token.mint, token.name, token.symbol);
+      const delay = token.source === 'helius' || 
+                    token.source === 'helius_swap' 
+                    ? 8000   // esperar 8 segundos para tokens de webhook
+                    : 0;     // DexScreener polling ya tiene datos
+
+      if (delay > 0) {
+        console.log(`[RADAR] Waiting ${delay/1000}s for ${token.mint} to appear in APIs...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+
+      let enriched = await enrichToken(token.mint, token.name, token.symbol);
+      
+      // Retry logic if no data found
+      const isEmpty = (data: any) => 
+        data.liquidity === 0 && data.volume_1m === 0 && data.holders === 0;
+
+      if (enriched && isEmpty(enriched)) {
+        console.log(`[RADAR] No data yet for ${token.mint}, retrying in 15s...`);
+        await new Promise(resolve => setTimeout(resolve, 15000));
+        enriched = await enrichToken(token.mint, token.name, token.symbol);
+      }
+
       if (enriched) {
-        const radarToken = buildRadarToken(enriched);
+        const isStillEmpty = isEmpty(enriched);
+        const radarToken = buildRadarToken(enriched, isStillEmpty);
         
         io.emit('radar:token', radarToken);
 
@@ -35,7 +57,7 @@ export function initEnricher(emitter: EventEmitter, io: Server): void {
           `[RADAR] ${radarToken.symbol} | ` +
           `Alpha: ${radarToken.alpha_score} (${radarToken.alpha_label}) | ` +
           `Risk: ${radarToken.risk_level} | ` +
-          `Liq: $${radarToken.liquidity.toFixed(0)}`
+          `Liq: $${radarToken.liquidity.toFixed(0)}${isStillEmpty ? ' (PENDING)' : ''}`
         );
       }
     } catch (err: any) {
@@ -171,7 +193,7 @@ async function fetchMintAuthority(mint: string): Promise<boolean> {
   }
 }
 
-function buildRadarToken(enriched: EnrichedToken): RadarToken {
+function buildRadarToken(enriched: EnrichedToken, dataPending = false): RadarToken {
   const momentum = calculateMomentum(enriched);
   const { score: riskScore, level: riskLevel } = calculateRisk(enriched);
   const alphaScore = calculateAlpha(momentum, riskScore, enriched.age_seconds);
@@ -200,7 +222,8 @@ function buildRadarToken(enriched: EnrichedToken): RadarToken {
     last_update: new Date(),
     detected_at: new Date(enriched.detected_at),
     alpha_label: getAlphaLabel(alphaScore),
-    rug_signals: rugSignal.signals
+    rug_signals: rugSignal.signals,
+    data_pending: dataPending
   };
 
   return token;
