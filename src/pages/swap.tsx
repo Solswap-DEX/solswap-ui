@@ -2,7 +2,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 
-const Swap = dynamic(() => import('@/features/Swap'))
+const Swap = dynamic(() => import('@/features/Swap'), { ssr: false })
 
 function SwapPage() {
   const router = useRouter()
