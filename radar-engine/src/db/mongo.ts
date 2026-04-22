@@ -45,6 +45,9 @@ const RadarTokenSchema = new Schema({
     default: 'HIGH'
   },
   wallet_concentration: { type: Number, default: 0 },
+  top10_concentration: { type: Number, default: 0 },
+  lp_holder_concentration: { type: Number, default: 0 },
+  sell_ratio: { type: Number, default: 0 },
   lp_locked: { type: Boolean, default: false },
   mint_authority_active: { type: Boolean, default: true },
   rug_signals: [{ type: String }],
