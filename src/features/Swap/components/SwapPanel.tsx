@@ -64,11 +64,11 @@ export function SwapPanel({
   const epochInfo = useAppStore((s) => s.epochInfo)
   const swapTokenAct = useSwapStore((s) => s.swapTokenAct)
   const unWrapSolAct = useSwapStore((s) => s.unWrapSolAct)
-  const tokenMap = useTokenStore((s) => s.tokenMap)
   const [getTokenBalanceUiAmount, fetchTokenAccountAct, refreshTokenAccTime] = useTokenAccountStore(
     (s) => [s.getTokenBalanceUiAmount, s.fetchTokenAccountAct, s.refreshTokenAccTime],
     shallow
   )
+  const [tokenMap, setExtraTokenListAct] = useTokenStore((s) => [s.tokenMap, s.setExtraTokenListAct], shallow)
   const { isOpen: isSending, onOpen: onSending, onClose: offSending } = useDisclosure()
   const { isOpen: isUnWrapping, onOpen: onUnWrapping, onClose: offUnWrapping } = useDisclosure()
   const { isOpen: isHightRiskOpen, onOpen: onHightRiskOpen, onClose: offHightRiskOpen } = useDisclosure()
@@ -110,6 +110,18 @@ export function SwapPanel({
         }
       : {}
   )
+
+  useEffect(() => {
+    if (unknownTokenA) {
+      setExtraTokenListAct({ token: unknownTokenA, addToStorage: true })
+    }
+  }, [unknownTokenA])
+
+  useEffect(() => {
+    if (unknownTokenB) {
+      setExtraTokenListAct({ token: unknownTokenB, addToStorage: true })
+    }
+  }, [unknownTokenB])
   const [inputFeeConfig, outputFeeConfig] = [
     tokenInput?.extensions.feeConfig || inputInfo?.extensions.feeConfig,
     tokenOutput?.extensions.feeConfig || outputInfo?.extensions.feeConfig
