@@ -58,7 +58,7 @@ export function initEnricher(emitter: EventEmitter, io: Server): void {
           `Alpha: ${radarToken.alpha_score} (${radarToken.alpha_label}) | ` +
           `Risk: ${radarToken.risk_level} | ` +
           `Liq: $${radarToken.liquidity.toFixed(0)}${isStillEmpty ? ' (PENDING)' : ''} | ` +
-          `Top holder: ${(radarToken.wallet_concentration * 100).toFixed(2)}%`
+          `Top holder: ${(radarToken.wallet_concentration * 100).toFixed(1)}%`
         );
       }
     } catch (err: any) {
@@ -74,11 +74,11 @@ async function enrichToken(
   discoveredName: string,
   discoveredSymbol: string
 ): Promise<EnrichedToken | null> {
-  const [dexData, birdeyeData, heliusData, concentration] = await Promise.all([
+  const [dexData, birdeyeData, heliusData, walletConc] = await Promise.all([
     fetchDexScreener(mint),
     fetchBirdeye(mint),
     fetchMintAuthority(mint),
-    fetchTopHolders(mint)
+    fetchWalletConcentration(mint)
   ]);
 
   const price_usd = dexData?.price_usd || 0;
@@ -94,7 +94,7 @@ async function enrichToken(
   
   const age_seconds = Math.floor((Date.now() - detected_at) / 1000);
   const volume_velocity = volume_1m / Math.max(age_seconds / 60, 1);
-  const holder_growth_rate = (birdeyeData?.holders || 0) / Math.max(age_seconds / 60, 1);
+  const holder_growth_rate = 0; // Birdeye holders removed
   const tx_spike_ratio = (buys_1m + sells_1m) / Math.max(age_seconds / 60, 1);
 
   return {
@@ -105,7 +105,7 @@ async function enrichToken(
     buys_1m,
     sells_1m,
     detected_at,
-    holders: birdeyeData?.holders || 0,
+    holders: 0,
     name: finalName,
     symbol: finalSymbol,
     mint_authority_active: heliusData,
@@ -113,7 +113,7 @@ async function enrichToken(
     volume_velocity,
     holder_growth_rate,
     tx_spike_ratio,
-    wallet_concentration: concentration,
+    wallet_concentration: walletConc,
     lp_locked: false,
     mint
   };
@@ -160,9 +160,9 @@ async function fetchBirdeye(mint: string): Promise<Partial<EnrichedToken> | null
 
     const data = response.data?.data;
     if (!data) return null;
-
+  
     return {
-      holders: parseInt(data.holder) || 0,
+      holders: 0,
       name: data.name,
       symbol: data.symbol
     };
@@ -195,27 +195,46 @@ async function fetchMintAuthority(mint: string): Promise<boolean> {
   }
 }
 
-async function fetchTopHolders(mint: string): Promise<number> {
-  if (!BIRDEYE_API_KEY) return 0;
+async function fetchWalletConcentration(mint: string): Promise<number> {
   try {
-    const response = await axios.get(
-      `https://public-api.birdeye.so/defi/token_holder?address=${mint}&offset=0&limit=10`,
+    const rpcUrl = `${HELIUS_RPC}/?api-key=${HELIUS_API_KEY}`;
+
+    const holdersRes = await axios.post(
+      rpcUrl,
       {
-        headers: { 'X-API-KEY': BIRDEYE_API_KEY },
-        timeout: 5000
-      }
+        jsonrpc: '2.0',
+        id: 'radar-holders',
+        method: 'getTokenLargestAccounts',
+        params: [mint]
+      },
+      { timeout: 5000 }
     );
 
-    const items = response.data?.data?.items;
-    if (!items || !Array.isArray(items) || items.length === 0) return 0;
+    const holders = holdersRes.data?.result?.value;
+    if (!holders || holders.length === 0) return 0;
 
-    const totalVisible = items.reduce((acc: number, item: any) => acc + (parseFloat(item.amount) || 0), 0);
-    if (totalVisible === 0) return 0;
+    const supplyRes = await axios.post(
+      rpcUrl,
+      {
+        jsonrpc: '2.0',
+        id: 'radar-supply',
+        method: 'getTokenSupply',
+        params: [mint]
+      },
+      { timeout: 5000 }
+    );
 
-    const topHolderAmount = parseFloat(items[0].amount) || 0;
-    return parseFloat((topHolderAmount / totalVisible).toFixed(4));
+    const totalSupply = supplyRes.data?.result?.value?.uiAmount;
+    if (!totalSupply || totalSupply === 0) return 0;
+
+    const topHolderAmount = holders[0]?.uiAmount || 0;
+    const concentration = topHolderAmount / totalSupply;
+    const result = Math.round(concentration * 10000) / 10000;
+
+    console.log(`[RADAR] ${mint.slice(0, 8)}... top holder: ${(result * 100).toFixed(1)}% of supply`);
+    return result;
   } catch (err: any) {
-    console.error(`[RADAR] Could not fetch holders for ${mint}:`, err.message);
+    console.error('[RADAR ERROR] fetchWalletConcentration:', err.message);
     return 0;
   }
 }
