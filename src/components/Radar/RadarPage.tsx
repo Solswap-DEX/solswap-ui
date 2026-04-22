@@ -44,7 +44,7 @@ export function RadarPage() {
       minH="100vh" 
       bg="var(--radar-bg)" 
       color="var(--radar-text)"
-      fontFamily="var(--radar-mono)"
+      fontFamily="var(--radar-sans)"
       sx={{
         '--radar-bg': '#080b0f',
         '--radar-surface': '#0d1117',
@@ -61,7 +61,9 @@ export function RadarPage() {
         '--radar-purple': '#bf5af2',
         '--radar-blue': '#0d9ddb',
         '--radar-solana': '#14f195',
-        '--radar-mono': "'JetBrains Mono', 'Fira Code', 'Courier New', monospace",
+        '--radar-sans': "'Inter', sans-serif",
+        '--radar-heading': "'Roboto', sans-serif",
+        '--radar-mono': "'JetBrains Mono', 'Fira Code', monospace",
       }}
     >
       <style>{`
@@ -117,6 +119,7 @@ export function RadarPage() {
               <Text
                 fontSize="28px"
                 fontWeight="800"
+                fontFamily="var(--radar-heading)"
                 color="white"
                 letterSpacing="6px"
                 lineHeight="1"
