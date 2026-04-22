@@ -80,6 +80,14 @@ export function useRadarSocket() {
   const reconnectAttempts = useRef(0)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  const isEmptyToken = useCallback((token: RadarToken): boolean => {
+    return (
+      Number(token.alpha_score) === 0 &&
+      Number(token.liquidity) === 0 &&
+      Number(token.volume_1m) === 0
+    )
+  }, [])
+
   const activateDemoMode = useCallback(() => {
     if (!isDemoMode) {
       console.log('[RADAR] Backend unavailable — activating demo mode')
@@ -99,7 +107,8 @@ export function useRadarSocket() {
       clearTimeout(fetchTimeout)
       const data = await res.json()
       if (data.tokens && Array.isArray(data.tokens)) {
-        setTokens(data.tokens)
+        const valid = data.tokens.filter((t: RadarToken) => !isEmptyToken(t))
+        setTokens(valid)
         setIsLoading(false)
         return true
       }
@@ -145,9 +154,7 @@ export function useRadarSocket() {
               const payload = parsed[1]
 
               if (eventType === 'radar:token') {
-                // Skip tokens with no data yet
-                if (payload.alpha_score === 0 && payload.liquidity === 0 && 
-                    payload.volume_1m === 0) return
+                if (isEmptyToken(payload)) return
 
                 setTokens(prev => {
                   const filtered = prev.filter((t: RadarToken) => t.mint !== payload.mint)
