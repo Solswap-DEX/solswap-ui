@@ -45,7 +45,8 @@ export function HotBoard({
       <Box flex={1} overflowY="auto" pr={1}>
         {sorted.length === 0 ? (
           <Box py={10} textAlign="center">
-            <Text color="var(--radar-text-dim)" fontSize="sm" fontFamily="var(--radar-mono)">NO MATCHES</Text>
+            <Text color="var(--radar-text-dim)" fontSize="xs" fontFamily="var(--radar-mono)">No high-momentum tokens yet.</Text>
+            <Text color="var(--radar-text-dim)" fontSize="xs" fontFamily="var(--radar-mono)">Market is consolidating.</Text>
           </Box>
         ) : (
           <Flex direction="column" gap={0}>

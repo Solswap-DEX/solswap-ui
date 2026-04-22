@@ -145,7 +145,7 @@ export function RadarPage() {
           <Flex justify="space-between" align="center">
             <VStack align="flex-start" spacing={0}>
               <Text fontSize="12px" color="var(--radar-text-dim)">
-                Real-time token intelligence · Solana
+                Tracking early momentum across Solana
               </Text>
               {isConnected && (
                 <Text fontSize="11px" color="var(--radar-solana)" className="listening-text">
