@@ -4,7 +4,7 @@ import { RadarToken, RadarAlert } from '../radar.types'
 const RADAR_HTTP = 'https://solswap.cloud/radar-api'
 const RADAR_WS = 'wss://solswap.cloud/radar-ws/socket.io/?EIO=4&transport=websocket'
 const CONNECTION_TIMEOUT_MS = 6000
-const MAX_RECONNECT_ATTEMPTS = 3
+const MAX_RECONNECT_ATTEMPTS = 10
 
 // Demo data shown when RADAR backend is not available
 function generateDemoTokens(): RadarToken[] {
@@ -137,6 +137,31 @@ export function useRadarSocket() {
           if (cancelled) return
           try {
             const msg = event.data as string
+
+            // Engine.IO v4 protocol handling
+            if (msg === '2') {
+              // Server PING → respond with PONG to keep connection alive
+              ws?.send('3')
+              return
+            }
+
+            if (msg.startsWith('0')) {
+              // Engine.IO OPEN packet → complete Socket.IO handshake
+              console.log('[RADAR] Engine.IO connected, sending Socket.IO handshake')
+              ws?.send('40')
+              return
+            }
+
+            if (msg === '40') {
+              // Socket.IO CONNECT confirmed → we are fully connected
+              console.log('[RADAR] Socket.IO handshake complete ✓')
+              setIsConnected(true)
+              setIsLoading(false)
+              setIsDemoMode(false)
+              reconnectAttempts.current = 0
+              return
+            }
+
             if (msg.startsWith('42')) {
               const parsed = JSON.parse(msg.slice(2))
               const eventType = parsed[0]
