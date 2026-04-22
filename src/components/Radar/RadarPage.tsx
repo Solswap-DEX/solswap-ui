@@ -62,6 +62,8 @@ export function RadarPage() {
                   fontFamily="'Courier New', monospace"
                   fontSize="xs"
                   color="rgba(0, 200, 83, 0.7)"
+                  minW="245px"
+                  whiteSpace="nowrap"
                   sx={{
                     '@keyframes typewriter': {
                       '0%, 40%': { content: '"> Listening to Helius nodes..."' },
