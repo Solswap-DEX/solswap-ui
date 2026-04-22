@@ -74,11 +74,13 @@ async function enrichToken(
   discoveredName: string,
   discoveredSymbol: string
 ): Promise<EnrichedToken | null> {
-  const [dexData, birdeyeData, heliusData, walletConc] = await Promise.all([
-    fetchDexScreener(mint),
+  const dexData = await fetchDexScreener(mint);
+  
+  const [birdeyeData, heliusData, walletData, lpData] = await Promise.all([
     fetchBirdeye(mint),
     fetchMintAuthority(mint),
-    fetchWalletConcentration(mint)
+    fetchWalletConcentration(mint),
+    fetchLPConcentration(mint, dexData?.pairAddress || '')
   ]);
 
   const price_usd = dexData?.price_usd || 0;
@@ -95,7 +97,9 @@ async function enrichToken(
   const age_seconds = Math.floor((Date.now() - detected_at) / 1000);
   const volume_velocity = volume_1m / Math.max(age_seconds / 60, 1);
   const holder_growth_rate = 0; // Birdeye holders removed
-  const tx_spike_ratio = (buys_1m + sells_1m) / Math.max(age_seconds / 60, 1);
+  const totalTx = buys_1m + sells_1m;
+  const sell_ratio = totalTx > 0 ? Math.round((sells_1m / totalTx) * 100) / 100 : 0;
+  const tx_spike_ratio = totalTx / Math.max(age_seconds / 60, 1);
 
   return {
     price_usd,
@@ -113,8 +117,11 @@ async function enrichToken(
     volume_velocity,
     holder_growth_rate,
     tx_spike_ratio,
-    wallet_concentration: walletConc,
-    lp_locked: false,
+    wallet_concentration: walletData.top1,
+    top10_concentration: walletData.top10,
+    lp_holder_concentration: lpData.lp_holder_concentration,
+    lp_locked: lpData.lp_locked,
+    sell_ratio,
     mint
   };
 }
@@ -138,7 +145,8 @@ async function fetchDexScreener(mint: string): Promise<Partial<EnrichedToken> | 
       sells_1m: pair.txns?.h1?.sells || 0,
       detected_at: pair.pairCreatedAt ? new Date(pair.pairCreatedAt).getTime() : Date.now(),
       name: pair.baseToken?.name,
-      symbol: pair.baseToken?.symbol
+      symbol: pair.baseToken?.symbol,
+      pairAddress: pair.pairAddress
     };
   } catch (err: any) {
     console.error('[RADAR ERROR] DexScreener fetch failed:', err.message);
@@ -195,47 +203,100 @@ async function fetchMintAuthority(mint: string): Promise<boolean> {
   }
 }
 
-async function fetchWalletConcentration(mint: string): Promise<number> {
+async function fetchWalletConcentration(mint: string): Promise<{ top1: number, top10: number }> {
   try {
     const rpcUrl = `${HELIUS_RPC}/?api-key=${HELIUS_API_KEY}`;
 
-    const holdersRes = await axios.post(
-      rpcUrl,
-      {
-        jsonrpc: '2.0',
-        id: 'radar-holders',
+    const [holdersRes, supplyRes] = await Promise.all([
+      axios.post(rpcUrl, {
+        jsonrpc: '2.0', id: 'radar-holders',
         method: 'getTokenLargestAccounts',
         params: [mint]
-      },
-      { timeout: 5000 }
-    );
-
-    const holders = holdersRes.data?.result?.value;
-    if (!holders || holders.length === 0) return 0;
-
-    const supplyRes = await axios.post(
-      rpcUrl,
-      {
-        jsonrpc: '2.0',
-        id: 'radar-supply',
+      }, { timeout: 5000 }),
+      axios.post(rpcUrl, {
+        jsonrpc: '2.0', id: 'radar-supply',
         method: 'getTokenSupply',
         params: [mint]
-      },
-      { timeout: 5000 }
+      }, { timeout: 5000 })
+    ]);
+
+    const holders = holdersRes.data?.result?.value || [];
+    const totalSupply = supplyRes.data?.result?.value?.uiAmount || 0;
+
+    if (!totalSupply || holders.length === 0) {
+      return { top1: 0, top10: 0 };
+    }
+
+    const top1 = (holders[0]?.uiAmount || 0) / totalSupply;
+    const top10sum = holders
+      .slice(0, 10)
+      .reduce((sum: number, h: any) => sum + (h.uiAmount || 0), 0);
+    const top10 = top10sum / totalSupply;
+
+    console.log(
+      `[RADAR] ${mint.slice(0, 8)}... ` +
+      `top1: ${(top1 * 100).toFixed(1)}% | ` +
+      `top10: ${(top10 * 100).toFixed(1)}%`
     );
 
-    const totalSupply = supplyRes.data?.result?.value?.uiAmount;
-    if (!totalSupply || totalSupply === 0) return 0;
-
-    const topHolderAmount = holders[0]?.uiAmount || 0;
-    const concentration = topHolderAmount / totalSupply;
-    const result = Math.round(concentration * 10000) / 10000;
-
-    console.log(`[RADAR] ${mint.slice(0, 8)}... top holder: ${(result * 100).toFixed(1)}% of supply`);
-    return result;
+    return {
+      top1: Math.round(top1 * 10000) / 10000,
+      top10: Math.round(top10 * 10000) / 10000
+    };
   } catch (err: any) {
     console.error('[RADAR ERROR] fetchWalletConcentration:', err.message);
-    return 0;
+    return { top1: 0, top10: 0 };
+  }
+}
+
+const LOCKER_ADDRESSES = [
+  'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', // Token Program
+  'So11111111111111111111111111111111111111112',   // wSOL
+  '11111111111111111111111111111111',              // System Program
+];
+
+const BURN_ADDRESS = '1nc1nerator11111111111111111111111111111111';
+
+async function fetchLPConcentration(
+  mint: string,
+  pairAddress: string
+): Promise<{ lp_locked: boolean, lp_holder_concentration: number }> {
+  try {
+    if (!pairAddress) return { lp_locked: false, lp_holder_concentration: 0 };
+
+    const rpcUrl = `${HELIUS_RPC}/?api-key=${HELIUS_API_KEY}`;
+
+    const res = await axios.post(rpcUrl, {
+      jsonrpc: '2.0', id: 'radar-lp',
+      method: 'getTokenLargestAccounts',
+      params: [pairAddress]
+    }, { timeout: 5000 });
+
+    const lpHolders = res.data?.result?.value || [];
+    if (lpHolders.length === 0) {
+      return { lp_locked: false, lp_holder_concentration: 0 };
+    }
+
+    const topLPHolder = lpHolders[0]?.address || '';
+    const isLocked = LOCKER_ADDRESSES.includes(topLPHolder) || topLPHolder === BURN_ADDRESS;
+
+    const totalLP = lpHolders.reduce((sum: number, h: any) => sum + (h.uiAmount || 0), 0);
+    const topLPAmount = lpHolders[0]?.uiAmount || 0;
+    const lpConcentration = totalLP > 0 ? topLPAmount / totalLP : 0;
+
+    console.log(
+      `[RADAR] LP ${pairAddress.slice(0, 8)}... ` +
+      `locked: ${isLocked} | ` +
+      `top holder: ${(lpConcentration * 100).toFixed(1)}%`
+    );
+
+    return {
+      lp_locked: isLocked,
+      lp_holder_concentration: Math.round(lpConcentration * 10000) / 10000
+    };
+  } catch (err: any) {
+    console.error('[RADAR ERROR] fetchLPConcentration:', err.message);
+    return { lp_locked: false, lp_holder_concentration: 0 };
   }
 }
 
@@ -262,6 +323,9 @@ function buildRadarToken(enriched: EnrichedToken, dataPending = false): RadarTok
     risk_score: riskScore,
     risk_level: rugSignal.isRug ? 'RUG PROBABLE' : riskLevel,
     wallet_concentration: enriched.wallet_concentration,
+    top10_concentration: enriched.top10_concentration,
+    lp_holder_concentration: enriched.lp_holder_concentration,
+    sell_ratio: enriched.sell_ratio,
     lp_locked: enriched.lp_locked,
     mint_authority_active: enriched.mint_authority_active,
     price_usd: enriched.price_usd,

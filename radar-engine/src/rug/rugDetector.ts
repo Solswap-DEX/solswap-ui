@@ -7,15 +7,15 @@ export function detectRug(token: EnrichedToken, history: PricePoint[]): RugSigna
     signals.push('MINT_AUTHORITY_ACTIVE');
   }
 
-  if (token.wallet_concentration > 0.20) {
+  if (token.wallet_concentration > 0.35 || token.top10_concentration > 0.80) {
     signals.push('HIGH_WALLET_CONCENTRATION');
   }
 
-  if (!token.lp_locked) {
+  if (!token.lp_locked && token.lp_holder_concentration > 0.80) {
     signals.push('LP_NOT_LOCKED');
   }
 
-  if (token.sells_1m > token.buys_1m * 4) {
+  if (token.sell_ratio > 0.80) {
     signals.push('EXTREME_SELL_IMBALANCE');
   }
 

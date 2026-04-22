@@ -13,6 +13,9 @@ export interface RadarToken {
   risk_score: number;
   risk_level: RiskLevel;
   wallet_concentration: number;
+  top10_concentration: number;
+  lp_holder_concentration: number;
+  sell_ratio: number;
   lp_locked: boolean;
   mint_authority_active: boolean;
   price_usd: number;
@@ -105,7 +108,11 @@ export interface EnrichedToken {
   holder_growth_rate: number;
   volume_velocity: number;
   wallet_concentration: number;
+  top10_concentration: number;
+  lp_holder_concentration: number;
+  sell_ratio: number;
   lp_locked: boolean;
+  pairAddress?: string;
 }
 
 export interface PricePoint {
