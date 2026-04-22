@@ -276,13 +276,13 @@ export const useTokenAccountStore = createStore<TokenAccountStore>(
           })
         }
         
-        // Auto-failover RPC if we hit a 403
-        if (e.message?.includes('403')) {
+        // Auto-failover RPC if we hit a 403 or 429
+        if (e.message?.includes('403') || e.message?.includes('429')) {
           const { rpcs, rpcNodeUrl, setRpcUrlAct } = useAppStore.getState()
           const currentIndex = rpcs.findIndex(r => r.url === rpcNodeUrl)
           const nextRpc = rpcs[(currentIndex + 1) % rpcs.length]
           if (nextRpc) {
-            console.log(`[RPC Failover] Rotating to ${nextRpc.name} due to 403`)
+            console.log(`[RPC Failover] Rotating to ${nextRpc.name} due to 403/429`)
             setRpcUrlAct(nextRpc.url, true, true)
           }
         }
