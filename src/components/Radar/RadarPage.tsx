@@ -3,6 +3,7 @@ import { useRadarSocket } from './hooks/useRadarSocket'
 import { LiveFeed } from './LiveFeed'
 import { HotBoard } from './HotBoard'
 import { AlertFeed } from './AlertFeed'
+import { RadarWelcomeModal } from './RadarWelcomeModal'
 
 export function RadarPage() {
   const { tokens, alerts, isConnected, isLoading, isDemoMode } = useRadarSocket()
@@ -21,6 +22,7 @@ export function RadarPage() {
 
   return (
     <Box p={4} minH="100vh" bg="#0d0d0d">
+      <RadarWelcomeModal />
       <style>{`
         @keyframes livePulse {
           0%, 100% { transform: scale(1); opacity: 1; }
