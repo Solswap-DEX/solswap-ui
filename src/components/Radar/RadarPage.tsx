@@ -1,12 +1,22 @@
-import { Box, Flex, Grid, Text, Spinner, VStack } from '@chakra-ui/react'
+import { Box, Flex, Text, Spinner, VStack } from '@chakra-ui/react'
+import { useState } from 'react'
 import { useRadarSocket } from './hooks/useRadarSocket'
 import { LiveFeed } from './LiveFeed'
 import { HotBoard } from './HotBoard'
 import { AlertFeed } from './AlertFeed'
 import { RadarWelcomeModal } from './RadarWelcomeModal'
 
+type TabKey = 'feed' | 'hot' | 'alerts'
+
+const TABS: { key: TabKey; label: string; icon: string }[] = [
+  { key: 'feed', label: 'Feed', icon: '⚡' },
+  { key: 'hot', label: 'Hot', icon: '🔥' },
+  { key: 'alerts', label: 'Alerts', icon: '🔔' },
+]
+
 export function RadarPage() {
   const { tokens, alerts, isConnected, isLoading, isDemoMode } = useRadarSocket()
+  const [activeTab, setActiveTab] = useState<TabKey>('feed')
 
   const tokenCount = tokens.length
   const rugCount = tokens.filter((t: any) => t.risk_level === 'RUG PROBABLE').length
@@ -21,7 +31,7 @@ export function RadarPage() {
   }
 
   return (
-    <Box p={4} minH="100vh" bg="#0d0d0d">
+    <Box minH="100vh" bg="#0a0a0a">
       <RadarWelcomeModal />
       <style>{`
         @keyframes livePulse {
@@ -30,10 +40,11 @@ export function RadarPage() {
         }
       `}</style>
 
-      <Box mb={6}>
+      {/* ── Header ── */}
+      <Box px={4} pt={4} pb={2}>
         <Flex align="center" gap={3} wrap="wrap">
           <Text
-            fontSize="4xl"
+            fontSize={{ base: '2xl', md: '4xl' }}
             fontFamily="'Courier New', monospace"
             fontWeight="bold"
             color="white"
@@ -64,6 +75,7 @@ export function RadarPage() {
                   color="rgba(0, 200, 83, 0.7)"
                   minW="245px"
                   whiteSpace="nowrap"
+                  display={{ base: 'none', md: 'block' }}
                   sx={{
                     '@keyframes typewriter': {
                       '0%, 40%': { content: '"> Listening to Helius nodes..."' },
@@ -82,57 +94,120 @@ export function RadarPage() {
             </Flex>
           )}
         </Flex>
-        <Text color="gray.500" fontSize="sm">
+        <Text color="gray.600" fontSize="xs" mt={1}>
           {isDemoMode
             ? 'Preview mode — RADAR backend offline. Showing sample data.'
             : 'Real-time token intelligence for Solana'}
         </Text>
-      </Box>
 
-      <Box mb={4} p={3} bg="rgba(255,255,255,0.03)" borderRadius="lg">
-        <Flex gap={6} wrap="wrap">
-          <Box>
-            <Text fontSize="lg" fontWeight="bold" fontFamily="'Courier New', monospace" color="white">
+        {/* ── Stats Bar ── */}
+        <Flex
+          mt={3}
+          gap={5}
+          px={3}
+          py={2}
+          bg="rgba(255,255,255,0.025)"
+          borderRadius="lg"
+          border="1px solid rgba(255,255,255,0.04)"
+        >
+          <Flex align="center" gap={1.5}>
+            <Text fontSize="sm" fontWeight="800" fontFamily="'Courier New', monospace" color="white">
               {tokenCount}
             </Text>
-            <Text fontSize="xs" color="gray.500">
-              tokens tracked
-            </Text>
-          </Box>
-          <Box>
-            <Text fontSize="lg" fontWeight="bold" fontFamily="'Courier New', monospace" color={ rugCount > 0 ? '#ff1744' : 'white'}>
+            <Text fontSize="10px" color="gray.600">tracked</Text>
+          </Flex>
+          <Flex align="center" gap={1.5}>
+            <Text
+              fontSize="sm"
+              fontWeight="800"
+              fontFamily="'Courier New', monospace"
+              color={rugCount > 0 ? '#ff1744' : 'gray.500'}
+            >
               {rugCount}
             </Text>
-            <Text fontSize="xs" color="gray.500">
-              rugs detected
+            <Text fontSize="10px" color="gray.600">rugs</Text>
+          </Flex>
+          <Flex align="center" gap={1.5}>
+            <Text fontSize="sm" fontWeight="800" fontFamily="'Courier New', monospace" color="white">
+              {alerts.length}
             </Text>
-          </Box>
-          <Box>
-            <Text fontSize="lg" fontWeight="bold" fontFamily="'Courier New', monospace" color="white">
-              just now
-            </Text>
-            <Text fontSize="xs" color="gray.500">
-              updated
-            </Text>
-          </Box>
+            <Text fontSize="10px" color="gray.600">alerts</Text>
+          </Flex>
         </Flex>
       </Box>
 
-      <Grid
-        templateColumns={{ base: '1fr', lg: '30% 45% 25%' }}
-        gap={4}
-        h="calc(100vh - 200px)"
+      {/* ── Tab Switcher ── */}
+      <Box
+        px={4}
+        pt={3}
+        pb={1}
+        position="sticky"
+        top={0}
+        zIndex={10}
+        bg="#0a0a0a"
       >
-        <Box>
+        <Flex
+          bg="rgba(255,255,255,0.04)"
+          borderRadius="xl"
+          p="3px"
+          gap="2px"
+        >
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.key
+            return (
+              <Box
+                key={tab.key}
+                flex={1}
+                py={2}
+                textAlign="center"
+                borderRadius="lg"
+                cursor="pointer"
+                transition="all 0.2s ease"
+                bg={isActive ? 'rgba(0, 200, 83, 0.12)' : 'transparent'}
+                border={isActive ? '1px solid rgba(0, 200, 83, 0.2)' : '1px solid transparent'}
+                onClick={() => setActiveTab(tab.key)}
+                _hover={!isActive ? { bg: 'rgba(255,255,255,0.04)' } : undefined}
+              >
+                <Text
+                  fontSize="sm"
+                  fontWeight={isActive ? '700' : '500'}
+                  color={isActive ? '#00c853' : 'gray.500'}
+                >
+                  {tab.icon} {tab.label}
+                  {tab.key === 'alerts' && alerts.length > 0 && (
+                    <Text
+                      as="span"
+                      ml={1}
+                      fontSize="10px"
+                      bg="rgba(255,23,68,0.2)"
+                      color="#ff1744"
+                      px={1.5}
+                      py={0.5}
+                      borderRadius="full"
+                      fontWeight="700"
+                    >
+                      {alerts.length}
+                    </Text>
+                  )}
+                </Text>
+              </Box>
+            )
+          })}
+        </Flex>
+      </Box>
+
+      {/* ── Content ── */}
+      <Box px={4} pt={3} pb={24}>
+        {activeTab === 'feed' && (
           <LiveFeed tokens={tokens} isConnected={isConnected} alerts={alerts} />
-        </Box>
-        <Box>
+        )}
+        {activeTab === 'hot' && (
           <HotBoard tokens={tokens} />
-        </Box>
-        <Box>
+        )}
+        {activeTab === 'alerts' && (
           <AlertFeed alerts={alerts} />
-        </Box>
-      </Grid>
+        )}
+      </Box>
     </Box>
   )
 }
