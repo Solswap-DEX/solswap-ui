@@ -44,7 +44,9 @@ axiosInstance.interceptors.response.use(
     const { status } = response
     const { url } = config
 
-    console.error(`axios request error: ${url}, status:${status || error.code}, msg:${response.message || error.message}`)
+    if (!config.skipError) {
+      console.error(`axios request error: ${url}, status:${status || error.code}, msg:${response.message || error.message}`)
+    }
     if (!url.includes('monitor'))
       sendNetworkEvent({
         url,

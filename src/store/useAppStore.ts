@@ -299,7 +299,6 @@ export const useAppStore = createStore<AppState>(
           })
         }
       } catch (error) {
-        console.warn('Failed to fetch block slot count (RPC might block getRecentPerformanceSamples):', error)
         // Fallback to a safe default if RPC blocks it (e.g., 2 slots per second)
         set({ blockSlotCountForSecond: 2 }, false, {
           type: 'fetchBlockSlotCountAct_fallback'
