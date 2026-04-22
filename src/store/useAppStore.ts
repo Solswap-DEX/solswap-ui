@@ -281,20 +281,30 @@ export const useAppStore = createStore<AppState>(
     fetchBlockSlotCountAct: async () => {
       const { raydium, connection } = get()
       if (!raydium || !connection) return
-      const res: {
-        id: string
-        jsonrpc: string
-        result: { numSlots: number; numTransactions: number; samplePeriodSecs: number; slot: number }[]
-      } = await axios.post(connection.rpcEndpoint, {
-        id: 'getRecentPerformanceSamples',
-        jsonrpc: '2.0',
-        method: 'getRecentPerformanceSamples',
-        params: [4]
-      })
-      const slotList = res.result.map((data) => data.numSlots)
-      set({ blockSlotCountForSecond: slotList.reduce((a, b) => a + b, 0) / slotList.length / 60 }, false, {
-        type: 'fetchBlockSlotCountAct'
-      })
+      try {
+        const res: {
+          id: string
+          jsonrpc: string
+          result: { numSlots: number; numTransactions: number; samplePeriodSecs: number; slot: number }[]
+        } = await axios.post(connection.rpcEndpoint, {
+          id: 'getRecentPerformanceSamples',
+          jsonrpc: '2.0',
+          method: 'getRecentPerformanceSamples',
+          params: [4]
+        })
+        if (res.result && res.result.length > 0) {
+          const slotList = res.result.map((data) => data.numSlots)
+          set({ blockSlotCountForSecond: slotList.reduce((a, b) => a + b, 0) / slotList.length / 60 }, false, {
+            type: 'fetchBlockSlotCountAct'
+          })
+        }
+      } catch (error) {
+        console.warn('Failed to fetch block slot count (RPC might block getRecentPerformanceSamples):', error)
+        // Fallback to a safe default if RPC blocks it (e.g., 2 slots per second)
+        set({ blockSlotCountForSecond: 2 }, false, {
+          type: 'fetchBlockSlotCountAct_fallback'
+        })
+      }
     },
     setUrlConfigAct: (urls) => {
       set({ urlConfigs: { ...get().urlConfigs, ...urls } }, false, { type: 'setUrlConfigAct' })
