@@ -122,15 +122,22 @@ function AppNavLayout({
                 <Box
                   as="span"
                   ml={1}
+                  px={1}
+                  py={0.2}
+                  bg="linear-gradient(135deg, #9945ff, #14f195)"
+                  borderRadius="sm"
+                  fontSize="9px"
+                  fontWeight="bold"
+                  color="white"
                   sx={{
                     '@keyframes blink': {
                       '0%, 100%': { opacity: 1 },
-                      '50%': { opacity: 0.5 }
+                      '50%': { opacity: 0.4 }
                     },
-                    animation: 'blink 1.5s ease-in-out infinite'
+                    animation: 'blink 1.2s ease-in-out infinite'
                   }}
                 >
-                  <TagNewIcon />
+                  NEW
                 </Box>
               }
             />
@@ -141,14 +148,22 @@ function AppNavLayout({
               title="RADAR"
               slotAfter={
                 <Box
+                  as="span"
                   ml={1}
                   px={1}
-                  py={0.5}
+                  py={0.2}
                   bg="linear-gradient(135deg, #9945ff, #14f195)"
                   borderRadius="sm"
                   fontSize="9px"
                   fontWeight="bold"
                   color="white"
+                  sx={{
+                    '@keyframes blink': {
+                      '0%, 100%': { opacity: 1 },
+                      '50%': { opacity: 0.4 }
+                    },
+                    animation: 'blink 1.2s ease-in-out infinite'
+                  }}
                 >
                   NEW
                 </Box>
