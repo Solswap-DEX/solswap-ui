@@ -27,7 +27,7 @@ import { compare } from 'compare-versions'
 export const defaultNetWork = WalletAdapterNetwork.Mainnet // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
 // Frontend uses public RPC for wallet operations (cheap, no rate limits)
 // Helius is reserved exclusively for backend services (Radar engine, Drift SDK)
-export const defaultEndpoint = 'https://solana-mainnet.core.chainstack.com'
+export const defaultEndpoint = 'https://solana-rpc.publicnode.com'
 export const APR_MODE_KEY = '_r_apr_'
 export const EXPLORER_KEY = '_r_explorer_'
 export const supportedExplorers = [
@@ -180,7 +180,7 @@ export const useAppStore = createStore<AppState>(
       const action = { type: 'initSolSwapAct' }
       const { initialing, urlConfigs, rpcNodeUrl: storeRpc, jupTokenType, displayTokenSettings } = get()
       if (initialing) return
-      const fallbackRpc = 'https://solana-mainnet.core.chainstack.com'
+      const fallbackRpc = 'https://solana-rpc.publicnode.com'
       const rpcNodeUrl = storeRpc || fallbackRpc
       const connection = payload.connection || new Connection(rpcNodeUrl)
       set({ initialing: true }, false, action)
@@ -336,7 +336,7 @@ export const useAppStore = createStore<AppState>(
           
           if (!readyRpcs[i]) {
             isRpcLoading = false
-            await setRpcUrlAct('https://solana-mainnet.core.chainstack.com', true, true)
+            await setRpcUrlAct('https://solana-rpc.publicnode.com', true, true)
             return
           }
 
@@ -347,7 +347,7 @@ export const useAppStore = createStore<AppState>(
               checkAndSetRpcNode()
             } else {
               isRpcLoading = false
-              await setRpcUrlAct('https://solana-mainnet.core.chainstack.com', true, true)
+              await setRpcUrlAct('https://solana-rpc.publicnode.com', true, true)
             }
           }
         }
@@ -359,13 +359,12 @@ export const useAppStore = createStore<AppState>(
           checkAndSetRpcNode()
         }
       } catch {
-        // Raydium API blocked — use public fallbacks since Helius is exhausted
-        const publicRpc = 'https://solana-mainnet.core.chainstack.com'
-        const wssRpc = 'wss://solana-mainnet.core.chainstack.com/ws'
+        // Raydium API blocked — use public fallbacks
+        const publicRpc = 'https://solana-rpc.publicnode.com'
+        const wssRpc = 'wss://solana-rpc.publicnode.com'
         const fallbackRpcs = [
-          { name: "Chainstack", url: publicRpc, ws: wssRpc, weight: 100, batch: true },
-          { name: "PublicNode", url: "https://solana-rpc.publicnode.com", weight: 80, batch: true },
-          { name: "Mainnet Beta", url: "https://api.mainnet-beta.solana.com", weight: 50, batch: true }
+          { name: "PublicNode", url: publicRpc, ws: wssRpc, weight: 100, batch: true },
+          { name: "Mainnet Beta", url: "https://api.mainnet-beta.solana.com", weight: 80, batch: true }
         ]
         set({ rpcs: fallbackRpcs }, false, { type: 'fetchRpcsAct_fallback' })
         
