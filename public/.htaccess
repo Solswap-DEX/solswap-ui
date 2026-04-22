@@ -1,8 +1,8 @@
 Options -MultiViews
 DirectoryIndex index.html
 RewriteEngine On
-
-# Removed redirect to /swap/ so Radar acts as landing page
+# Redirect root to /radar/ (landing page)
+RewriteRule ^$ /radar/ [L,R=302]
 
 # If the request matches a real file, serve it
 RewriteCond %{REQUEST_FILENAME} -f
