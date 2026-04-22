@@ -1,4 +1,4 @@
-import { Box, Grid, GridItem, HStack, Text, VStack, useClipboard, Button } from '@chakra-ui/react'
+import { Box, Grid, GridItem, HStack, Text, VStack, useClipboard, Button, Flex } from '@chakra-ui/react'
 import { RAYMint, SOLMint } from '@raydium-io/raydium-sdk-v2'
 import { PublicKey } from '@solana/web3.js'
 import { useMemo, useState, useRef, useEffect } from 'react'
