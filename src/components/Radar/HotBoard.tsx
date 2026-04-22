@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { RadarToken } from './radar.types'
 import { RiskBadge } from './RiskBadge'
 import { AlphaBar } from './AlphaBar'
+import { BuySellBar } from './BuySellBar'
 
 function formatUsd(value: number): string {
   if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`
@@ -44,8 +45,10 @@ export function HotBoard({
             <Th color="gray.500" fontSize="xs">Token</Th>
             <Th color="gray.500" fontSize="xs">Alpha</Th>
             <Th color="gray.500" fontSize="xs">Risk</Th>
+            <Th color="gray.500" fontSize="xs">MCAP</Th>
             <Th color="gray.500" fontSize="xs">Liq</Th>
             <Th color="gray.500" fontSize="xs">Vol</Th>
+            <Th color="gray.500" fontSize="xs">B/S</Th>
             <Th color="gray.500" fontSize="xs">Age</Th>
             <Th color="gray.500" fontSize="xs">Action</Th>
           </Tr>
@@ -83,11 +86,17 @@ export function HotBoard({
                 <Td>
                   <RiskBadge level={token.risk_level} />
                 </Td>
-                <Td fontSize="xs" color="gray.400">
+                <Td fontSize="xs" color="gray.400" fontFamily="'Courier New', monospace">
+                  {token.market_cap ? formatUsd(token.market_cap) : '$—'}
+                </Td>
+                <Td fontSize="xs" color="gray.400" fontFamily="'Courier New', monospace">
                   {formatUsd(token.liquidity)}
                 </Td>
-                <Td fontSize="xs" color="gray.400">
+                <Td fontSize="xs" color="gray.400" fontFamily="'Courier New', monospace">
                   {formatUsd(token.volume_1m)}
+                </Td>
+                <Td>
+                  <BuySellBar buys={token.buys_1m} sells={token.sells_1m} />
                 </Td>
                 <Td fontSize="xs" color="gray.400">
                   {formatAge(token.age_seconds)}

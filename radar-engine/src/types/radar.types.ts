@@ -23,6 +23,8 @@ export interface RadarToken {
   buys_1m: number;
   sells_1m: number;
   data_pending?: boolean;
+  price_at_detection: number;
+  market_cap?: number;
 }
 
 export interface StopLossWatch {

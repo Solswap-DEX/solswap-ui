@@ -223,7 +223,9 @@ function buildRadarToken(enriched: EnrichedToken, dataPending = false): RadarTok
     detected_at: new Date(enriched.detected_at),
     alpha_label: getAlphaLabel(alphaScore),
     rug_signals: rugSignal.signals,
-    data_pending: dataPending
+    data_pending: dataPending,
+    price_at_detection: enriched.price_usd,
+    market_cap: 0
   };
 
   return token;

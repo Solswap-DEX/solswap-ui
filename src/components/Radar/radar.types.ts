@@ -22,6 +22,8 @@ export interface RadarToken {
   rug_signals: string[]
   buys_1m: number
   sells_1m: number
+  price_at_detection: number
+  market_cap?: number
 }
 
 export interface StopLossWatch {

@@ -30,6 +30,55 @@ import TokenAvatarPair from '@/components/TokenAvatarPair'
 import SwapIcon from '@/icons/misc/SwapIcon'
 import dayjs from 'dayjs'
 import useRefreshEpochInfo from '@/hooks/app/useRefreshEpochInfo'
+import { useRouter } from 'next/router'
+
+function RadarPromoBanner() {
+  const router = useRouter()
+  if (router.pathname === '/radar') return null
+
+  return (
+    <Flex
+      direction={['column', 'row']}
+      align={['start', 'center']}
+      justify="space-between"
+      bg="linear-gradient(135deg, rgba(20,241,149,0.05) 0%, rgba(153,69,255,0.05) 100%)"
+      borderLeft="3px solid #14f195"
+      borderRadius="12px"
+      p="16px 20px"
+      mb="16px"
+      w="100%"
+      gap={[4, 0]}
+    >
+      <Box>
+        <Text fontSize="11px" color="gray.500" mb={1} textTransform="uppercase" letterSpacing="wider">
+          Discover before everyone else
+        </Text>
+        <Text fontSize="13px" color="white" lineHeight="1.4" maxW="320px">
+          SolSwap RADAR detects new Solana tokens in real time — scoring momentum, risk, and alpha before you invest.
+        </Text>
+        <Text fontSize="11px" color="#14f195" mt={2}>
+          ⚡ Live · Real-time alpha scoring · Free
+        </Text>
+      </Box>
+      <Button
+        bg="transparent"
+        border="1px solid #14f195"
+        color="#14f195"
+        borderRadius="8px"
+        px={4}
+        py={2}
+        fontSize="13px"
+        h="auto"
+        _hover={{ bg: 'rgba(20,241,149,0.1)' }}
+        onClick={() => router.push('/radar')}
+        flexShrink={0}
+        w={['100%', 'auto']}
+      >
+        Open RADAR →
+      </Button>
+    </Flex>
+  )
+}
 
 export default function Swap() {
   // const { inputMint: cacheInput, outputMint: cacheOutput } = getSwapPairCache()
@@ -211,6 +260,7 @@ export default function Swap() {
             justifySelf: 'center'
           } : {})}
         >
+          <RadarPromoBanner />
           <PanelCard p={[3, 6]} flexGrow={['1', 'unset']}>
             <SwapPanel
               onInputMintChange={setInputMint}
