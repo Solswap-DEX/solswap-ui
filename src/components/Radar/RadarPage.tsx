@@ -1,3 +1,4 @@
+import React from 'react'
 import { Box, Flex, Text, Spinner, VStack, useBreakpointValue } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import { useRadarSocket } from './hooks/useRadarSocket'
@@ -53,13 +54,13 @@ export function RadarPage() {
         '--radar-text': '#c9d1d9',
         '--radar-text-dim': '#6e7681',
         '--radar-text-bright': '#ffffff',
-        --radar-green: '#00ff88',
-        --radar-yellow: '#ffd700',
-        --radar-orange: '#ff9500',
-        --radar-red: '#ff3b5c',
-        --radar-purple: '#bf5af2',
-        --radar-blue: '#0d9ddb',
-        --radar-solana: '#14f195',
+        '--radar-green': '#00ff88',
+        '--radar-yellow': '#ffd700',
+        '--radar-orange': '#ff9500',
+        '--radar-red': '#ff3b5c',
+        '--radar-purple': '#bf5af2',
+        '--radar-blue': '#0d9ddb',
+        '--radar-solana': '#14f195',
         '--radar-mono': "'JetBrains Mono', 'Fira Code', 'Courier New', monospace",
       }}
     >
