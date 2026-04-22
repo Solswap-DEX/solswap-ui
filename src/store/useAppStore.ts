@@ -362,9 +362,10 @@ export const useAppStore = createStore<AppState>(
         // Raydium API blocked — use env RPC or public fallbacks
         const heliusUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://api.mainnet-beta.solana.com"
         const fallbackRpcs = [
-          { name: "Mainnet (Primary)", url: heliusUrl, weight: 100, batch: true },
+          { name: "Ankr (Failover)", url: "https://rpc.ankr.com/solana", weight: 100, batch: true },
           { name: "Solana Mainnet", url: "https://api.mainnet-beta.solana.com/", weight: 80, batch: true },
-          { name: "QuickNode (Public)", url: "https://solana-api.syndica.io/access/api_key/rpc", weight: 60, batch: true }
+          { name: "Chainstack", url: "https://solana-mainnet.core.chainstack.com", weight: 70, batch: true },
+          { name: "Syndica", url: "https://solana-api.syndica.io", weight: 60, batch: true }
         ]
         
         set({ rpcs: fallbackRpcs }, false, { type: 'fetchRpcsAct_fallback' })
@@ -415,7 +416,8 @@ export const useAppStore = createStore<AppState>(
         
         isRpcLoading = false
         const rpcNode = get().rpcs.find((r) => r.url === url)
-        set({ rpcNodeUrl: url, wsNodeUrl: rpcNode?.ws, tokenAccLoaded: false }, false, { type: 'setRpcUrlAct' })
+        const connection = new Connection(url, { commitment: get().commitment })
+        set({ rpcNodeUrl: url, wsNodeUrl: rpcNode?.ws, connection, tokenAccLoaded: false }, false, { type: 'setRpcUrlAct' })
         setStorageItem(
           isProdEnv() ? RPC_URL_PROD_KEY : RPC_URL_KEY,
           JSON.stringify({
