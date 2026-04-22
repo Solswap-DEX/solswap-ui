@@ -31,7 +31,7 @@ export function RadarPage() {
       `}</style>
 
       <Box mb={6}>
-        <Flex align="center" gap={3}>
+        <Flex align="center" gap={3} wrap="wrap">
           <Text
             fontSize="4xl"
             fontFamily="'Courier New', monospace"
@@ -42,17 +42,41 @@ export function RadarPage() {
             RADAR
           </Text>
           {isConnected && (
-            <Flex align="center" gap={1}>
-              <Box
-                w={2}
-                h={2}
-                borderRadius="full"
-                bg={isDemoMode ? '#ffd600' : '#00c853'}
-                style={{ animation: 'livePulse 2s ease-in-out infinite' }}
-              />
-              <Text fontSize="xs" color={isDemoMode ? '#ffd600' : '#00c853'} fontWeight="bold">
-                {isDemoMode ? 'DEMO' : 'LIVE'}
-              </Text>
+            <Flex align="center" gap={3}>
+              <Flex align="center" gap={1}>
+                <Box
+                  w={2}
+                  h={2}
+                  borderRadius="full"
+                  bg={isDemoMode ? '#ffd600' : '#00c853'}
+                  style={{ animation: 'livePulse 2s ease-in-out infinite' }}
+                />
+                <Text fontSize="xs" color={isDemoMode ? '#ffd600' : '#00c853'} fontWeight="bold">
+                  {isDemoMode ? 'DEMO' : 'LIVE'}
+                </Text>
+              </Flex>
+
+              {/* Terminal Hacker Legend */}
+              {!isDemoMode && (
+                <Box
+                  fontFamily="'Courier New', monospace"
+                  fontSize="xs"
+                  color="rgba(0, 200, 83, 0.7)"
+                  sx={{
+                    '@keyframes typewriter': {
+                      '0%, 40%': { content: '"> Listening to Helius nodes..."' },
+                      '50%, 90%': { content: '"> AI Alpha Engine Online."' },
+                      '45%, 95%': { content: '"> "' }
+                    },
+                    '&::after': {
+                      content: '"> Listening to Helius nodes..."',
+                      animation: 'typewriter 8s infinite ease-in-out',
+                      borderRight: '2px solid rgba(0, 200, 83, 0.7)',
+                      paddingRight: '4px',
+                    }
+                  }}
+                />
+              )}
             </Flex>
           )}
         </Flex>
