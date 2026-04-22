@@ -33,7 +33,7 @@ export interface RadarToken {
   sells_1m: number;
   data_pending?: boolean;
   price_at_detection: number;
-  market_cap?: number;
+  market_cap: number;
 }
 
 export interface StopLossWatch {
@@ -124,6 +124,7 @@ export interface EnrichedToken {
   delta_top10: number;
   delta_volume: number;
   liquidity_velocity: number;
+  market_cap: number;
 }
 
 export type AlphaLabel = 

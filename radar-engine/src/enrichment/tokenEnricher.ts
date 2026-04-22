@@ -163,7 +163,8 @@ async function enrichToken(
     delta_top10: deltas.delta_top10,
     delta_volume: deltas.delta_volume,
     liquidity_velocity: deltas.liquidity_velocity,
-    volume_velocity: deltas.volume_velocity
+    volume_velocity: deltas.volume_velocity,
+    market_cap: dexData?.market_cap || 0
   };
 }
 
@@ -174,16 +175,20 @@ async function fetchDexScreener(mint: string): Promise<Partial<EnrichedToken> | 
       { timeout: 5000 }
     );
 
-    const pair = response.data.pairs?.[0];
+    const pair = response.data.pairs?.sort((a: any, b: any) => 
+      (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0)
+    )?.[0];
+
     if (!pair) return null;
 
     return {
       price_usd: parseFloat(pair.priceUsd) || 0,
       liquidity: pair.liquidity?.usd || 0,
-      volume_1m: pair.volume?.h1 || 0,
-      volume_5m: pair.volume?.h5 || 0,
-      buys_1m: pair.txns?.h1?.buys || 0,
-      sells_1m: pair.txns?.h1?.sells || 0,
+      market_cap: pair.fdv || 0,
+      volume_1m: pair.volume?.m5 || 0,
+      volume_5m: pair.volume?.m5 || 0,
+      buys_1m: pair.txns?.m5?.buys || 0,
+      sells_1m: pair.txns?.m5?.sells || 0,
       detected_at: pair.pairCreatedAt ? new Date(pair.pairCreatedAt).getTime() : Date.now(),
       name: pair.baseToken?.name,
       symbol: pair.baseToken?.symbol,
@@ -382,7 +387,7 @@ function buildRadarToken(enriched: EnrichedToken, dataPending = false): RadarTok
     rug_signals: rugSignal.signals,
     data_pending: dataPending,
     price_at_detection: enriched.price_usd,
-    market_cap: 0,
+    market_cap: enriched.market_cap,
     delta_liquidity: enriched.delta_liquidity,
     delta_holders: enriched.delta_holders,
     delta_top10: enriched.delta_top10,
