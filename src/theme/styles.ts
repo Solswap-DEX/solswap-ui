@@ -4,7 +4,7 @@ export const styles = {
       height: '100%'
     },
     body: {
-      fontFamily: `'Lexend', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+      fontFamily: `'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
       'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif`,
       background: 'var(--background-app)',
       backgroundAttachment: 'fixed',
