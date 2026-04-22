@@ -1,4 +1,4 @@
-import { Box, Flex, Text } from '@chakra-ui/react'
+import { Box, Flex, Text, Tooltip } from '@chakra-ui/react'
 import { useRouter } from 'next/router'
 import { RadarToken } from './radar.types'
 import { TokenAvatar } from './TokenAvatar'
@@ -113,18 +113,22 @@ export function TrenchCard({ token }: { token: RadarToken }) {
 
           {/* V + MC */}
           <Flex gap="6px" align="center" flexShrink={0}>
-            <Box textAlign="right">
-              <Text fontSize="8px" color="rgba(255,255,255,0.25)" lineHeight="1">V</Text>
-              <Text fontSize="9px" fontWeight="700" color="white" fontFamily="monospace" lineHeight="1.3">
-                {formatUsd(token.volume_1m)}
-              </Text>
-            </Box>
-            <Box textAlign="right">
-              <Text fontSize="8px" color="rgba(255,255,255,0.25)" lineHeight="1">MC</Text>
-              <Text fontSize="9px" fontWeight="700" color={alphaColor} fontFamily="monospace" lineHeight="1.3">
-                {token.market_cap ? formatUsd(token.market_cap) : '—'}
-              </Text>
-            </Box>
+            <Tooltip label="1-minute Trading Volume in USD" fontSize="xs" placement="top" hasArrow>
+              <Box textAlign="right">
+                <Text fontSize="8px" color="rgba(255,255,255,0.25)" lineHeight="1">V</Text>
+                <Text fontSize="9px" fontWeight="700" color="white" fontFamily="monospace" lineHeight="1.3">
+                  {formatUsd(token.volume_1m)}
+                </Text>
+              </Box>
+            </Tooltip>
+            <Tooltip label="Current Market Capitalization in USD" fontSize="xs" placement="top" hasArrow>
+              <Box textAlign="right">
+                <Text fontSize="8px" color="rgba(255,255,255,0.25)" lineHeight="1">MC</Text>
+                <Text fontSize="9px" fontWeight="700" color={alphaColor} fontFamily="monospace" lineHeight="1.3">
+                  {token.market_cap ? formatUsd(token.market_cap) : '—'}
+                </Text>
+              </Box>
+            </Tooltip>
           </Flex>
         </Flex>
 
@@ -133,58 +137,75 @@ export function TrenchCard({ token }: { token: RadarToken }) {
           <Flex align="center" gap="5px">
             <CopyAddress mint={token.mint} />
             {token.fee_ratio !== undefined && token.fee_ratio > 0 && (
-              <Text fontSize="9px" color="rgba(255,255,255,0.2)" fontFamily="monospace">
-                F≡{token.fee_ratio.toFixed(2)}
-              </Text>
+              <Tooltip label="Fee / Liquidity Ratio (Higher indicates better backing relative to fee generation)" fontSize="xs" hasArrow>
+                <Text fontSize="9px" color="rgba(255,255,255,0.2)" fontFamily="monospace" cursor="help">
+                  F≡{token.fee_ratio.toFixed(2)}
+                </Text>
+              </Tooltip>
             )}
           </Flex>
-          <Box
-            px="5px" py="1px"
-            bg={`${alphaColor}18`}
-            border={`1px solid ${alphaColor}33`}
-            borderRadius="3px"
-            fontSize="8px" fontWeight="700" color={alphaColor}
-            whiteSpace="nowrap"
-          >
-            {token.alpha_label}
-          </Box>
+          <Tooltip label={`Alpha signal status: ${token.alpha_label}`} fontSize="xs" hasArrow>
+            <Box
+              px="5px" py="1px"
+              bg={`${alphaColor}18`}
+              border={`1px solid ${alphaColor}33`}
+              borderRadius="3px"
+              fontSize="8px" fontWeight="700" color={alphaColor}
+              whiteSpace="nowrap"
+              cursor="help"
+            >
+              {token.alpha_label}
+            </Box>
+          </Tooltip>
         </Flex>
 
         {/* ── Row 3: Holders · B/S · Risk · PriceChange ── */}
         <Flex justify="space-between" align="center" mb="5px">
           <Flex gap="6px" align="center">
             {/* Holders */}
-            <Flex align="center" gap="2px">
-              <Text fontSize="9px" color="rgba(255,255,255,0.3)">👤</Text>
-              <Text fontSize="9px" color="gray.400" fontWeight="600">{token.holders}</Text>
-            </Flex>
+            <Tooltip label="Number of unique wallet holders" fontSize="xs" hasArrow>
+              <Flex align="center" gap="2px" cursor="help">
+                <Text fontSize="9px" color="rgba(255,255,255,0.3)">👤</Text>
+                <Text fontSize="9px" color="gray.400" fontWeight="600">{token.holders}</Text>
+              </Flex>
+            </Tooltip>
             {/* Buys */}
-            <Flex align="center" gap="1px">
-              <Text fontSize="9px" color="#00c853" fontWeight="700">🟢{token.buys_1m}</Text>
-            </Flex>
+            <Tooltip label="Number of buy transactions in the last minute" fontSize="xs" hasArrow>
+              <Flex align="center" gap="1px" cursor="help">
+                <Text fontSize="9px" color="#00c853" fontWeight="700">🟢{token.buys_1m}</Text>
+              </Flex>
+            </Tooltip>
             {/* Sells */}
-            <Flex align="center" gap="1px">
-              <Text fontSize="9px" color="#ff1744" fontWeight="700">🔴{token.sells_1m}</Text>
-            </Flex>
+            <Tooltip label="Number of sell transactions in the last minute" fontSize="xs" hasArrow>
+              <Flex align="center" gap="1px" cursor="help">
+                <Text fontSize="9px" color="#ff1744" fontWeight="700">🔴{token.sells_1m}</Text>
+              </Flex>
+            </Tooltip>
             {/* Risk */}
-            <Box
-              px="4px" py="0px"
-              bg={`${riskColor}18`}
-              border={`1px solid ${riskColor}44`}
-              borderRadius="3px"
-              fontSize="8px" fontWeight="700" color={riskColor}
-            >
-              {token.risk_level === 'RUG PROBABLE' ? 'RUG' : token.risk_level}
-            </Box>
+            <Tooltip label={`Risk Level Assessment: ${token.risk_level}`} fontSize="xs" hasArrow>
+              <Box
+                px="4px" py="0px"
+                bg={`${riskColor}18`}
+                border={`1px solid ${riskColor}44`}
+                borderRadius="3px"
+                fontSize="8px" fontWeight="700" color={riskColor}
+                cursor="help"
+              >
+                {token.risk_level === 'RUG PROBABLE' ? 'RUG' : token.risk_level}
+              </Box>
+            </Tooltip>
           </Flex>
           {/* Price change 5m */}
           {token.price_change_5m !== undefined && (
-            <Text
-              fontSize="9px" fontWeight="700" fontFamily="monospace"
-              color={token.price_change_5m >= 0 ? '#00c853' : '#ff1744'}
-            >
-              {token.price_change_5m >= 0 ? '+' : ''}{token.price_change_5m.toFixed(0)}%
-            </Text>
+            <Tooltip label="Price change in the last 5 minutes" fontSize="xs" hasArrow>
+              <Text
+                fontSize="9px" fontWeight="700" fontFamily="monospace"
+                color={token.price_change_5m >= 0 ? '#00c853' : '#ff1744'}
+                cursor="help"
+              >
+                {token.price_change_5m >= 0 ? '+' : ''}{token.price_change_5m.toFixed(0)}%
+              </Text>
+            </Tooltip>
           )}
         </Flex>
 
@@ -205,14 +226,20 @@ export function TrenchCard({ token }: { token: RadarToken }) {
           borderTop="1px solid rgba(255,255,255,0.04)"
         >
           <Flex gap="6px" align="center">
-            <Text fontSize="8px" color="rgba(255,255,255,0.2)">α</Text>
-            <Text fontSize="9px" fontWeight="700" color={alphaColor} fontFamily="monospace">
-              {token.alpha_score.toFixed(0)}
-            </Text>
+            <Tooltip label="Alpha Score: Higher means more bullish metrics" fontSize="xs" hasArrow>
+              <Flex align="center" gap="3px" cursor="help">
+                <Text fontSize="8px" color="rgba(255,255,255,0.2)">α</Text>
+                <Text fontSize="9px" fontWeight="700" color={alphaColor} fontFamily="monospace">
+                  {token.alpha_score.toFixed(0)}
+                </Text>
+              </Flex>
+            </Tooltip>
             {token.ds_listing_age_seconds !== undefined && token.ds_listing_age_seconds > 0 && (
-              <Text fontSize="8px" color="rgba(255,255,255,0.15)">
-                DS {formatAge(token.ds_listing_age_seconds)}
-              </Text>
+              <Tooltip label="Time since listed on DexScreener" fontSize="xs" hasArrow>
+                <Text fontSize="8px" color="rgba(255,255,255,0.15)" cursor="help">
+                  DS {formatAge(token.ds_listing_age_seconds)}
+                </Text>
+              </Tooltip>
             )}
           </Flex>
           <QuickBuyButton mint={token.mint} symbol={token.symbol} />
