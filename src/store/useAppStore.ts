@@ -25,7 +25,9 @@ import { retry, isProdEnv } from '@/utils/common'
 import { compare } from 'compare-versions'
 
 export const defaultNetWork = WalletAdapterNetwork.Mainnet // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
-export const defaultEndpoint = process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com' // Fallback to public mainnet if env var missing
+// Frontend uses public RPC for wallet operations (cheap, no rate limits)
+// Helius is reserved exclusively for backend services (Radar engine, Drift SDK)
+export const defaultEndpoint = 'https://rpc.ankr.com/solana'
 export const APR_MODE_KEY = '_r_apr_'
 export const EXPLORER_KEY = '_r_explorer_'
 export const supportedExplorers = [
@@ -179,7 +181,7 @@ export const useAppStore = createStore<AppState>(
       const { initialing, urlConfigs, rpcNodeUrl: storeRpc, jupTokenType, displayTokenSettings } = get()
       if (initialing) return
       
-      const fallbackRpc = process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com'
+      const fallbackRpc = 'https://rpc.ankr.com/solana'
       const rpcNodeUrl = storeRpc || fallbackRpc
       const connection = payload.connection || new Connection(rpcNodeUrl)
       set({ initialing: true }, false, action)
@@ -335,7 +337,7 @@ export const useAppStore = createStore<AppState>(
           
           if (!readyRpcs[i]) {
             isRpcLoading = false
-            await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com', true, true)
+            await setRpcUrlAct('https://rpc.ankr.com/solana', true, true)
             return
           }
 
@@ -346,7 +348,7 @@ export const useAppStore = createStore<AppState>(
               checkAndSetRpcNode()
             } else {
               isRpcLoading = false
-              await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com', true, true)
+              await setRpcUrlAct('https://rpc.ankr.com/solana', true, true)
             }
           }
         }
@@ -359,12 +361,10 @@ export const useAppStore = createStore<AppState>(
         }
       } catch {
         // Raydium API blocked — use env RPC or public fallbacks
-        const heliusUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://api.mainnet-beta.solana.com"
+        const publicRpc = 'https://rpc.ankr.com/solana'
         const fallbackRpcs = [
-          { name: "Ankr (Failover)", url: "https://rpc.ankr.com/solana", weight: 100, batch: true },
-          { name: "Solana Mainnet", url: "https://api.mainnet-beta.solana.com/", weight: 80, batch: true },
-          { name: "Chainstack", url: "https://solana-mainnet.core.chainstack.com", weight: 70, batch: true },
-          { name: "Syndica", url: "https://solana-api.syndica.io", weight: 60, batch: true }
+          { name: "Ankr", url: "https://rpc.ankr.com/solana", weight: 100, batch: true },
+          { name: "Chainstack", url: "https://solana-mainnet.core.chainstack.com", weight: 70, batch: true }
         ]
         
         set({ rpcs: fallbackRpcs }, false, { type: 'fetchRpcsAct_fallback' })
@@ -372,15 +372,15 @@ export const useAppStore = createStore<AppState>(
         // Initialize TxQueueManager failover pool with these endpoints
         try {
           const { getTxQueueManager } = require('../features/Swap/txQueueManager')
-          const queue = getTxQueueManager(heliusUrl)
+          const queue = getTxQueueManager(publicRpc)
           fallbackRpcs.forEach(rpc => {
-            if (rpc.url !== heliusUrl) queue.addRpcEndpoint(rpc.url)
+            if (rpc.url !== publicRpc) queue.addRpcEndpoint(rpc.url)
           })
         } catch (e) {
           console.error('[Fallback] Failed to inject RPC failovers into tx queue', e)
         }
 
-        await setRpcUrlAct(heliusUrl, true, true)
+        await setRpcUrlAct(publicRpc, true, true)
       } finally {
         rpcLoading = false
       }
