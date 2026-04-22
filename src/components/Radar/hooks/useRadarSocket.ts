@@ -89,22 +89,16 @@ export function useRadarSocket() {
   }, [])
 
   const activateDemoMode = useCallback(() => {
-    if (!isDemoMode) {
-      console.log('[RADAR] Backend unavailable — activating demo mode')
-      setIsDemoMode(true)
-      setTokens(generateDemoTokens())
-      setAlerts(generateDemoAlerts())
-      setIsConnected(true)
-      setIsLoading(false)
-    }
-  }, [isDemoMode])
+    setIsDemoMode(true)
+    setTokens(generateDemoTokens())
+    setAlerts(generateDemoAlerts())
+    setIsConnected(true)
+    setIsLoading(false)
+  }, [])
 
   const fetchTokens = useCallback(async (): Promise<boolean> => {
     try {
-      const controller = new AbortController()
-      const fetchTimeout = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT_MS)
-      const res = await fetch(`${RADAR_HTTP}/radar/recent`, { signal: controller.signal })
-      clearTimeout(fetchTimeout)
+      const res = await fetch(`${RADAR_HTTP}/radar/recent`)
       const data = await res.json()
       if (data.tokens && Array.isArray(data.tokens)) {
         const valid = data.tokens.filter((t: RadarToken) => !isEmptyToken(t))
@@ -116,29 +110,23 @@ export function useRadarSocket() {
       console.log('[RADAR] API fetch failed')
     }
     return false
-  }, [])
+  }, [isEmptyToken])
 
   useEffect(() => {
     let ws: WebSocket | null = null
     let cancelled = false
+    let reconnectTimer: NodeJS.Timeout | null = null
 
     const connectWs = () => {
       if (cancelled) return
 
       try {
+        console.log('[RADAR] Connecting to WebSocket...')
         ws = new WebSocket(RADAR_WS)
 
-        timeoutRef.current = setTimeout(() => {
-          if (ws && ws.readyState !== WebSocket.OPEN) {
-            ws.close()
-            if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
-              activateDemoMode()
-            }
-          }
-        }, CONNECTION_TIMEOUT_MS)
-
         ws.onopen = () => {
-          if (timeoutRef.current) clearTimeout(timeoutRef.current)
+          if (cancelled) return
+          console.log('[RADAR] WebSocket connected ✓')
           setIsConnected(true)
           setIsLoading(false)
           setIsDemoMode(false)
@@ -146,6 +134,7 @@ export function useRadarSocket() {
         }
 
         ws.onmessage = (event) => {
+          if (cancelled) return
           try {
             const msg = event.data as string
             if (msg.startsWith('42')) {
@@ -169,43 +158,40 @@ export function useRadarSocket() {
         }
 
         ws.onclose = () => {
+          if (cancelled) return
           setIsConnected(false)
-          if (!cancelled && reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
+          
+          if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
             reconnectAttempts.current++
-            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 8000)
-            setTimeout(connectWs, delay)
-          } else if (!cancelled) {
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 5000)
+            console.log(`[RADAR] Connection lost. Retrying in ${delay}ms...`)
+            reconnectTimer = setTimeout(connectWs, delay)
+          } else {
             activateDemoMode()
           }
         }
 
         ws.onerror = () => {
-          // onclose will fire after onerror
+          if (ws) ws.close()
         }
-      } catch {
-        console.log('[RADAR] WebSocket not available')
+      } catch (e) {
+        console.error('[RADAR] WS Error:', e)
         activateDemoMode()
       }
 
       wsRef.current = ws
     }
 
-    // Try API first, then WebSocket
-    fetchTokens().then(success => {
-      if (success) {
-        connectWs()
-      } else {
-        connectWs()
-        // If WS also fails, the timeout/reconnect logic will activate demo mode
-      }
+    fetchTokens().then(() => {
+      if (!cancelled) connectWs()
     })
 
     return () => {
       cancelled = true
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      if (reconnectTimer) clearTimeout(reconnectTimer)
       if (ws) ws.close()
     }
-  }, [fetchTokens, activateDemoMode])
+  }, [fetchTokens, activateDemoMode, isEmptyToken])
 
   return { tokens, alerts, isConnected, isLoading, isDemoMode }
 }
