@@ -1,30 +1,60 @@
 import { Box, Flex, Text } from '@chakra-ui/react'
+import { useState } from 'react'
 import { RadarToken } from './radar.types'
 import { TrenchCard } from './TrenchCard'
+import { ColumnHeader, SortKey } from './ColumnHeader'
 
-export function HotBoard({ tokens }: { tokens: RadarToken[] }) {
-  const sortedTokens = [...tokens]
-    .sort((a, b) => b.alpha_score - a.alpha_score)
-    .slice(0, 20)
+export function HotBoard({ 
+  tokens,
+  title = "HOT",
+  color = "var(--radar-red)"
+}: { 
+  tokens: RadarToken[] 
+  title?: string
+  color?: string
+}) {
+  const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<SortKey>('alpha')
+
+  const filtered = tokens.filter(t => 
+    t.symbol.toLowerCase().includes(search.toLowerCase()) ||
+    t.name.toLowerCase().includes(search.toLowerCase()) ||
+    t.mint.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sort === 'alpha') return b.alpha_score - a.alpha_score
+    if (sort === 'volume') return b.volume_1m - a.volume_1m
+    if (sort === 'age') return b.age_seconds - a.age_seconds
+    if (sort === 'mcap') return (b.market_cap || 0) - (a.market_cap || 0)
+    return 0
+  })
 
   return (
-    <Box h="100%" overflow="auto">
-      <Flex align="center" gap={2} mb={3} px={1}>
-        <Text fontWeight="bold" color="white" fontSize="sm">🔥 Hot Board</Text>
-        <Text fontSize="xs" color="gray.600">Sorted by Alpha Score</Text>
-      </Flex>
+    <Box h="calc(100vh - 180px)" overflow="hidden" display="flex" flexDirection="column">
+      <ColumnHeader
+        title={title}
+        count={tokens.length}
+        color={color}
+        search={search}
+        onSearchChange={setSearch}
+        sort={sort}
+        onSortChange={setSort}
+      />
 
-      {sortedTokens.length === 0 ? (
-        <Box py={10} textAlign="center">
-          <Text color="gray.500" fontSize="sm">No tokens to rank yet...</Text>
-        </Box>
-      ) : (
-        <Flex direction="column" gap={2}>
-          {sortedTokens.map((token) => (
-            <TrenchCard key={token.mint} token={token} />
-          ))}
-        </Flex>
-      )}
+      <Box flex={1} overflowY="auto" pr={1}>
+        {sorted.length === 0 ? (
+          <Box py={10} textAlign="center">
+            <Text color="var(--radar-text-dim)" fontSize="sm" fontFamily="var(--radar-mono)">NO MATCHES</Text>
+          </Box>
+        ) : (
+          <Flex direction="column" gap={0}>
+            {sorted.map((token) => (
+              <TrenchCard key={token.mint} token={token} />
+            ))}
+          </Flex>
+        )}
+      </Box>
     </Box>
   )
 }

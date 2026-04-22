@@ -1,5 +1,5 @@
 import { Box, Flex, Text, Spinner, VStack, useBreakpointValue } from '@chakra-ui/react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRadarSocket } from './hooks/useRadarSocket'
 import { TrenchesLayout } from './TrenchesLayout'
 import { LiveFeed } from './LiveFeed'
@@ -19,120 +19,162 @@ export function RadarPage() {
   const { tokens, alerts, isConnected, isLoading, isDemoMode } = useRadarSocket()
   const [activeTab, setActiveTab] = useState<TabKey>('feed')
   const isDesktop = useBreakpointValue({ base: false, md: true })
+  const [time, setTime] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   const tokenCount = tokens.length
   const rugCount = tokens.filter((t: any) => t.risk_level === 'RUG PROBABLE').length
-  const graduatingCount = tokens.filter((t: any) => t.is_pumpfun && !t.is_graduated && (t.bonding_curve_pct ?? 0) >= 80).length
 
   if (isLoading) {
     return (
-      <VStack py={20} justify="center">
-        <Spinner size="xl" color="green.400" />
-        <Text color="gray.500">Loading RADAR...</Text>
+      <VStack py={20} justify="center" bg="#080b0f" minH="100vh">
+        <Spinner size="xl" color="#14f195" thickness="3px" />
+        <Text color="#6e7681" fontFamily="monospace">INITIALIZING TERMINAL...</Text>
       </VStack>
     )
   }
 
   return (
-    <Box minH="100vh" bg="#0a0a0a">
-      <RadarWelcomeModal />
+    <Box 
+      minH="100vh" 
+      bg="var(--radar-bg)" 
+      color="var(--radar-text)"
+      fontFamily="var(--radar-mono)"
+      sx={{
+        '--radar-bg': '#080b0f',
+        '--radar-surface': '#0d1117',
+        '--radar-surface-2': '#111820',
+        '--radar-border': 'rgba(255,255,255,0.06)',
+        '--radar-border-accent': 'rgba(20,241,149,0.3)',
+        '--radar-text': '#c9d1d9',
+        '--radar-text-dim': '#6e7681',
+        '--radar-text-bright': '#ffffff',
+        --radar-green: '#00ff88',
+        --radar-yellow: '#ffd700',
+        --radar-orange: '#ff9500',
+        --radar-red: '#ff3b5c',
+        --radar-purple: '#bf5af2',
+        --radar-blue: '#0d9ddb',
+        --radar-solana: '#14f195',
+        '--radar-mono': "'JetBrains Mono', 'Fira Code', 'Courier New', monospace",
+      }}
+    >
       <style>{`
-        @keyframes livePulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.4); opacity: 0.6; }
+        @keyframes scanline {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(100%); }
         }
-        @keyframes bcPulse {
+        @keyframes blink {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+          50% { opacity: 0; }
+        }
+        @keyframes livePulse {
+          0% { transform: scale(0.9); opacity: 0.8; }
+          50% { transform: scale(1.1); opacity: 1; }
+          100% { transform: scale(0.9); opacity: 0.8; }
+        }
+        .radar-bg-effects {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          pointer-events: none;
+          z-index: 1;
+          background-image: repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(255,255,255,0.01) 2px,
+            rgba(255,255,255,0.01) 4px
+          );
+        }
+        .listening-text::after {
+          content: "|";
+          animation: blink 1s infinite;
+          margin-left: 4px;
+          color: var(--radar-solana);
         }
       `}</style>
-
-      {/* ── Header ── */}
-      <Box px={4} pt={4} pb={2}>
-        <Flex align="center" gap={3} justify="space-between" wrap="wrap">
-          <Flex align="center" gap={3}>
-            <Text
-              fontSize={{ base: '2xl', md: '3xl' }}
-              fontFamily="'Courier New', monospace"
-              fontWeight="bold"
-              color="white"
-              letterSpacing="widest"
-            >
-              RADAR
-            </Text>
-            {isConnected && (
-              <Flex align="center" gap={3}>
-                <Flex align="center" gap={1}>
-                  <Box
-                    w={2} h={2} borderRadius="full"
-                    bg={isDemoMode ? '#ffd600' : '#00c853'}
-                    style={{ animation: 'livePulse 2s ease-in-out infinite' }}
-                  />
-                  <Text fontSize="xs" color={isDemoMode ? '#ffd600' : '#00c853'} fontWeight="bold">
-                    {isDemoMode ? 'DEMO' : 'LIVE'}
-                  </Text>
-                </Flex>
-                {!isDemoMode && (
-                  <Box
-                    fontFamily="'Courier New', monospace"
-                    fontSize="xs"
-                    color="rgba(0,200,83,0.7)"
-                    display={{ base: 'none', md: 'block' }}
-                    sx={{
-                      '&::after': {
-                        content: '"> Listening to Helius nodes..."',
-                        borderRight: '2px solid rgba(0,200,83,0.7)',
-                        paddingRight: '4px',
-                      }
-                    }}
-                  />
-                )}
-              </Flex>
-            )}
-          </Flex>
-
-          {/* Stats bar */}
-          <Flex gap={4} align="center">
-            <Flex align="center" gap={1.5}>
-              <Text fontSize="sm" fontWeight="800" fontFamily="'Courier New', monospace" color="white">{tokenCount}</Text>
-              <Text fontSize="10px" color="gray.600">tracked</Text>
-            </Flex>
-            {graduatingCount > 0 && (
-              <Flex align="center" gap={1.5}>
-                <Text fontSize="sm" fontWeight="800" fontFamily="'Courier New', monospace" color="#00e676">{graduatingCount}</Text>
-                <Text fontSize="10px" color="gray.600">🚀 graduating</Text>
-              </Flex>
-            )}
-            <Flex align="center" gap={1.5}>
-              <Text fontSize="sm" fontWeight="800" fontFamily="'Courier New', monospace" color={rugCount > 0 ? '#ff1744' : 'gray.500'}>
-                {rugCount}
+      
+      <div className="radar-bg-effects" />
+      
+      <Box position="relative" zIndex={2} px={{ base: 4, md: 6 }} py={4}>
+        <RadarWelcomeModal />
+        
+        {/* ── HEADER ── */}
+        <Box 
+          bg="var(--radar-surface)" 
+          borderBottom="1px solid var(--radar-border-accent)" 
+          p={4} 
+          mb={4}
+          borderRadius="4px"
+        >
+          <Flex justify="space-between" align="center" mb={2}>
+            <Flex align="center" gap={3}>
+              <Text
+                fontSize="28px"
+                fontWeight="800"
+                color="white"
+                letterSpacing="6px"
+                lineHeight="1"
+              >
+                <Text as="span" color="var(--radar-solana)" mr={2}>◈</Text>
+                RADAR
               </Text>
-              <Text fontSize="10px" color="gray.600">rugs</Text>
+              
+              {isConnected && (
+                <Flex align="center" gap={2} ml={4}>
+                  <Box 
+                    w="8px" h="8px" borderRadius="full" bg="var(--radar-green)"
+                    boxShadow="0 0 8px var(--radar-green)"
+                    style={{ animation: 'livePulse 2s infinite' }}
+                  />
+                  <Text fontSize="11px" fontWeight="bold" color="var(--radar-green)" letterSpacing="1px">LIVE</Text>
+                </Flex>
+              )}
             </Flex>
-            <Flex align="center" gap={1.5}>
-              <Text fontSize="sm" fontWeight="800" fontFamily="'Courier New', monospace" color="white">{alerts.length}</Text>
-              <Text fontSize="10px" color="gray.600">alerts</Text>
+            
+            <Text fontSize="11px" color="var(--radar-text-dim)" fontFamily="monospace">
+              {time.toLocaleTimeString()}
+            </Text>
+          </Flex>
+
+          <Flex justify="space-between" align="center">
+            <VStack align="flex-start" spacing={0}>
+              <Text fontSize="12px" color="var(--radar-text-dim)">
+                Real-time token intelligence · Solana
+              </Text>
+              {isConnected && (
+                <Text fontSize="11px" color="var(--radar-solana)" className="listening-text">
+                  Listening to Helius nodes...
+                </Text>
+              )}
+            </VStack>
+
+            <Flex gap={4} align="center" fontSize="11px" color="var(--radar-text-dim)">
+              <Text><Text as="span" color="white" fontWeight="bold">{tokenCount}</Text> tracked</Text>
+              <Text>·</Text>
+              <Text><Text as="span" color="var(--radar-red)" fontWeight="bold">{rugCount}</Text> rugs</Text>
+              <Text>·</Text>
+              <Text><Text as="span" color="white" fontWeight="bold">{alerts.length}</Text> alerts</Text>
+              <Text>·</Text>
+              <Text>updated just now</Text>
             </Flex>
           </Flex>
-        </Flex>
-
-        <Text color="gray.600" fontSize="xs" mt={1}>
-          {isDemoMode
-            ? 'Preview mode — RADAR backend offline. Showing sample data.'
-            : 'Real-time token intelligence · Fresh / Building / Hot'}
-        </Text>
-      </Box>
-
-      {/* ── Desktop: 3-column Trenches layout ── */}
-      {isDesktop ? (
-        <Box px={4} pb={6}>
-          <TrenchesLayout tokens={tokens} alerts={alerts} />
         </Box>
-      ) : (
-        <>
-          {/* ── Mobile: Tab Switcher ── */}
-          <Box px={4} pt={3} pb={1} position="sticky" top={0} zIndex={10} bg="#0a0a0a">
-            <Flex bg="rgba(255,255,255,0.04)" borderRadius="xl" p="3px" gap="2px">
+
+        {/* ── ALERTS (Fixed Toasts) ── */}
+        <AlertFeed alerts={alerts} />
+
+        {/* ── MAIN CONTENT ── */}
+        {isDesktop ? (
+          <TrenchesLayout tokens={tokens} alerts={[]} />
+        ) : (
+          <>
+            {/* Mobile Tabs switcher */}
+            <Flex bg="var(--radar-surface)" borderRadius="4px" p="2px" mb={4} border="1px solid var(--radar-border)">
               {TABS.map((tab) => {
                 const isActive = activeTab === tab.key
                 return (
@@ -141,44 +183,27 @@ export function RadarPage() {
                     flex={1}
                     py={2}
                     textAlign="center"
-                    borderRadius="lg"
                     cursor="pointer"
-                    transition="all 0.2s ease"
-                    bg={isActive ? 'rgba(0,200,83,0.12)' : 'transparent'}
-                    border={isActive ? '1px solid rgba(0,200,83,0.2)' : '1px solid transparent'}
+                    bg={isActive ? 'var(--radar-surface-2)' : 'transparent'}
+                    color={isActive ? 'var(--radar-solana)' : 'var(--radar-text-dim)'}
+                    fontSize="11px"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="1px"
                     onClick={() => setActiveTab(tab.key)}
-                    _hover={!isActive ? { bg: 'rgba(255,255,255,0.04)' } : undefined}
                   >
-                    <Text
-                      fontSize="sm"
-                      fontWeight={isActive ? '700' : '500'}
-                      color={isActive ? '#00c853' : 'gray.500'}
-                    >
-                      {tab.icon} {tab.label}
-                      {tab.key === 'alerts' && alerts.length > 0 && (
-                        <Text
-                          as="span" ml={1} fontSize="10px"
-                          bg="rgba(255,23,68,0.2)" color="#ff1744"
-                          px={1.5} py={0.5} borderRadius="full" fontWeight="700"
-                        >
-                          {alerts.length}
-                        </Text>
-                      )}
-                    </Text>
+                    {tab.label}
                   </Box>
                 )
               })}
             </Flex>
-          </Box>
-
-          {/* ── Mobile: Content ── */}
-          <Box px={4} pt={3} pb={24}>
-            {activeTab === 'feed' && <LiveFeed tokens={tokens} isConnected={isConnected} alerts={alerts} />}
-            {activeTab === 'hot' && <HotBoard tokens={tokens} />}
-            {activeTab === 'alerts' && <AlertFeed alerts={alerts} />}
-          </Box>
-        </>
-      )}
+            <Box pb={24}>
+              {activeTab === 'feed' && <LiveFeed tokens={tokens} isConnected={isConnected} alerts={[]} />}
+              {activeTab === 'hot' && <HotBoard tokens={tokens} />}
+            </Box>
+          </>
+        )}
+      </Box>
     </Box>
   )
 }

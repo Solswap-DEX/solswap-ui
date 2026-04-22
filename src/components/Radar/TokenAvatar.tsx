@@ -1,66 +1,48 @@
-import { Box, Image } from '@chakra-ui/react'
-import { useState } from 'react'
+import { Box, Text } from '@chakra-ui/react'
 
-function mintToGradient(mint: string): string {
+const AVATAR_COLORS = ['#14f195', '#ffd700', '#ff3b5c', '#bf5af2', '#0d9ddb', '#ff9500']
+
+function getHashColor(name: string): string {
   let hash = 0
-  for (let i = 0; i < mint.length; i++) {
-    hash = mint.charCodeAt(i) + ((hash << 5) - hash)
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
   }
-  const h1 = Math.abs(hash % 360)
-  const h2 = (h1 + 40) % 360
-  return `linear-gradient(135deg, hsl(${h1}, 70%, 45%), hsl(${h2}, 80%, 35%))`
+  const index = Math.abs(hash) % AVATAR_COLORS.length
+  return AVATAR_COLORS[index]
 }
 
 export function TokenAvatar({
-  mint,
   symbol,
-  size = 48,
-  imageUrl
+  size = 36
 }: {
   mint: string
   symbol: string
   size?: number
   imageUrl?: string
 }) {
-  const [imgError, setImgError] = useState(false)
-  const imgUrl = imageUrl || `https://dd.dexscreener.com/ds-data/tokens/solana/${mint}.png`
-
-  if (imgError) {
-    return (
-      <Box
-        w={`${size}px`}
-        h={`${size}px`}
-        minW={`${size}px`}
-        borderRadius="full"
-        bg={mintToGradient(mint)}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        fontSize={`${Math.floor(size * 0.35)}px`}
-        fontWeight="800"
-        color="white"
-        textTransform="uppercase"
-        letterSpacing="tight"
-        border="2px solid rgba(255,255,255,0.1)"
-        userSelect="none"
-      >
-        {symbol.slice(0, 2)}
-      </Box>
-    )
-  }
+  const bgColor = getHashColor(symbol)
+  const displaySymbol = symbol.slice(0, 2).toUpperCase()
 
   return (
-    <Image
-      src={imgUrl}
-      alt={symbol}
+    <Box
       w={`${size}px`}
       h={`${size}px`}
-      minW={`${size}px`}
-      borderRadius="full"
-      objectFit="cover"
-      border="2px solid rgba(255,255,255,0.1)"
-      bg="rgba(255,255,255,0.05)"
-      onError={() => setImgError(true)}
-    />
+      borderRadius="50%"
+      bg={bgColor}
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      flexShrink={0}
+      boxShadow="inset 0 0 10px rgba(0,0,0,0.2)"
+    >
+      <Text
+        fontSize={`${Math.max(size / 3, 10)}px`}
+        fontWeight="800"
+        color="white"
+        lineHeight="1"
+      >
+        {displaySymbol}
+      </Text>
+    </Box>
   )
 }

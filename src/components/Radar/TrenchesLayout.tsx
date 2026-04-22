@@ -1,135 +1,62 @@
-import { Box, Flex, Text } from '@chakra-ui/react'
-import { useState, useMemo } from 'react'
-import { RadarToken, RadarAlert, getTokenColumn } from './radar.types'
-import { TrenchCard } from './TrenchCard'
-import { ColumnHeader, SortKey } from './ColumnHeader'
+import { Box, SimpleGrid, Flex } from '@chakra-ui/react'
+import { RadarToken, RadarAlert } from './radar.types'
+import { LiveFeed } from './LiveFeed'
+import { HotBoard } from './HotBoard'
 
-function sortTokens(tokens: RadarToken[], sort: SortKey): RadarToken[] {
-  return [...tokens].sort((a, b) => {
-    switch (sort) {
-      case 'alpha': return b.alpha_score - a.alpha_score
-      case 'volume': return b.volume_1m - a.volume_1m
-      case 'age': return a.age_seconds - b.age_seconds
-      case 'mcap': return (b.market_cap ?? 0) - (a.market_cap ?? 0)
-      case 'bonding_curve': return (b.bonding_curve_pct ?? 0) - (a.bonding_curve_pct ?? 0)
-      default: return 0
-    }
-  })
-}
+export function TrenchesLayout({ tokens, alerts }: { tokens: RadarToken[]; alerts: RadarAlert[] }) {
+  // Logic to group tokens by category
+  const freshTokens = tokens
+    .filter(t => t.age_seconds < 300) // First 5 mins
+    .sort((a, b) => b.detected_at.getTime() - a.detected_at.getTime())
 
-const COLUMN_CONFIG = [
-  { key: 'fresh' as const, label: 'Fresh', color: '#00b0ff', emoji: '🆕' },
-  { key: 'building' as const, label: 'Building', color: '#ffd600', emoji: '⚡' },
-  { key: 'hot' as const, label: 'Hot', color: '#ff5722', emoji: '🔥' },
-]
+  const buildingTokens = tokens
+    .filter(t => t.age_seconds >= 300 && t.age_seconds < 3600) // 5m to 1h
+    .sort((a, b) => b.alpha_score - a.alpha_score)
 
-function Column({
-  title,
-  color,
-  tokens,
-}: {
-  title: string
-  color: string
-  tokens: RadarToken[]
-}) {
-  const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<SortKey>('alpha')
-
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase()
-    const base = q
-      ? tokens.filter(t =>
-          t.symbol.toLowerCase().includes(q) ||
-          t.name.toLowerCase().includes(q)
-        )
-      : tokens
-    return sortTokens(base, sort)
-  }, [tokens, search, sort])
+  const hotTokens = tokens
+    .filter(t => t.age_seconds >= 3600 || t.alpha_score > 70) // > 1h or very high alpha
+    .sort((a, b) => b.alpha_score - a.alpha_score)
 
   return (
-    <Flex
-      direction="column"
-      flex={1}
-      minW={0}
-      h="100%"
-      overflow="hidden"
-      bg="#0d0d0d"
-      borderRight="1px solid rgba(255,255,255,0.05)"
-      _last={{ borderRight: 'none' }}
-    >
-      <Box px={2} pt={2}>
-        <ColumnHeader
-          title={title}
-          count={filtered.length}
-          color={color}
-          search={search}
-          onSearchChange={setSearch}
-          sort={sort}
-          onSortChange={setSort}
-        />
-      </Box>
+    <Box maxW="1600px" mx="auto">
+      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={0}>
+        {/* FRESH COLUMN */}
+        <Box 
+          px={3} 
+          borderRight={{ base: 'none', md: '1px solid var(--radar-border)' }}
+        >
+          <LiveFeed 
+            tokens={freshTokens} 
+            isConnected={true} 
+            alerts={[]} 
+            title="FRESH"
+            color="var(--radar-solana)"
+          />
+        </Box>
 
-      <Box flex={1} overflowY="auto" px={2} py={2}
-        css={{
-          '&::-webkit-scrollbar': { width: '3px' },
-          '&::-webkit-scrollbar-track': { background: 'transparent' },
-          '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.1)', borderRadius: '3px' },
-        }}
-      >
-        {filtered.length === 0 ? (
-          <Box py={8} textAlign="center">
-            <Text fontSize="xs" color="gray.600">No tokens yet...</Text>
-          </Box>
-        ) : (
-          <Flex direction="column" gap={1.5}>
-            {filtered.slice(0, 50).map(token => (
-              <TrenchCard key={token.mint} token={token} />
-            ))}
-          </Flex>
-        )}
-      </Box>
-    </Flex>
-  )
-}
+        {/* BUILDING COLUMN */}
+        <Box 
+          px={3} 
+          borderRight={{ base: 'none', md: '1px solid var(--radar-border)' }}
+        >
+          <LiveFeed 
+            tokens={buildingTokens} 
+            isConnected={true} 
+            alerts={[]} 
+            title="BUILDING"
+            color="var(--radar-yellow)"
+          />
+        </Box>
 
-export function TrenchesLayout({
-  tokens,
-  alerts,
-}: {
-  tokens: RadarToken[]
-  alerts: RadarAlert[]
-}) {
-  const columns = useMemo(() => {
-    const fresh: RadarToken[] = []
-    const building: RadarToken[] = []
-    const hot: RadarToken[] = []
-
-    for (const token of tokens) {
-      const col = getTokenColumn(token)
-      if (col === 'fresh') fresh.push(token)
-      else if (col === 'building') building.push(token)
-      else hot.push(token)
-    }
-    return { fresh, building, hot }
-  }, [tokens])
-
-  return (
-    <Flex
-      direction="row"
-      h="calc(100vh - 130px)"
-      overflow="hidden"
-      border="1px solid rgba(255,255,255,0.06)"
-      borderRadius="xl"
-      mt={2}
-    >
-      {COLUMN_CONFIG.map(col => (
-        <Column
-          key={col.key}
-          title={col.label}
-          color={col.color}
-          tokens={columns[col.key]}
-        />
-      ))}
-    </Flex>
+        {/* HOT COLUMN */}
+        <Box px={3}>
+          <HotBoard 
+            tokens={hotTokens} 
+            title="HOT"
+            color="var(--radar-red)"
+          />
+        </Box>
+      </SimpleGrid>
+    </Box>
   )
 }

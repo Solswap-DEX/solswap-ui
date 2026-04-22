@@ -1,62 +1,67 @@
 import { Box, Flex, Text } from '@chakra-ui/react'
+import { useState } from 'react'
 import { RadarToken, RadarAlert } from './radar.types'
 import { TrenchCard } from './TrenchCard'
+import { ColumnHeader, SortKey } from './ColumnHeader'
 
 export function LiveFeed({
   tokens,
   isConnected,
-  alerts
+  title = "FRESH",
+  color = "var(--radar-solana)"
 }: {
   tokens: RadarToken[]
   isConnected: boolean
   alerts: RadarAlert[]
+  title?: string
+  color?: string
 }) {
-  // Show "fresh" tokens first (youngest), then building
-  const sorted = [...tokens].sort((a, b) => a.age_seconds - b.age_seconds)
+  const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<SortKey>('age')
+
+  const filtered = tokens.filter(t => 
+    t.symbol.toLowerCase().includes(search.toLowerCase()) ||
+    t.name.toLowerCase().includes(search.toLowerCase()) ||
+    t.mint.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sort === 'age') return a.age_seconds - b.age_seconds
+    if (sort === 'alpha') return b.alpha_score - a.alpha_score
+    if (sort === 'volume') return b.volume_1m - a.volume_1m
+    if (sort === 'mcap') return (b.market_cap || 0) - (a.market_cap || 0)
+    return 0
+  })
 
   return (
-    <Box h="100%" overflow="auto">
-      <style>{`
-        @keyframes livePulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.4); opacity: 0.6; }
-        }
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateY(-8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+    <Box h="calc(100vh - 180px)" overflow="hidden" display="flex" flexDirection="column">
+      <ColumnHeader
+        title={title}
+        count={tokens.length}
+        color={color}
+        search={search}
+        onSearchChange={setSearch}
+        sort={sort}
+        onSortChange={setSort}
+      />
 
-      <Flex align="center" gap={2} mb={3} px={1}>
-        <Text fontWeight="bold" color="white" fontSize="sm">🆕 Fresh Feed</Text>
-        <Box
-          w={2} h={2} borderRadius="full"
-          bg={isConnected ? '#00c853' : '#666'}
-          style={{ animation: isConnected ? 'livePulse 2s ease-in-out infinite' : undefined }}
-        />
-        <Text fontSize="xs" color="gray.600">{tokens.length} tokens</Text>
-      </Flex>
-
-      {!isConnected ? (
-        <Box py={10} textAlign="center">
-          <Text color="gray.500" fontSize="sm">Connecting to RADAR...</Text>
-        </Box>
-      ) : tokens.length === 0 ? (
-        <Box py={10} textAlign="center">
-          <Text color="gray.500" fontSize="sm">No tokens detected yet. Waiting for data...</Text>
-        </Box>
-      ) : (
-        <Flex direction="column" gap={2}>
-          {sorted.slice(0, 30).map((token, idx) => (
-            <Box
-              key={token.mint}
-              style={{ animation: idx < 3 ? `slideIn 0.3s ease-out` : undefined }}
-            >
-              <TrenchCard token={token} />
-            </Box>
-          ))}
-        </Flex>
-      )}
+      <Box flex={1} overflowY="auto" pr={1}>
+        {!isConnected ? (
+          <Box py={10} textAlign="center">
+            <Text color="var(--radar-text-dim)" fontSize="sm" fontFamily="var(--radar-mono)">CONNECTING...</Text>
+          </Box>
+        ) : sorted.length === 0 ? (
+          <Box py={10} textAlign="center">
+            <Text color="var(--radar-text-dim)" fontSize="sm" fontFamily="var(--radar-mono)">NO MATCHES</Text>
+          </Box>
+        ) : (
+          <Flex direction="column" gap={0}>
+            {sorted.slice(0, 50).map((token) => (
+              <TrenchCard key={token.mint} token={token} />
+            ))}
+          </Flex>
+        )}
+      </Box>
     </Box>
   )
 }
