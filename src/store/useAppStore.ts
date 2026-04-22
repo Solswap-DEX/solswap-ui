@@ -291,7 +291,7 @@ export const useAppStore = createStore<AppState>(
           jsonrpc: '2.0',
           method: 'getRecentPerformanceSamples',
           params: [4]
-        })
+        }, { skipError: true })
         if (res.result && res.result.length > 0) {
           const slotList = res.result.map((data) => data.numSlots)
           set({ blockSlotCountForSecond: slotList.reduce((a, b) => a + b, 0) / slotList.length / 60 }, false, {
@@ -362,9 +362,9 @@ export const useAppStore = createStore<AppState>(
         // Raydium API blocked — use env RPC or public fallbacks
         const heliusUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://api.mainnet-beta.solana.com"
         const fallbackRpcs = [
-          { name: "Mainnet (Primary)", url: heliusUrl, weight: 100 },
-          { name: "Solana Mainnet", url: "https://api.mainnet-beta.solana.com/", weight: 80 },
-          { name: "QuickNode (Public)", url: "https://solana-api.syndica.io/access/api_key/rpc", weight: 60 }
+          { name: "Mainnet (Primary)", url: heliusUrl, weight: 100, batch: true },
+          { name: "Solana Mainnet", url: "https://api.mainnet-beta.solana.com/", weight: 80, batch: true },
+          { name: "QuickNode (Public)", url: "https://solana-api.syndica.io/access/api_key/rpc", weight: 60, batch: true }
         ]
         
         set({ rpcs: fallbackRpcs }, false, { type: 'fetchRpcsAct_fallback' })
