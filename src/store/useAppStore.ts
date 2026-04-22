@@ -27,7 +27,7 @@ import { compare } from 'compare-versions'
 export const defaultNetWork = WalletAdapterNetwork.Mainnet // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
 // Frontend uses public RPC for wallet operations (cheap, no rate limits)
 // Helius is reserved exclusively for backend services (Radar engine, Drift SDK)
-export const defaultEndpoint = process.env.NEXT_PUBLIC_RPC || 'https://api.mainnet-beta.solana.com'
+export const defaultEndpoint = 'https://solana-mainnet.core.chainstack.com'
 export const APR_MODE_KEY = '_r_apr_'
 export const EXPLORER_KEY = '_r_explorer_'
 export const supportedExplorers = [
@@ -180,8 +180,7 @@ export const useAppStore = createStore<AppState>(
       const action = { type: 'initSolSwapAct' }
       const { initialing, urlConfigs, rpcNodeUrl: storeRpc, jupTokenType, displayTokenSettings } = get()
       if (initialing) return
-      
-      const fallbackRpc = process.env.NEXT_PUBLIC_RPC || 'https://api.mainnet-beta.solana.com'
+      const fallbackRpc = 'https://solana-mainnet.core.chainstack.com'
       const rpcNodeUrl = storeRpc || fallbackRpc
       const connection = payload.connection || new Connection(rpcNodeUrl)
       set({ initialing: true }, false, action)
@@ -337,7 +336,7 @@ export const useAppStore = createStore<AppState>(
           
           if (!readyRpcs[i]) {
             isRpcLoading = false
-            await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC || 'https://api.mainnet-beta.solana.com', true, true)
+            await setRpcUrlAct('https://solana-mainnet.core.chainstack.com', true, true)
             return
           }
 
@@ -348,7 +347,7 @@ export const useAppStore = createStore<AppState>(
               checkAndSetRpcNode()
             } else {
               isRpcLoading = false
-              await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC || 'https://api.mainnet-beta.solana.com', true, true)
+              await setRpcUrlAct('https://solana-mainnet.core.chainstack.com', true, true)
             }
           }
         }
@@ -360,14 +359,14 @@ export const useAppStore = createStore<AppState>(
           checkAndSetRpcNode()
         }
       } catch {
-        // Raydium API blocked — use env RPC or public fallbacks
-        const publicRpc = process.env.NEXT_PUBLIC_RPC || 'https://api.mainnet-beta.solana.com'
-        const wssRpc = publicRpc.replace('https', 'wss')
+        // Raydium API blocked — use public fallbacks since Helius is exhausted
+        const publicRpc = 'https://solana-mainnet.core.chainstack.com'
+        const wssRpc = 'wss://solana-mainnet.core.chainstack.com/ws'
         const fallbackRpcs = [
-          { name: "Helius", url: publicRpc, ws: wssRpc, weight: 100, batch: true },
-          { name: "Chainstack", url: "https://solana-mainnet.core.chainstack.com", weight: 70, batch: true }
+          { name: "Chainstack", url: publicRpc, ws: wssRpc, weight: 100, batch: true },
+          { name: "PublicNode", url: "https://solana-rpc.publicnode.com", weight: 80, batch: true },
+          { name: "Mainnet Beta", url: "https://api.mainnet-beta.solana.com", weight: 50, batch: true }
         ]
-        
         set({ rpcs: fallbackRpcs }, false, { type: 'fetchRpcsAct_fallback' })
         
         // Initialize TxQueueManager failover pool with these endpoints
