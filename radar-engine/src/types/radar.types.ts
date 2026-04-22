@@ -21,7 +21,11 @@ export interface RadarToken {
   price_usd: number;
   last_update: Date;
   detected_at: Date;
-  alpha_label: 'HIGH ALPHA' | 'WATCH' | 'NEUTRAL' | 'IGNORE';
+  delta_liquidity: number;
+  delta_holders: number;
+  delta_top10: number;
+  delta_volume: number;
+  alpha_label: AlphaLabel;
   rug_signals: string[];
   buys_1m: number;
   sells_1m: number;
@@ -113,7 +117,20 @@ export interface EnrichedToken {
   sell_ratio: number;
   lp_locked: boolean;
   pairAddress?: string;
+  delta_liquidity: number;
+  delta_holders: number;
+  delta_top10: number;
+  delta_volume: number;
 }
+
+export type AlphaLabel = 
+  | '🔥 HIGH ALPHA'
+  | '⚡ EARLY SIGNAL'
+  | '👀 WATCH'
+  | '🧪 SPECULATIVE'
+  | '😴 NEUTRAL'
+  | '❌ IGNORE'
+  | '☠️ RUG PROBABLE';
 
 export interface PricePoint {
   price: number;

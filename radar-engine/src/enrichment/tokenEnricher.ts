@@ -7,6 +7,7 @@ import { calculateRisk } from '../scoring/riskScore';
 import { calculateAlpha, getAlphaLabel } from '../scoring/alphaScore';
 import { detectRug } from '../rug/rugDetector';
 import { upsertToken } from '../db/mongo';
+import { updateSnapshot, getDeltas } from '../state/tokenStateTracker';
 
 const DEXSCREENER_URL = process.env.DEXSCREENER_BASE_URL || 'https://api.dexscreener.com';
 const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY || '';
@@ -101,6 +102,26 @@ async function enrichToken(
   const sell_ratio = totalTx > 0 ? Math.round((sells_1m / totalTx) * 100) / 100 : 0;
   const tx_spike_ratio = totalTx / Math.max(age_seconds / 60, 1);
 
+  const currentSnapshot = {
+    liquidity: liquidity,
+    holders: 0,
+    top10_concentration: walletData.top10 || 0,
+    volume_1m: volume_1m,
+    timestamp: Date.now()
+  };
+
+  const deltas = getDeltas(mint, currentSnapshot);
+  updateSnapshot(mint, currentSnapshot);
+
+  if (deltas.has_previous) {
+    console.log(
+      `[RADAR DELTA] ${finalSymbol} | ` +
+      `liq: ${deltas.delta_liquidity >= 0 ? '+' : ''}${deltas.delta_liquidity.toFixed(0)} | ` +
+      `holders: ${deltas.delta_holders >= 0 ? '+' : ''}${deltas.delta_holders} | ` +
+      `top10: ${deltas.delta_top10 >= 0 ? '+' : ''}${(deltas.delta_top10*100).toFixed(1)}%`
+    );
+  }
+
   return {
     price_usd,
     liquidity,
@@ -122,7 +143,11 @@ async function enrichToken(
     lp_holder_concentration: lpData.lp_holder_concentration,
     lp_locked: lpData.lp_locked,
     sell_ratio,
-    mint
+    mint,
+    delta_liquidity: deltas.delta_liquidity,
+    delta_holders: deltas.delta_holders,
+    delta_top10: deltas.delta_top10,
+    delta_volume: deltas.delta_volume
   };
 }
 
@@ -198,7 +223,7 @@ async function fetchMintAuthority(mint: string): Promise<boolean> {
     const mintAuthority = response.data?.result?.value?.data?.parsed?.info?.mintAuthority;
     return mintAuthority !== null && mintAuthority !== undefined;
   } catch (err: any) {
-    console.error('[RADAR ERROR] Helius mint authority check failed:', err.message);
+    console.error('[RADAR ERROR] Helius mint authority check failed (401?):', err.message, 'Key:', HELIUS_API_KEY.slice(0,4));
     return false;
   }
 }
@@ -331,11 +356,21 @@ function buildRadarToken(enriched: EnrichedToken, dataPending = false): RadarTok
     price_usd: enriched.price_usd,
     last_update: new Date(),
     detected_at: new Date(enriched.detected_at),
-    alpha_label: getAlphaLabel(alphaScore),
+    alpha_label: getAlphaLabel(
+      alphaScore,
+      rugSignal.isRug ? 'RUG PROBABLE' : riskLevel,
+      enriched.age_seconds,
+      enriched.delta_liquidity,
+      enriched.delta_holders
+    ),
     rug_signals: rugSignal.signals,
     data_pending: dataPending,
     price_at_detection: enriched.price_usd,
-    market_cap: 0
+    market_cap: 0,
+    delta_liquidity: enriched.delta_liquidity,
+    delta_holders: enriched.delta_holders,
+    delta_top10: enriched.delta_top10,
+    delta_volume: enriched.delta_volume
   };
 
   return token;

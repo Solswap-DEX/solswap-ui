@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { RadarToken } from './radar.types'
 import { RiskBadge } from './RiskBadge'
 import { AlphaBar } from './AlphaBar'
+import { AlphaBadge } from './AlphaBadge'
 
 function formatAge(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -28,8 +29,6 @@ export function TokenCard({
   onStopLossClick?: () => void
 }) {
   const router = useRouter()
-  const isHighAlpha = token.alpha_label === 'HIGH ALPHA'
-
   return (
     <Box
       p={3}
@@ -39,21 +38,9 @@ export function TokenCard({
       transition="all 0.2s"
       _hover={{ bg: 'rgba(255,255,255,0.06)' }}
     >
-      {isHighAlpha && (
-        <Box
-          display="inline-block"
-          mb={2}
-          px={2}
-          py={0.5}
-          bg="linear-gradient(135deg, #9945ff, #14f195)"
-          borderRadius="sm"
-          fontSize="9px"
-          fontWeight="bold"
-          color="white"
-        >
-          ⚡ HIGH ALPHA
-        </Box>
-      )}
+      <Box mb={2}>
+        <AlphaBadge label={token.alpha_label} />
+      </Box>
 
       <Flex justify="space-between" align="center" mb={2}>
         <Box>

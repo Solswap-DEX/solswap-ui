@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { RadarToken } from './radar.types'
 import { RiskBadge } from './RiskBadge'
 import { AlphaBar } from './AlphaBar'
+import { AlphaBadge } from './AlphaBadge'
 import { BuySellBar } from './BuySellBar'
 
 function formatUsd(value: number): string {
@@ -70,9 +71,10 @@ export function HotBoard({
                     <Text fontSize="xs" fontWeight="bold" color="white">
                       {token.symbol}
                     </Text>
-                    <Text fontSize="xs" color="gray.500">
+                    <Text fontSize="xs" color="gray.500" mb={1}>
                       {token.name?.slice(0, 8) || 'Unknown'}
                     </Text>
+                    <AlphaBadge label={token.alpha_label} />
                   </Box>
                 </Td>
                 <Td>

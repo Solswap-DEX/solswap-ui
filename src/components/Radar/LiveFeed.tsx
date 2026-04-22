@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { RadarToken, RadarAlert } from './radar.types'
 import { RiskBadge } from './RiskBadge'
 import { AlphaBar } from './AlphaBar'
+import { AlphaBadge } from './AlphaBadge'
 import { BuySellBar } from './BuySellBar'
 
 function formatUsd(value: number): string {
@@ -103,9 +104,10 @@ export function LiveFeed({
                       <Text fontSize="xs" fontWeight="bold" color="white">
                         {token.symbol}
                       </Text>
-                      <Text fontSize="10px" color="gray.500">
+                      <Text fontSize="10px" color="gray.500" mb={1}>
                         {token.name?.slice(0, 10) || 'Unknown'}
                       </Text>
+                      <AlphaBadge label={token.alpha_label} />
                     </Box>
                   </Td>
                   <Td py={1}>

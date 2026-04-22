@@ -49,12 +49,15 @@ export function detectRug(token: EnrichedToken, history: PricePoint[]): RugSigna
     }
   }
 
-  console.log('[RADAR TODO] Wash trading detection requires on-chain tx parsing — v2 feature');
+  if (token.volume_1m > 5000 && token.holder_growth_rate < 2) {
+    signals.push('WASH_TRADING_SIGNAL');
+  }
 
   const isRug = signals.length >= 2;
 
   return { isRug, signals };
 }
+
 
 export function detectRugPull(token: any): any {
   return null;

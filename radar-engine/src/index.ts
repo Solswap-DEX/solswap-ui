@@ -1,12 +1,12 @@
 import dotenv from 'dotenv';
+dotenv.config();
+
 import { EventEmitter } from 'events';
 import { connectMongo } from './db/mongo';
 import { http, io } from './server';
 import { initStopLossMonitor } from './alerts/stopLossMonitor';
 import { initDiscovery } from './discovery/tokenDiscovery';
 import { initEnricher } from './enrichment/tokenEnricher';
-
-dotenv.config();
 
 const PORT = parseInt(process.env.PORT || '3333');
 

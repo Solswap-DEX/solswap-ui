@@ -155,6 +155,7 @@ export function useRadarSocket() {
 
               if (eventType === 'radar:token') {
                 if (isEmptyToken(payload)) return
+                if (payload.alpha_label === '❌ IGNORE') return
 
                 setTokens(prev => {
                   const filtered = prev.filter((t: RadarToken) => t.mint !== payload.mint)

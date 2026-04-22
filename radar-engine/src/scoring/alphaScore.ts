@@ -23,11 +23,39 @@ export function calculateAlpha(
   return result
 }
 
+import { AlphaLabel } from '../types/radar.types';
+
 export function getAlphaLabel(
-  score: number
-): 'HIGH ALPHA' | 'WATCH' | 'NEUTRAL' | 'IGNORE' {
-  if (score >= 80) return 'HIGH ALPHA'
-  if (score >= 50) return 'WATCH'
-  if (score >= 20) return 'NEUTRAL'
-  return 'IGNORE'
+  score: number,
+  riskLevel: string,
+  age_seconds: number,
+  delta_liquidity: number,
+  delta_holders: number
+): AlphaLabel {
+  // Rug always overrides everything
+  if (riskLevel === 'RUG PROBABLE') return '☠️ RUG PROBABLE'
+
+  // High alpha regardless of age
+  if (score >= 80) return '🔥 HIGH ALPHA'
+
+  // Early signal: young token with positive deltas
+  // This is the PRE-pump detector
+  if (
+    age_seconds < 300 &&        // less than 5 minutes old
+    score >= 40 &&              // decent momentum
+    delta_liquidity > 1000 &&   // liquidity flowing in
+    delta_holders > 0           // new holders joining
+  ) return '⚡ EARLY SIGNAL'
+
+  // Watch: solid score
+  if (score >= 50) return '👀 WATCH'
+
+  // Speculative: low score but very young with activity
+  if (age_seconds < 120 && score >= 25) return '🧪 SPECULATIVE'
+
+  // Neutral: some signal
+  if (score >= 20) return '😴 NEUTRAL'
+
+  // Default ignore
+  return '❌ IGNORE'
 }
