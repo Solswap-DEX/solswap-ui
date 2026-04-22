@@ -25,7 +25,7 @@ import { retry, isProdEnv } from '@/utils/common'
 import { compare } from 'compare-versions'
 
 export const defaultNetWork = WalletAdapterNetwork.Mainnet // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
-export const defaultEndpoint = process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com' // Fallback to public mainnet if env var missing
+export const defaultEndpoint = process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.ankr.com/solana' // Fallback to public mainnet if env var missing
 export const APR_MODE_KEY = '_r_apr_'
 export const EXPLORER_KEY = '_r_explorer_'
 export const supportedExplorers = [
@@ -179,7 +179,7 @@ export const useAppStore = createStore<AppState>(
       const { initialing, urlConfigs, rpcNodeUrl: storeRpc, jupTokenType, displayTokenSettings } = get()
       if (initialing) return
       
-      const fallbackRpc = process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com'
+      const fallbackRpc = process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.ankr.com/solana'
       const rpcNodeUrl = storeRpc || fallbackRpc
       const connection = payload.connection || new Connection(rpcNodeUrl)
       set({ initialing: true }, false, action)
@@ -326,7 +326,7 @@ export const useAppStore = createStore<AppState>(
           
           if (!readyRpcs[i]) {
             isRpcLoading = false
-            await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com', true, true)
+            await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.ankr.com/solana', true, true)
             return
           }
 
@@ -337,7 +337,7 @@ export const useAppStore = createStore<AppState>(
               checkAndSetRpcNode()
             } else {
               isRpcLoading = false
-              await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com', true, true)
+              await setRpcUrlAct(process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.ankr.com/solana', true, true)
             }
           }
         }
@@ -350,9 +350,9 @@ export const useAppStore = createStore<AppState>(
         }
       } catch {
         // Raydium API blocked — use env RPC or public fallbacks
-        const heliusUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://api.mainnet-beta.solana.com"
+        const heliusUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://rpc.ankr.com/solana"
         const fallbackRpcs = [
-          { name: "Helius (Primary)", url: heliusUrl, weight: 100 },
+          { name: "Ankr (Primary)", url: heliusUrl, weight: 100 },
           { name: "Solana Mainnet", url: "https://api.mainnet-beta.solana.com/", weight: 80 },
           { name: "QuickNode (Public)", url: "https://solana-api.syndica.io/access/api_key/rpc", weight: 60 }
         ]
