@@ -152,7 +152,7 @@ export function RadarPage() {
               </Text>
               {isConnected && (
                 <Text fontSize="11px" color="var(--radar-solana)" className="listening-text">
-                  Listening to Helius nodes...
+                  Listening to Solana network...
                 </Text>
               )}
             </VStack>

@@ -82,7 +82,7 @@ export function NetworkStatusBar() {
       try {
         // using our internal proxy if rpcUrl contains helius-rpc but we are pointing to it directly,
         // Wait, solswap uses /api/helius explicitly in the bridge, but useAppStore holds the full URLs.
-        const response = await fetch(rpcUrl.startsWith('/') ? rpcUrl : (rpcUrl.includes('helius') ? '/api/helius' : rpcUrl), {
+        const response = await fetch(rpcUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

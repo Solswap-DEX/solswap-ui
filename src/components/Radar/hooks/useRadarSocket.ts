@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { io, Socket } from 'socket.io-client'
 import { RadarToken, RadarAlert } from '../radar.types'
 
 const RADAR_HTTP = 'https://solswap.cloud/radar-api'
-const RADAR_WS = 'wss://solswap.cloud/radar-ws/socket.io/?EIO=4&transport=websocket'
+const RADAR_WS_URL = 'https://solswap.cloud'
 const CONNECTION_TIMEOUT_MS = 6000
 const MAX_RECONNECT_ATTEMPTS = 10
 
@@ -85,9 +86,8 @@ export function useRadarSocket() {
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isDemoMode, setIsDemoMode] = useState(false)
-  const wsRef = useRef<WebSocket | null>(null)
+  const socketRef = useRef<Socket | null>(null)
   const reconnectAttempts = useRef(0)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const isEmptyToken = useCallback((token: RadarToken): boolean => {
     return (
@@ -122,108 +122,58 @@ export function useRadarSocket() {
   }, [isEmptyToken])
 
   useEffect(() => {
-    let ws: WebSocket | null = null
-    let cancelled = false
-    let reconnectTimer: NodeJS.Timeout | null = null
+    // Load initial data first
+    fetchTokens()
 
-    const connectWs = () => {
-      if (cancelled) return
+    // Connect using socket.io-client — handles reconnect, handshake and ping/pong automatically
+    const socket = io(RADAR_WS_URL, {
+      path: '/radar-ws/socket.io',
+      transports: ['websocket'],
+      reconnectionAttempts: MAX_RECONNECT_ATTEMPTS,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: CONNECTION_TIMEOUT_MS,
+    })
 
-      try {
-        console.log('[RADAR] Connecting to WebSocket...')
-        ws = new WebSocket(RADAR_WS)
+    socketRef.current = socket
 
-        ws.onopen = () => {
-          if (cancelled) return
-          console.log('[RADAR] WebSocket connected ✓')
-          setIsConnected(true)
-          setIsLoading(false)
-          setIsDemoMode(false)
-          reconnectAttempts.current = 0
-        }
+    socket.on('connect', () => {
+      console.log('[RADAR] Socket.IO connected ✓')
+      setIsConnected(true)
+      setIsLoading(false)
+      setIsDemoMode(false)
+      reconnectAttempts.current = 0
+    })
 
-        ws.onmessage = (event) => {
-          if (cancelled) return
-          try {
-            const msg = event.data as string
+    socket.on('disconnect', (reason) => {
+      console.log('[RADAR] Disconnected:', reason)
+      setIsConnected(false)
+    })
 
-            // Engine.IO v4 protocol handling
-            if (msg === '2') {
-              // Server PING → respond with PONG to keep connection alive
-              ws?.send('3')
-              return
-            }
-
-            if (msg.startsWith('0')) {
-              // Engine.IO OPEN packet → complete Socket.IO handshake
-              console.log('[RADAR] Engine.IO connected, sending Socket.IO handshake')
-              ws?.send('40')
-              return
-            }
-
-            if (msg === '40') {
-              // Socket.IO CONNECT confirmed → we are fully connected
-              console.log('[RADAR] Socket.IO handshake complete ✓')
-              setIsConnected(true)
-              setIsLoading(false)
-              setIsDemoMode(false)
-              reconnectAttempts.current = 0
-              return
-            }
-
-            if (msg.startsWith('42')) {
-              const parsed = JSON.parse(msg.slice(2))
-              const eventType = parsed[0]
-              const payload = parsed[1]
-
-              if (eventType === 'radar:token') {
-                if (isEmptyToken(payload)) return
-                if (payload.alpha_label === '❌ IGNORE') return
-
-                setTokens(prev => {
-                  const filtered = prev.filter((t: RadarToken) => t.mint !== payload.mint)
-                  return [payload, ...filtered].slice(0, 50)
-                })
-              } else if (eventType === 'radar:alert') {
-                setAlerts(prev => [payload, ...prev].slice(0, 20))
-              }
-            }
-          } catch {}
-        }
-
-        ws.onclose = () => {
-          if (cancelled) return
-          setIsConnected(false)
-          
-          if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
-            reconnectAttempts.current++
-            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 5000)
-            console.log(`[RADAR] Connection lost. Retrying in ${delay}ms...`)
-            reconnectTimer = setTimeout(connectWs, delay)
-          } else {
-            activateDemoMode()
-          }
-        }
-
-        ws.onerror = () => {
-          if (ws) ws.close()
-        }
-      } catch (e) {
-        console.error('[RADAR] WS Error:', e)
+    socket.on('connect_error', (err) => {
+      console.warn('[RADAR] Connection error:', err.message)
+      reconnectAttempts.current++
+      if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
+        socket.disconnect()
         activateDemoMode()
       }
+    })
 
-      wsRef.current = ws
-    }
+    socket.on('radar:token', (payload: RadarToken) => {
+      if (isEmptyToken(payload)) return
+      if (payload.alpha_label === '❌ IGNORE') return
+      setTokens(prev => {
+        const filtered = prev.filter((t: RadarToken) => t.mint !== payload.mint)
+        return [payload, ...filtered].slice(0, 50)
+      })
+    })
 
-    fetchTokens().then(() => {
-      if (!cancelled) connectWs()
+    socket.on('radar:alert', (payload: RadarAlert) => {
+      setAlerts(prev => [payload, ...prev].slice(0, 20))
     })
 
     return () => {
-      cancelled = true
-      if (reconnectTimer) clearTimeout(reconnectTimer)
-      if (ws) ws.close()
+      socket.disconnect()
     }
   }, [fetchTokens, activateDemoMode, isEmptyToken])
 
