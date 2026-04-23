@@ -266,14 +266,20 @@ export const useTokenAccountStore = createStore<TokenAccountStore>(
         useAppStore.setState({ tokenAccLoaded: true })
       } catch (e: any) {
         loading = false
-        // Silence noise from 403/429 RPC errors
-        const isNetworkError = e.message?.includes('403') || e.message?.includes('429') || e.message?.includes('Request failed')
+        // Only show a user-visible toast for unexpected errors, not routine RPC failures
+        const isNetworkError = [
+          '403', '429', '400', 'failed to fetch', 'request failed',
+          'networkerror', 'failed', 'timeout', 'econnrefused'
+        ].some(kw => e.message?.toLowerCase().includes(kw))
+
         if (!isNetworkError) {
           toastSubject.next({
             status: 'error',
             title: 'fetch token account error',
             detail: e.message
           })
+        } else {
+          console.warn('[RPC] Token account fetch failed silently:', e.message)
         }
         
         // Auto-failover RPC if we hit a 403 or 429
