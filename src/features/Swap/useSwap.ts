@@ -11,13 +11,83 @@ import { safeDecimal } from '@/utils/safeDecimal'
 import { ApiSwapV1OutSuccess, ApiSwapV1OutError } from './type'
 import { REVENUE_CONFIG } from '@/config/revenueConfig'
 
-const fetcher = async (url: string): Promise<ApiSwapV1OutSuccess | ApiSwapV1OutError> => {
+const WSOL_MINT = 'So11111111111111111111111111111111111111112'
+
+// Normalize 'sol' or SOLMint to WSOL for Raydium API
+const toApiMint = (mint: string) => {
+  if (!mint) return mint
+  if (mint === 'sol' || mint === '11111111111111111111111111111111') return WSOL_MINT
+  if (isValidPublicKey(mint)) return solToWSol(mint).toBase58()
+  return mint
+}
+
+// Try Jupiter Quote API as a fallback for pump.fun / non-Raydium tokens
+const fetchJupiterQuote = async (
+  inputMint: string,
+  outputMint: string,
+  amount: string,
+  slippageBps: string,
+  swapType: 'BaseIn' | 'BaseOut'
+): Promise<ApiSwapV1OutSuccess | ApiSwapV1OutError> => {
+  const mode = swapType === 'BaseOut' ? 'ExactOut' : 'ExactIn'
+  const url = `https://lite.jupiterapi.com/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}&swapMode=${mode}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error('Jupiter API error')
+  const jup = await res.json()
+  if (jup.error || !jup.outAmount) throw new Error(jup.error || 'No route found on Jupiter')
+  // Map Jupiter response to Raydium-like format
+  return {
+    id: 'jup-' + Date.now(),
+    success: true,
+    version: 'V1',
+    openTime: undefined,
+    msg: undefined,
+    data: {
+      swapType,
+      inputMint: jup.inputMint,
+      inputAmount: jup.inAmount,
+      outputMint: jup.outputMint,
+      outputAmount: jup.outAmount,
+      otherAmountThreshold: jup.otherAmountThreshold || jup.outAmount,
+      slippageBps: Number(slippageBps),
+      priceImpactPct: parseFloat(jup.priceImpactPct || '0'),
+      routePlan: (jup.routePlan || []).map((r: any) => ({
+        poolId: r.swapInfo?.ammKey || '',
+        inputMint: r.swapInfo?.inputMint || '',
+        outputMint: r.swapInfo?.outputMint || '',
+        feeMint: r.swapInfo?.feeMint || '',
+        feeRate: 0,
+        feeAmount: r.swapInfo?.feeAmount || '0'
+      }))
+    }
+  } as ApiSwapV1OutSuccess
+}
+
+const fetcher = async (key: string): Promise<ApiSwapV1OutSuccess | ApiSwapV1OutError> => {
+  // key format: "raydium|<url>|<inputMint>|<outputMint>|<amount>|<slippageBps>|<swapType>"
+  const [, url, inputMint, outputMint, amount, slippageBps, swapType] = key.split('|')
   try {
     const res = await axios.get(url, { skipError: true })
-    if (res && typeof res === 'object') return res
+    if (res && typeof res === 'object') {
+      const data = res as unknown as ApiSwapV1OutSuccess | ApiSwapV1OutError
+      // If Raydium returns a route error, fall back to Jupiter
+      if (!data.success && data.msg && (
+        data.msg.includes('ROUTE_NOT_FOUND') ||
+        data.msg.includes('REQ_INPUT_MINT_ERROR') ||
+        data.msg.includes('REQ_OUTPUT_MINT_ERROR')
+      )) {
+        return fetchJupiterQuote(inputMint, outputMint, amount, slippageBps, swapType as 'BaseIn' | 'BaseOut')
+      }
+      return data
+    }
     throw new Error('Invalid API response')
   } catch (e) {
-    throw e
+    // On network error, also try Jupiter
+    try {
+      return fetchJupiterQuote(inputMint, outputMint, amount, slippageBps, swapType as 'BaseIn' | 'BaseOut')
+    } catch {
+      throw e
+    }
   }
 }
 
@@ -41,25 +111,24 @@ export default function useSwap(props: {
   } = props || {}
 
   const [amount, setAmount] = useState('')
-  const WSOL_MINT = 'So11111111111111111111111111111111111111112'
-  const [inputMint, outputMint] = [
-    propInputMint === 'sol' ? WSOL_MINT : (isValidPublicKey(propInputMint) ? solToWSol(propInputMint).toBase58() : propInputMint),
-    propOutputMint === 'sol' ? WSOL_MINT : (isValidPublicKey(propOutputMint) ? solToWSol(propOutputMint).toBase58() : propOutputMint)
-  ]
+  const [inputMint, outputMint] = [toApiMint(propInputMint), toApiMint(propOutputMint)]
 
   const [txVersion, urlConfigs] = useAppStore((s) => [s.txVersion, s.urlConfigs], shallow)
   const slippage = useSwapStore((s) => s.slippage)
   const slippageBps = safeDecimal(propsSlippage || slippage * 10000).toFixed(0)
 
   const apiTrail = swapType === 'BaseOut' ? 'swap-base-out' : 'swap-base-in'
-  const url =
+  const raydiumUrl =
     shouldFetch && inputMint && outputMint && !safeDecimal(amount.trim() || 0).isZero()
-      ? `${urlConfigs.SWAP_HOST}${
-          urlConfigs.SWAP_COMPUTE
-        }${apiTrail}?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}&txVersion=${
+      ? `${urlConfigs.SWAP_HOST}${urlConfigs.SWAP_COMPUTE}${apiTrail}?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}&txVersion=${
           txVersion === TxVersion.V0 ? 'V0' : 'LEGACY'
         }&referrer=${REVENUE_CONFIG.referrerWallet}&platformFee=${REVENUE_CONFIG.feeBps}&feeAccount=${REVENUE_CONFIG.feeCollector}`
       : null
+
+  // Include mints and params in the SWR key so Jupiter fallback also has them
+  const swrKey = raydiumUrl
+    ? `raydium|${raydiumUrl}|${inputMint}|${outputMint}|${amount}|${slippageBps}|${swapType}`
+    : null
 
   const updateAmount = useCallback(
     debounce((val: string) => {
@@ -72,7 +141,7 @@ export default function useSwap(props: {
     updateAmount(propsAmount)
   }, [propsAmount, updateAmount])
 
-  const { data, error, ...swrProps } = useSWR(() => url, fetcher, {
+  const { data, error, ...swrProps } = useSWR(() => swrKey, fetcher, {
     refreshInterval,
     focusThrottleInterval: refreshInterval,
     dedupingInterval: 30 * 1000
@@ -81,7 +150,7 @@ export default function useSwap(props: {
   return {
     response: data,
     data: data?.data,
-    error: error?.message || data?.msg,
+    error: error?.message || (!data?.success ? data?.msg : undefined),
     openTime: data?.openTime,
     ...swrProps
   }
