@@ -121,7 +121,9 @@ export const useTokenStore = createStore<TokenStore>(
             tags: ['native']
           }
           tokenMap.set(solAddress, solToken)
+          tokenMap.set('sol', solToken) // Add alias for easier resolution
           officialMints.add(solAddress)
+          officialMints.add('sol')
         }
 
 

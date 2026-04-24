@@ -58,7 +58,7 @@ export function SwapPanel({
   const [urlInputMint, urlOutputMint] = [urlToMint(query.inputMint), urlToMint(query.outputMint)]
   const { inputMint: cacheInput, outputMint: cacheOutput } = getSwapPairCache()
   const [defaultInput, defaultOutput] = [
-    (urlInputMint || cacheInput) === 'So11111111111111111111111111111111111111112' ? PublicKey.default.toBase58() : (urlInputMint || cacheInput),
+    (urlInputMint || cacheInput) === 'So11111111111111111111111111111111111111112' ? 'sol' : (urlInputMint || cacheInput),
     urlOutputMint || cacheOutput
   ]
 
@@ -78,7 +78,7 @@ export function SwapPanel({
   const sendingResult = useRef<ApiSwapV1OutSuccess | undefined>()
   const wsolBalance = getTokenBalanceUiAmount({ mint: NATIVE_MINT.toBase58(), decimals: SOL_INFO.decimals })
 
-  const [inputMint, setInputMint] = useState<string>(PublicKey.default.toBase58())
+  const [inputMint, setInputMint] = useState<string>('sol')
   const [swapType, setSwapType] = useState<'BaseIn' | 'BaseOut'>('BaseIn')
 
   const [outputMint, setOutputMint] = useState<string>('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
