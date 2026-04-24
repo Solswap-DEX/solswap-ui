@@ -75,7 +75,7 @@ export function SwapPanel({
   const sendingResult = useRef<ApiSwapV1OutSuccess | undefined>()
   const wsolBalance = getTokenBalanceUiAmount({ mint: NATIVE_MINT.toBase58(), decimals: SOL_INFO.decimals })
 
-  const [inputMint, setInputMint] = useState<string>(PublicKey.default.toBase58())
+  const [inputMint, setInputMint] = useState<string>('sol')
   const [swapType, setSwapType] = useState<'BaseIn' | 'BaseOut'>('BaseIn')
 
   const [outputMint, setOutputMint] = useState<string>('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
