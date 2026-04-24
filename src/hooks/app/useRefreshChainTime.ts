@@ -21,7 +21,7 @@ function useRefreshChainTime() {
     // fetchBlockSlotCountAct()
     const interval = window.setInterval(() => {
       fetchBlockSlotCountAct()
-    }, 1000 * 60 * 1)
+    }, 1000 * 60 * 3)
 
     return () => window.clearInterval(interval)
   }, [fetchBlockSlotCountAct, raydium])

@@ -80,31 +80,20 @@ export function NetworkStatusBar() {
     const pingRpc = async () => {
       const startTime = performance.now()
       try {
-        // using our internal proxy if rpcUrl contains helius-rpc but we are pointing to it directly,
-        // Wait, solswap uses /api/helius explicitly in the bridge, but useAppStore holds the full URLs.
-        const response = await fetch(rpcUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'getHealth'
-          })
-        })
-
-        if (response.ok) {
-          const endTime = performance.now()
-          setLatency(Math.round(endTime - startTime))
-        } else {
-          setLatency(null)
-        }
-      } catch (error) {
+        const start = Date.now()
+        await axios.post(rpcUrl, {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'getEpochInfo'
+        }, { skipError: true } as any)
+        setLatency(Date.now() - start)
+      } catch (e) {
         setLatency(null)
       }
     }
 
-    pingRpc() // Initial ping
-    intervalId = setInterval(pingRpc, 10000) // Update every 10 secs
+    pingRpc()
+    intervalId = setInterval(pingRpc, 30000) // Update every 30 secs to save CUPS
 
     return () => clearInterval(intervalId)
   }, [isOnline, rpcUrl])

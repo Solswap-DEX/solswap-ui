@@ -10,7 +10,7 @@ export default function useRefreshEpochInfo(firstFetch?: boolean) {
     if (!useAppStore.getState().epochInfo) {
       retry(getEpochInfo)
     }
-    const interval = window.setInterval(getEpochInfo, 1000 * 60)
+    const interval = window.setInterval(getEpochInfo, 1000 * 60 * 5)
     return () => window.clearInterval(interval)
   }, [getEpochInfo])
 
