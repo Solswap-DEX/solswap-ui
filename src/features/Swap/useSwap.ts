@@ -30,7 +30,8 @@ const fetchJupiterQuote = async (
   swapType: 'BaseIn' | 'BaseOut'
 ): Promise<ApiSwapV1OutSuccess | ApiSwapV1OutError> => {
   const mode = swapType === 'BaseOut' ? 'ExactOut' : 'ExactIn'
-  const url = `https://lite.jupiterapi.com/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}&swapMode=${mode}`
+  // Use our local proxy to avoid ERR_TUNNEL_CONNECTION_FAILED from browser extensions/firewalls
+  const url = `/api/jup/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}&swapMode=${mode}`
   const res = await fetch(url)
   if (!res.ok) throw new Error('Jupiter API error')
   const jup = await res.json()
