@@ -20,11 +20,11 @@ export function NetworkStatusBar() {
   const [utcTime, setUtcTime] = useState<string>('')
 
   // The actual URL used for the ping — uses whatever RPC the app selected (now public, not Helius)
-  const rpcUrl = rpcNodeUrl || 'https://rpc.ankr.com/solana'
+  const rpcUrl = rpcNodeUrl || 'https://solswap.cloud/api/solana'
 
   // Determine provider name for display
-  const providerName = rpcUrl.includes('ankr')
-    ? 'Ankr'
+  const providerName = rpcUrl.includes('solswap.cloud/api/solana')
+    ? 'SolSwap Node'
     : rpcUrl.includes('helius')
     ? 'Helius'
     : rpcUrl.includes('solana')

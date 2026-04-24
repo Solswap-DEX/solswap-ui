@@ -27,7 +27,7 @@ import { compare } from 'compare-versions'
 export const defaultNetWork = WalletAdapterNetwork.Mainnet // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
 // Frontend uses public RPC for wallet operations (cheap, no rate limits)
 // Helius is reserved exclusively for backend services (Radar engine, Drift SDK)
-export const defaultEndpoint = 'https://rpc.ankr.com/solana'
+export const defaultEndpoint = 'https://solswap.cloud/api/solana'
 export const APR_MODE_KEY = '_r_apr_'
 export const EXPLORER_KEY = '_r_explorer_'
 export const supportedExplorers = [
@@ -180,7 +180,7 @@ export const useAppStore = createStore<AppState>(
       const action = { type: 'initSolSwapAct' }
       const { initialing, urlConfigs, rpcNodeUrl: storeRpc, jupTokenType, displayTokenSettings } = get()
       if (initialing) return
-      const fallbackRpc = 'https://rpc.ankr.com/solana'
+      const fallbackRpc = 'https://solswap.cloud/api/solana'
       const rpcNodeUrl = storeRpc || fallbackRpc
       const connection = payload.connection || new Connection(rpcNodeUrl)
       set({ initialing: true }, false, action)
@@ -336,7 +336,7 @@ export const useAppStore = createStore<AppState>(
           
           if (!readyRpcs[i]) {
             isRpcLoading = false
-            await setRpcUrlAct('https://rpc.ankr.com/solana', true, true)
+            await setRpcUrlAct('https://solswap.cloud/api/solana', true, true)
             return
           }
 
@@ -347,7 +347,7 @@ export const useAppStore = createStore<AppState>(
               checkAndSetRpcNode()
             } else {
               isRpcLoading = false
-              await setRpcUrlAct('https://rpc.ankr.com/solana', true, true)
+              await setRpcUrlAct('https://solswap.cloud/api/solana', true, true)
             }
           }
         }
@@ -360,11 +360,11 @@ export const useAppStore = createStore<AppState>(
         }
       } catch {
         // Raydium API blocked — use public fallbacks
-        const publicRpc = 'https://rpc.ankr.com/solana'
-        const wssRpc = 'wss://rpc.ankr.com/solana'
+        const publicRpc = 'https://solswap.cloud/api/solana'
+        const wssRpc = 'wss://solswap.cloud/api/solana-ws'
         const fallbackRpcs = [
-          { name: "Ankr", url: publicRpc, ws: wssRpc, weight: 100, batch: true },
-          { name: "Mainnet Beta", url: "https://rpc.ankr.com/solana", weight: 80, batch: true }
+          { name: "SolSwap Node", url: publicRpc, ws: wssRpc, weight: 100, batch: true },
+          { name: "Mainnet Beta", url: "https://solswap.cloud/api/solana", weight: 80, batch: true }
         ]
         set({ rpcs: fallbackRpcs }, false, { type: 'fetchRpcsAct_fallback' })
         
