@@ -86,8 +86,8 @@ export const getOnlineTokenInfo = async ({
             address: mintAddress,
             programId: programId?.toBase58() || TOKEN_PROGRAM_ID.toBase58(),
             logoURI: '',
-            symbol: mintAddress.slice(0, 4) + '...' + mintAddress.slice(-4),
-            name: 'Token ' + mintAddress.slice(0, 6),
+            symbol: mintAddress.slice(0, 6),
+            name: mintAddress.slice(0, 6),
             decimals: onlineData.decimals,
             tags,
             extensions: {
