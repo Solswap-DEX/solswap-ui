@@ -41,9 +41,10 @@ export default function useSwap(props: {
   } = props || {}
 
   const [amount, setAmount] = useState('')
+  const WSOL_MINT = 'So11111111111111111111111111111111111111112'
   const [inputMint, outputMint] = [
-    isValidPublicKey(propInputMint) ? solToWSol(propInputMint).toBase58() : propInputMint,
-    isValidPublicKey(propOutputMint) ? solToWSol(propOutputMint).toBase58() : propOutputMint
+    propInputMint === 'sol' ? WSOL_MINT : (isValidPublicKey(propInputMint) ? solToWSol(propInputMint).toBase58() : propInputMint),
+    propOutputMint === 'sol' ? WSOL_MINT : (isValidPublicKey(propOutputMint) ? solToWSol(propOutputMint).toBase58() : propOutputMint)
   ]
 
   const [txVersion, urlConfigs] = useAppStore((s) => [s.txVersion, s.urlConfigs], shallow)
