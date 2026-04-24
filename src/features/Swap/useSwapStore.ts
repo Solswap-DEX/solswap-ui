@@ -141,7 +141,7 @@ export const useSwapStore = createStore<SwapStore>(
       })
 
       // ── MEV Risk Analysis ──
-      const slippage = this.getState().slippage
+      const slippage = useSwapStore.getState().slippage
       // Heuristic: estimate USD value if not provided (simplified for demo)
       // Replaced multiplier: removing magic * 10 (Logic Fix)
       const inputAmountUsd = (Number(swapResponse.data.inputAmount) / 10 ** (inputMint?.decimals || 9)) * 1 // Normalizing factor
@@ -162,7 +162,7 @@ export const useSwapStore = createStore<SwapStore>(
       // ── Delegate execution to the transaction queue ──
       try {
         return await queueManager.enqueue(swapSessionId, async (conn, risk) => {
-          return await this._executeSwap({
+          return await useSwapStore.getState()._executeSwap({
             swapSessionId,
             swapResponse,
             wrapSol,
@@ -235,29 +235,51 @@ export const useSwapStore = createStore<SwapStore>(
         const computeData = await getSwapComputePrice()
 
         const isV0Tx = txVersion === TxVersion.V0
-        const {
-          data,
-          success
-        }: {
-          id: string
-          success: true
-          version: 'V1'
-          msg?: string
-          data?: { transaction: string }[]
-        } = await axios.post(
-          `${urlConfigs.SWAP_HOST}${urlConfigs.SWAP_TX}${swapResponse.data.swapType === 'BaseIn' ? 'swap-base-in' : 'swap-base-out'}`,
-          {
-            wallet: publicKey.toBase58(),
-            computeUnitPriceMicroLamports: new Decimal(computeData?.microLamports || 0).toFixed(0),
-            swapResponse,
-            txVersion: isV0Tx ? 'V0' : 'LEGACY',
-            wrapSol: isInputSol,
-            unwrapSol,
-            inputAccount: isInputSol ? undefined : inputTokenAcc?.toBase58(),
-            outputAccount: isOutputSol ? undefined : outputTokenAcc?.toBase58(),
-            referrer: REVENUE_CONFIG.referrerWallet
+        let data: { transaction: string }[] | undefined
+        let success = false
+        
+        if (swapResponse._jupiterQuote) {
+          try {
+            const jupRes = await fetch('/api/jup/swap', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                quoteResponse: swapResponse._jupiterQuote,
+                userPublicKey: publicKey.toBase58(),
+                wrapAndUnwrapSol: wrapSol || unwrapSol,
+                // Jupiter takes feeAccount, dynamically passing revenue config
+                feeAccount: REVENUE_CONFIG.feeCollector,
+                computeUnitPriceMicroLamports: Number(computeData?.microLamports || 0)
+              })
+            })
+            const jupData = await jupRes.json()
+            if (jupData.swapTransaction) {
+              success = true
+              data = [{ transaction: jupData.swapTransaction }]
+            } else {
+              console.error('Jupiter swap error:', jupData)
+            }
+          } catch (err) {
+            console.error('Jupiter swap fetch error:', err)
           }
-        )
+        } else {
+          const rayRes = await axios.post(
+            `${urlConfigs.SWAP_HOST}${urlConfigs.SWAP_TX}${swapResponse.data.swapType === 'BaseIn' ? 'swap-base-in' : 'swap-base-out'}`,
+            {
+              wallet: publicKey.toBase58(),
+              computeUnitPriceMicroLamports: new Decimal(computeData?.microLamports || 0).toFixed(0),
+              swapResponse,
+              txVersion: isV0Tx ? 'V0' : 'LEGACY',
+              wrapSol: isInputSol,
+              unwrapSol,
+              inputAccount: isInputSol ? undefined : inputTokenAcc?.toBase58(),
+              outputAccount: isOutputSol ? undefined : outputTokenAcc?.toBase58(),
+              referrer: REVENUE_CONFIG.referrerWallet
+            }
+          )
+          data = rayRes.data
+          success = rayRes.success
+        }
         if (!success) {
           toastSubject.next({
             title: 'Make Transaction Error',
