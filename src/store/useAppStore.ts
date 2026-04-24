@@ -182,7 +182,8 @@ export const useAppStore = createStore<AppState>(
       if (initialing) return
       const fallbackRpc = 'https://solswap.cloud/api/solana'
       const rpcNodeUrl = storeRpc || fallbackRpc
-      const connection = payload.connection || new Connection(rpcNodeUrl)
+      const wsNodeUrl = get().wsNodeUrl || rpcNodeUrl.replace('http', 'ws').replace('/api/solana', '/api/solana-ws')
+      const connection = payload.connection || new Connection(rpcNodeUrl, { wsEndpoint: wsNodeUrl })
       set({ initialing: true }, false, action)
       const isDev = window.location.host === 'localhost:3002'
 
@@ -414,8 +415,9 @@ export const useAppStore = createStore<AppState>(
         
         isRpcLoading = false
         const rpcNode = get().rpcs.find((r) => r.url === url)
-        const connection = new Connection(url, { commitment: get().commitment })
-        set({ rpcNodeUrl: url, wsNodeUrl: rpcNode?.ws, connection, tokenAccLoaded: false }, false, { type: 'setRpcUrlAct' })
+        const wsNodeUrl = rpcNode?.ws || url.replace('http', 'ws').replace('/api/solana', '/api/solana-ws')
+        const connection = new Connection(url, { commitment: get().commitment, wsEndpoint: wsNodeUrl })
+        set({ rpcNodeUrl: url, wsNodeUrl, connection, tokenAccLoaded: false }, false, { type: 'setRpcUrlAct' })
         setStorageItem(
           isProdEnv() ? RPC_URL_PROD_KEY : RPC_URL_KEY,
           JSON.stringify({
