@@ -27,7 +27,7 @@ import { compare } from 'compare-versions'
 export const defaultNetWork = WalletAdapterNetwork.Mainnet // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
 // Frontend uses public RPC for wallet operations (cheap, no rate limits)
 // Helius is reserved exclusively for backend services (Radar engine, Drift SDK)
-export const defaultEndpoint = 'https://api.mainnet-beta.solana.com'
+export const defaultEndpoint = 'https://solana-rpc.publicnode.com'
 export const APR_MODE_KEY = '_r_apr_'
 export const EXPLORER_KEY = '_r_explorer_'
 export const supportedExplorers = [
@@ -180,7 +180,7 @@ export const useAppStore = createStore<AppState>(
       const action = { type: 'initSolSwapAct' }
       const { initialing, urlConfigs, rpcNodeUrl: storeRpc, jupTokenType, displayTokenSettings } = get()
       if (initialing) return
-      const fallbackRpc = 'https://api.mainnet-beta.solana.com'
+      const fallbackRpc = 'https://solana-rpc.publicnode.com'
       const rpcNodeUrl = storeRpc || fallbackRpc
       const connection = payload.connection || new Connection(rpcNodeUrl)
       set({ initialing: true }, false, action)
@@ -336,7 +336,7 @@ export const useAppStore = createStore<AppState>(
           
           if (!readyRpcs[i]) {
             isRpcLoading = false
-            await setRpcUrlAct('https://api.mainnet-beta.solana.com', true, true)
+            await setRpcUrlAct('https://solana-rpc.publicnode.com', true, true)
             return
           }
 
@@ -347,7 +347,7 @@ export const useAppStore = createStore<AppState>(
               checkAndSetRpcNode()
             } else {
               isRpcLoading = false
-              await setRpcUrlAct('https://api.mainnet-beta.solana.com', true, true)
+              await setRpcUrlAct('https://solana-rpc.publicnode.com', true, true)
             }
           }
         }
@@ -360,11 +360,11 @@ export const useAppStore = createStore<AppState>(
         }
       } catch {
         // Raydium API blocked — use public fallbacks
-        const publicRpc = 'https://api.mainnet-beta.solana.com'
-        const wssRpc = 'wss://api.mainnet-beta.solana.com'
+        const publicRpc = 'https://solana-rpc.publicnode.com'
+        const wssRpc = 'wss://solana-rpc.publicnode.com'
         const fallbackRpcs = [
           { name: "PublicNode", url: publicRpc, ws: wssRpc, weight: 100, batch: true },
-          { name: "Mainnet Beta", url: "https://api.mainnet-beta.solana.com", weight: 80, batch: true }
+          { name: "Mainnet Beta", url: "https://solana-rpc.publicnode.com", weight: 80, batch: true }
         ]
         set({ rpcs: fallbackRpcs }, false, { type: 'fetchRpcsAct_fallback' })
         
