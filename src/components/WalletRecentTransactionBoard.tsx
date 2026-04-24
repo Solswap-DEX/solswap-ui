@@ -115,6 +115,7 @@ export default function WalletRecentTransactionBoard({ wallet, address, isOpen =
       };
       getBalance();
       
+      /*
       try {
         subscriptionId = connection.onAccountChange(pubKey, (accountInfo) => {
           if (isMounted) {
@@ -124,6 +125,7 @@ export default function WalletRecentTransactionBoard({ wallet, address, isOpen =
       } catch (e) {
          console.error("PubSub error", e);
       }
+      */
 
       return () => {
         isMounted = false;

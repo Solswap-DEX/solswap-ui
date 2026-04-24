@@ -22,6 +22,7 @@ function useTokenAccountInfo() {
 
     let timeoutId = 0
 
+    /*
     const listenerId = connection.onAccountChange(publicKey, () => {
       fetchTokenAccountAct({ commitment, forceFetch: true })
       accountChangeCbk.forEach((cb) => cb())
@@ -31,10 +32,11 @@ function useTokenAccountInfo() {
         accountChangeCbk.forEach((cb) => cb())
       }, 6 * 1000)
     })
+    */
 
     return () => {
       if (timeoutId) window.clearTimeout(timeoutId)
-      connection.removeAccountChangeListener(listenerId)
+      // connection.removeAccountChangeListener(listenerId)
     }
     // eslint-disable-next-line
   }, [connection?.rpcEndpoint, publicKey])
