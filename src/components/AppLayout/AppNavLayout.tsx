@@ -60,7 +60,7 @@ function AppNavLayout({
 }) {
   const { t } = useTranslation()
   const { pathname } = useRouter()
-  const queryReferrer = useReferrerQuery('?')
+
 
   return (
     <Flex direction="column" id="app-layout" height="full" overflow={overflowHidden ? 'hidden' : 'auto'}>
@@ -164,9 +164,7 @@ function AppNavLayout({
         {/* wallet and settings button */}
         {!pathname.startsWith('/docs') && (
           <Flex gap={[0.5, 1]} align="center" flexShrink={0}>
-            <Desktop>
-              {/* <TorqueButton /> */}
-            </Desktop>
+
             <PriorityButton />
             <SettingsMenu />
             {/* <EVMWallet />  don't need currently yet*/}
