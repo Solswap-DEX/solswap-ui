@@ -247,8 +247,6 @@ export const useSwapStore = createStore<SwapStore>(
                 quoteResponse: swapResponse._jupiterQuote,
                 userPublicKey: publicKey.toBase58(),
                 wrapAndUnwrapSol: wrapSol || unwrapSol,
-                // Jupiter takes feeAccount, dynamically passing revenue config
-                feeAccount: REVENUE_CONFIG.feeCollector,
                 computeUnitPriceMicroLamports: Number(computeData?.microLamports || 0)
               })
             })
