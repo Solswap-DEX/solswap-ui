@@ -65,6 +65,15 @@ export const getOnlineTokenInfo = async ({
       if (!info) return undefined
       const space = (info as AccountInfo<Buffer> & { space?: number })?.space ?? 0
       if (space === 82 || space >= 165) {
+        // Try to fetch metadata from Jupiter first for better name/symbol/logo
+        let jupData: any = null
+        try {
+          const jupRes = await fetch(`https://tokens.jup.ag/token/${mint.toString()}`)
+          if (jupRes.ok) jupData = await jupRes.json()
+        } catch (e) {
+          console.debug('Jupiter token fetch failed', e)
+        }
+
         const tags = []
         if (info?.owner.equals(TOKEN_2022_PROGRAM_ID)) {
           programId = TOKEN_2022_PROGRAM_ID
@@ -85,9 +94,9 @@ export const getOnlineTokenInfo = async ({
             chainId: 101,
             address: mintAddress,
             programId: programId?.toBase58() || TOKEN_PROGRAM_ID.toBase58(),
-            logoURI: '',
-            symbol: mintAddress.slice(0, 6),
-            name: mintAddress.slice(0, 6),
+            logoURI: jupData?.logoURI || '',
+            symbol: jupData?.symbol || mintAddress.slice(0, 6),
+            name: jupData?.name || mintAddress.slice(0, 6),
             decimals: onlineData.decimals,
             tags,
             extensions: {
