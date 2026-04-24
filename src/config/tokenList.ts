@@ -1,4 +1,4 @@
-export const TOKEN_LIST_URL = 'https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json';
+export const TOKEN_LIST_URL = 'https://token.jup.ag/all';
 
 export interface TokenInfo {
   address: string;
