@@ -33,7 +33,7 @@ import useRefreshEpochInfo from '@/hooks/app/useRefreshEpochInfo'
 import { useRouter } from 'next/router'
 
 export default function Swap() {
-  const [inputMint, setInputMint] = useState<string>('sol')
+  const [inputMint, setInputMint] = useState<string>(PublicKey.default.toBase58())
   const [outputMint, setOutputMint] = useState<string>('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
   const [showChart, setShowChart] = useState<boolean>(false)
   const [isMobileChartShown, setIsMobileChartShown] = useState<boolean>(false)
