@@ -108,6 +108,23 @@ export const useTokenStore = createStore<TokenStore>(
           officialMints.add(token.address)
         })
 
+        // Also ensure native SOL is in the map for default state resolution
+        const wsolToken = tokenMap.get('So11111111111111111111111111111111111111112')
+        if (wsolToken) {
+          const { PublicKey } = await import('@solana/web3.js')
+          const solAddress = PublicKey.default.toBase58()
+          const solToken = {
+            ...wsolToken,
+            address: solAddress,
+            symbol: 'SOL',
+            name: 'Solana',
+            tags: ['native']
+          }
+          tokenMap.set(solAddress, solToken)
+          officialMints.add(solAddress)
+        }
+
+
         set({
           tokenList,
           tokenMap,
