@@ -57,7 +57,10 @@ export function SwapPanel({
   const query = useRouteQuery<{ inputMint: string; outputMint: string }>()
   const [urlInputMint, urlOutputMint] = [urlToMint(query.inputMint), urlToMint(query.outputMint)]
   const { inputMint: cacheInput, outputMint: cacheOutput } = getSwapPairCache()
-  const [defaultInput, defaultOutput] = [urlInputMint || cacheInput, urlOutputMint || cacheOutput]
+  const [defaultInput, defaultOutput] = [
+    (urlInputMint || cacheInput) === 'So11111111111111111111111111111111111111112' ? 'sol' : (urlInputMint || cacheInput),
+    urlOutputMint || cacheOutput
+  ]
 
   const { t, i18n } = useTranslation()
   const { swap: swapDisabled } = useAppStore((s) => s.featureDisabled)

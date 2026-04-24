@@ -65,13 +65,31 @@ export const getOnlineTokenInfo = async ({
       if (!info) return undefined
       const space = (info as AccountInfo<Buffer> & { space?: number })?.space ?? 0
       if (space === 82 || space >= 165) {
-        // Try to fetch metadata from Jupiter first for better name/symbol/logo
-        let jupData: any = null
+        // Try to fetch metadata from DexScreener first for better name/symbol/logo
+        let dexData: any = null
         try {
-          const jupRes = await fetch(`https://tokens.jup.ag/token/${mint.toString()}`)
-          if (jupRes.ok) jupData = await jupRes.json()
+          const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint.toString()}`)
+          if (dexRes.ok) {
+            const data = await dexRes.json()
+            if (data && data.pairs && data.pairs.length > 0) {
+              const pair = data.pairs.find((p: any) => p.baseToken.address === mint.toString()) || data.pairs[0]
+              if (pair.baseToken.address === mint.toString()) {
+                dexData = {
+                  name: pair.baseToken.name,
+                  symbol: pair.baseToken.symbol,
+                  logoURI: pair.info?.imageUrl || ''
+                }
+              } else if (pair.quoteToken.address === mint.toString()) {
+                dexData = {
+                  name: pair.quoteToken.name,
+                  symbol: pair.quoteToken.symbol,
+                  logoURI: pair.info?.imageUrl || ''
+                }
+              }
+            }
+          }
         } catch (e) {
-          console.debug('Jupiter token fetch failed', e)
+          console.debug('DexScreener token fetch failed', e)
         }
 
         const tags = []
@@ -94,9 +112,9 @@ export const getOnlineTokenInfo = async ({
             chainId: 101,
             address: mintAddress,
             programId: programId?.toBase58() || TOKEN_PROGRAM_ID.toBase58(),
-            logoURI: jupData?.logoURI || '',
-            symbol: jupData?.symbol || mintAddress.slice(0, 6),
-            name: jupData?.name || mintAddress.slice(0, 6),
+            logoURI: dexData?.logoURI || '',
+            symbol: dexData?.symbol || mintAddress.substring(0, 6),
+            name: dexData?.name || mintAddress.substring(0, 6),
             decimals: onlineData.decimals,
             tags,
             extensions: {
