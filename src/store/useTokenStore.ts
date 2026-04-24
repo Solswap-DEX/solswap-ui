@@ -108,22 +108,43 @@ export const useTokenStore = createStore<TokenStore>(
           officialMints.add(token.address)
         })
 
-        // Also ensure native SOL is in the map for default state resolution
+        // Core token injection helper
+        const injectCoreToken = (token: any) => {
+          tokenMap.set(token.address, token)
+          officialMints.add(token.address)
+        }
+
+        // Always ensure native SOL and main stablecoins are in the map for default state resolution
         const wsolToken = tokenMap.get('So11111111111111111111111111111111111111112')
         if (wsolToken) {
           const { PublicKey } = await import('@solana/web3.js')
           const solAddress = PublicKey.default.toBase58()
-          const solToken = {
+          injectCoreToken({
             ...wsolToken,
             address: solAddress,
             symbol: 'SOL',
             name: 'Solana',
             tags: ['native']
-          }
-          tokenMap.set(solAddress, solToken)
-          tokenMap.set('sol', solToken) // Add alias for easier resolution
-          officialMints.add(solAddress)
-          officialMints.add('sol')
+          })
+          injectCoreToken({
+            ...wsolToken,
+            address: 'sol',
+            symbol: 'SOL',
+            name: 'Solana',
+            tags: ['native']
+          })
+        }
+
+        // Add USDC if missing (Core stablecoin fallback)
+        if (!tokenMap.has('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')) {
+           injectCoreToken({
+             address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+             symbol: 'USDC',
+             name: 'USD Coin',
+             decimals: 6,
+             logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png',
+             chainId: 101
+           })
         }
 
 

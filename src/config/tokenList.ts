@@ -1,4 +1,4 @@
-export const TOKEN_LIST_URL = 'https://token.jup.ag/all';
+export const TOKEN_LIST_URL = 'https://cache.jup.ag/tokens';
 
 export interface TokenInfo {
   address: string;
