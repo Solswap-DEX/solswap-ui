@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ReactNode } from 'react'
 
-import LaunchpadPageThumbnailIcon from '@/icons/pageNavigation/LaunchpadPageThumbnailIcon'
+
 import LiquidityPageThumbnailIcon from '@/icons/pageNavigation/LiquidityPageThumbnailIcon'
 import MorePageThumbnailIcon from '@/icons/pageNavigation/MoreThumbnailIcon'
 import PortfolioPageThumbnailIcon from '@/icons/pageNavigation/PortfolioPageThumbnailIcon'
@@ -25,8 +25,7 @@ export function MobileBottomNavbar() {
   const isSwapActive = pathname === swapHref
   const liquidityHref = '/liquidity-pools'
   const isLiquidityActive = pathname === liquidityHref
-  const launchpadHref = '/launchpad'
-  const isLaunchpadActive = pathname.startsWith(launchpadHref)
+
   const protfolioHref = '/portfolio'
   const isPortfolioActive = pathname === protfolioHref
   const radarHref = '/radar'
@@ -56,12 +55,7 @@ export function MobileBottomNavbar() {
         icon={(colorMode) => <LiquidityPageThumbnailIcon colorMode={colorMode} isActive={isLiquidityActive} />}
         isActive={isLiquidityActive}
       />
-      <BottomNavbarItem
-        href={launchpadHref}
-        text={t('launchpad.title')}
-        icon={(colorMode) => <LaunchpadPageThumbnailIcon colorMode={colorMode} isActive={isLaunchpadActive} />}
-        isActive={isLaunchpadActive}
-      />
+
       <BottomNavbarItem
         href={protfolioHref}
         text={t('portfolio.title')}

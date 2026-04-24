@@ -14,7 +14,7 @@ import '@/components/LandingPage/components/tvl.css'
 import '@/components/LandingPage/liquidity.css'
 import 'react-day-picker/dist/style.css'
 import { GoogleAnalytics } from '@next/third-parties/google'
-import { OnboardingDialog } from '@/components/Dialogs/OnboardingDialog'
+
 import { DialogManager } from '@/components/DialogManager'
 
 const DynamicProviders = dynamic(() => import('@/provider').then((mod) => mod.Providers))
@@ -67,7 +67,7 @@ const MyApp = ({ Component, pageProps, ...props }: AppProps) => {
           )}
         </DynamicContent>
         <DialogManager />
-        <OnboardingDialog />
+
       </DynamicProviders>
     </>
   )

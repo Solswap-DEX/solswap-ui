@@ -1,22 +1,21 @@
 import { useEffect } from 'react'
 import { useAppStore, EXPLORER_KEY, APR_MODE_KEY, USER_ADDED_KEY, FEE_KEY } from '@/store/useAppStore'
 import { useLiquidityStore, LIQUIDITY_SLIPPAGE_KEY } from '@/store/useLiquidityStore'
-import { useLaunchpadStore, LAUNCHPAD_SLIPPAGE_KEY } from '@/store/useLaunchpadStore'
+
 import { useSwapStore, SWAP_SLIPPAGE_KEY } from '@/features/Swap/useSwapStore'
 import { getStorageItem } from '@/utils/localStorage'
 import { I18N_CACHE_KEY, changeLang } from '@/i18n'
 
 export default function useLoadStorageData() {
   useEffect(() => {
-    const [explorerUrl, aprMode, userAdded, transactionFee, cacheLang, liquiditySlippage, swapSlippage, launchpadSlippage] = [
+    const [explorerUrl, aprMode, userAdded, transactionFee, cacheLang, liquiditySlippage, swapSlippage] = [
       getStorageItem(EXPLORER_KEY),
       getStorageItem(APR_MODE_KEY),
       getStorageItem(USER_ADDED_KEY),
       getStorageItem(FEE_KEY),
       getStorageItem(I18N_CACHE_KEY),
       getStorageItem(LIQUIDITY_SLIPPAGE_KEY),
-      getStorageItem(SWAP_SLIPPAGE_KEY),
-      getStorageItem(LAUNCHPAD_SLIPPAGE_KEY)
+      getStorageItem(SWAP_SLIPPAGE_KEY)
     ]
 
     useAppStore.setState({
@@ -43,10 +42,7 @@ export default function useLoadStorageData() {
         slippage: Number(swapSlippage)
       })
 
-    if (launchpadSlippage)
-      useLaunchpadStore.setState({
-        slippage: Number(launchpadSlippage)
-      })
+
     changeLang(cacheLang || 'en')
   }, [])
 }

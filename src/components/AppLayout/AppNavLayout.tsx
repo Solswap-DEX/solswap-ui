@@ -42,7 +42,7 @@ import DisclaimerModal from './components/DisclaimerModal'
 import AppVersion from './AppVersion'
 import { NetworkStatusBar } from '../NetworkStatusBar'
 import TagNewIcon from '@/icons/misc/TagNewIcon'
-import { useReferrerQuery } from '@/features/Launchpad/utils'
+
 // Torque rewards feature disabled in SolSwap cleanup
 // import { TorqueButton } from '@/features/Torque'
 
@@ -114,33 +114,7 @@ function AppNavLayout({
           <HStack flexGrow={1} flexShrink={1} justify="start" overflow={['auto', 'visible']} gap={0}>
             <RouteLink href="/swap" isActive={pathname === '/swap'} title={t('swap.title')} />
             <RouteLink href="/liquidity-pools" isActive={pathname.includes('/liquidity')} title={t('liquidity.title')} />
-            <RouteLink
-              href="/launchpad"
-              isActive={pathname.startsWith('/launchpad')}
-              title={t('launchpad.title')}
-              slotAfter={
-                <Box
-                  as="span"
-                  ml={1}
-                  px={1}
-                  py={0.2}
-                  bg="linear-gradient(135deg, #9945ff, #14f195)"
-                  borderRadius="sm"
-                  fontSize="9px"
-                  fontWeight="bold"
-                  color="white"
-                  sx={{
-                    '@keyframes blink': {
-                      '0%, 100%': { opacity: 1 },
-                      '50%': { opacity: 0.4 }
-                    },
-                    animation: 'blink 1.2s ease-in-out infinite'
-                  }}
-                >
-                  NEW
-                </Box>
-              }
-            />
+
             <RouteLink href="/portfolio" isActive={pathname === '/portfolio'} title={t('portfolio.title')} />
             <RouteLink
               href="/radar"

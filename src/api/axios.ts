@@ -3,7 +3,7 @@ import { toastSubject } from '@/hooks/toast/useGlobalToast'
 import i18n from '@/i18n'
 import axios from 'axios'
 import { sendNetworkEvent } from './event'
-import { onboardingDialogSubject } from '@/components/Dialogs/OnboardingDialog'
+
 
 const axiosInstance = axios.create({ timeout: 60 * 1000 })
 export const retryCount = 5
@@ -77,9 +77,7 @@ axiosInstance.interceptors.response.use(
       })
 
     const errorMsg = response.data?.msg || error.message || ''
-    if (config.authTokenCheck && (errorMsg.includes('token check error') || errorMsg.includes('token expired'))) {
-      onboardingDialogSubject.next({ open: true })
-    }
+
 
     return Promise.reject(error)
   }

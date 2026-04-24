@@ -33,12 +33,6 @@ export default function Feature() {
       linkTitle: 'Launch CLMM'
     },
     {
-      title: 'AcceleRaytor',
-      desc: 'A launchpad for new Solana projects.',
-      link: '',
-      linkTitle: 'Launch AcceleRaytor'
-    },
-    {
       title: 'NFT',
       desc: 'Swap or Trade quickly and cheaply.',
       link: '',

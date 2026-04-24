@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Box, Button, ButtonProps } from '@chakra-ui/react'
 import { colors } from '@/theme/cssVariables/colors'
 import CircleCheck from '@/icons/misc/CircleCheck'
-import CopyLaunchpadIcon from '@/icons/misc/CopyLaunchpadIcon'
+import CopyIcon from '@/icons/misc/CopyIcon'
 import { SvgIcon } from '@/icons/type'
 
 export type CopyButtonProps = {
@@ -51,11 +51,11 @@ export const CopyButton = ({ value, buttonType = 'default', children, Icon, onCo
       }
     >
       {children}
-      {copied ? <CircleCheck color={colors.textLaunchpadLink} /> : <CopyLaunchpadIcon color={colors.textLaunchpadLink} />}
+      {copied ? <CircleCheck color={colors.textSecondary} /> : <CopyIcon color={colors.textTertiary} />}
     </Box>
   ) : buttonType === 'icon' ? (
     copied ? (
-      <CircleCheck color={colors.textLaunchpadLink} />
+      <CircleCheck color={colors.textSecondary} />
     ) : Icon ? (
       <Icon
         cursor="pointer"
@@ -66,14 +66,14 @@ export const CopyButton = ({ value, buttonType = 'default', children, Icon, onCo
         }}
       />
     ) : (
-      <CopyLaunchpadIcon
+      <CopyIcon
         cursor="pointer"
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
           copy()
         }}
-        color={colors.textLaunchpadLink}
+        color={colors.textTertiary}
       />
     )
   ) : (
