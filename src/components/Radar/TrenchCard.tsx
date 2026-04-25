@@ -41,23 +41,23 @@ function getTriggerReason(token: RadarToken): { icon: string; text: string; colo
   const alpha = token.alpha_score
 
   if (token.is_pumpfun && bc >= 80 && !token.is_graduated)
-    return { icon: '🚀', text: 'Bonding curve near graduation', color: '#14f195', description: 'El token está muy cerca de llegar al 100% y migrar a Raydium.' }
+    return { icon: '🚀', text: 'Bonding curve near graduation', color: '#14f195', description: 'Token is very close to reaching 100% and migrating to Raydium.' }
   if (lv > 500)
-    return { icon: '⚡', text: `Liquidity inflow +${formatVelocity(lv)} SOL`, color: '#00ff88', description: 'Están entrando cantidades masivas de liquidez nueva.' }
+    return { icon: '⚡', text: `Liquidity inflow +${formatVelocity(lv)} SOL`, color: '#00ff88', description: 'Massive amounts of fresh liquidity are entering the pool.' }
   if (buys > 0 && sells === 0)
-    return { icon: '📈', text: 'Pure buy pressure, no sells', color: '#00ff88', description: 'Mucha presión de compra y nadie está vendiendo en el último minuto.' }
+    return { icon: '📈', text: 'Pure buy pressure, no sells', color: '#00ff88', description: 'Strong buy pressure with absolutely no sells in the last minute.' }
   if (buys > sells * 3 && buys >= 3)
-    return { icon: '📈', text: 'Early accumulation detected', color: '#ffd700', description: 'Los compradores superan en gran número a los vendedores (ratio de 3 a 1).' }
+    return { icon: '📈', text: 'Early accumulation detected', color: '#ffd700', description: 'Buyers are heavily outnumbering sellers (3 to 1 ratio).' }
   if (vv > 200)
-    return { icon: '⚡', text: `Volume spike +${formatVelocity(vv)}`, color: '#ffd700', description: 'El volumen de transacciones ha explotado repentinamente.' }
+    return { icon: '⚡', text: `Volume spike +${formatVelocity(vv)}`, color: '#ffd700', description: 'Trading volume has suddenly exploded.' }
   if (top10 < 0.35 && token.holders > 30)
-    return { icon: '🧠', text: 'Distributed holder base', color: '#bf5af2', description: 'El top 10 de wallets tiene menos del 35% del total. Hay muy bajo riesgo de un volcado (dump) masivo.' }
+    return { icon: '🧠', text: 'Distributed holder base', color: '#bf5af2', description: 'Top 10 wallets hold less than 35% of the total supply. Very low risk of a massive dump.' }
   if (wc < 0.05 && token.holders > 20)
-    return { icon: '✨', text: 'Low whale concentration', color: '#0d9ddb', description: 'La wallet más grande tiene menos del 5%. Nadie controla el mercado.' }
+    return { icon: '✨', text: 'Low whale concentration', color: '#0d9ddb', description: 'The largest wallet holds less than 5%. No single person controls the market.' }
   if (pc5 > 15)
-    return { icon: '📊', text: `Price +${pc5.toFixed(0)}% in 5m`, color: '#00ff88', description: 'El precio está subiendo muy rápido en el corto plazo.' }
+    return { icon: '📊', text: `Price +${pc5.toFixed(0)}% in 5m`, color: '#00ff88', description: 'Price is surging rapidly in the short term.' }
   if (alpha > 70)
-    return { icon: '🔥', text: 'High alpha momentum', color: '#ff9500', description: 'El algoritmo detecta un momento general muy alto basado en volumen, liquidez y distribución.' }
+    return { icon: '🔥', text: 'High alpha momentum', color: '#ff9500', description: 'Algorithm detects very high overall momentum based on volume, liquidity, and distribution.' }
   return null
 }
 
