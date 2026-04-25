@@ -9,6 +9,7 @@ import { ExodusWalletAdapter } from '@solana/wallet-adapter-exodus'
 import { SlopeWalletAdapter } from '@solana/wallet-adapter-slope'
 import { initialize } from '@solflare-wallet/wallet-adapter'
 import { BackpackWalletAdapter } from '@solana/wallet-adapter-backpack'
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom'
 import {
   TorusWalletAdapter,
   TrustWalletAdapter,
@@ -67,29 +68,34 @@ const App: FC<PropsWithChildren<any>> = ({ children }) => {
 
   const _walletConnect = useMemo(() => {
     const connectWallet: WalletConnectWalletAdapter[] = []
-    try {
-      connectWallet.push(
-        new WalletConnectWalletAdapter({
-          network: network as WalletAdapterNetwork.Mainnet,
-          options: {
-            projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PJ_ID,
-            metadata: {
-              name: 'SolSwap',
-              description: 'Solana DEX - Swap, Bridge & LaunchLab',
-              url: 'https://solswap.cloud',
-              icons: ['https://solswap.cloud/logo/logo-only-icon.svg']
+    const wcProjectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PJ_ID
+    // Only init WalletConnect if a real project ID is configured — avoids relay errors
+    if (wcProjectId && wcProjectId.length > 8) {
+      try {
+        connectWallet.push(
+          new WalletConnectWalletAdapter({
+            network: network as WalletAdapterNetwork.Mainnet,
+            options: {
+              projectId: wcProjectId,
+              metadata: {
+                name: 'SolSwap',
+                description: 'Solana DEX - Swap, Bridge & LaunchLab',
+                url: 'https://solswap.cloud',
+                icons: ['https://solswap.cloud/logo/logo-only-icon.svg']
+              }
             }
-          }
-        })
-      )
-    } catch (e) {
-      // console.error('WalletConnect error', e)
+          })
+        )
+      } catch (e) {
+        // silently ignore
+      }
     }
     return connectWallet
   }, [network])
 
   const wallets = useMemo(
     () => [
+      new PhantomWalletAdapter(),
       new BackpackWalletAdapter(),
       new SlopeWalletAdapter({ endpoint }),
       new TorusWalletAdapter(),
