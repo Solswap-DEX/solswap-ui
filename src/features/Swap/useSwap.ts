@@ -60,8 +60,9 @@ const fetchJupiterQuote = async (
         feeRate: 0,
         feeAmount: r.swapInfo?.feeAmount || '0'
       }))
-    }
-  } as ApiSwapV1OutSuccess
+    },
+    _jupiterQuote: jup
+  } as ApiSwapV1OutSuccess & { _jupiterQuote?: any }
 }
 
 const fetcher = async (key: string): Promise<ApiSwapV1OutSuccess | ApiSwapV1OutError> => {

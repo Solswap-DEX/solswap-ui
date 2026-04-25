@@ -295,7 +295,7 @@ export const useTokenAccountStore = createStore<TokenAccountStore>(
       }
     },
     getTokenBalanceUiAmount: ({ mint: mintKey, decimals, isNative = true }) => {
-      const mint = mintKey?.toString()
+      const mint = mintKey?.toString() === 'sol' ? PublicKey.default.toBase58() : mintKey?.toString() || ''
       const defaultVal = {
         rawAmount: new Decimal(0),
         amount: new Decimal(0),

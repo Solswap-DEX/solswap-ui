@@ -24,6 +24,7 @@ import { colors } from '@/theme/cssVariables'
 import { trimTrailZero, formatCurrency, detectedSeparator } from '@/utils/numberish/formatter'
 
 import { t } from 'i18next'
+import { isSolWSol } from '@/utils/token'
 import Button from './Button'
 import TokenAvatar from './TokenAvatar'
 import TokenSelectDialog, { TokenSelectDialogProps } from './TokenSelectDialog'
@@ -197,7 +198,7 @@ function TokenInput(props: TokenInputProps) {
   })
 
   const getBalanceString = useEvent((amount: string) => {
-    if (token?.address !== SOL_INFO.address || !balanceMaxString) return amount
+    if (!isSolWSol(token?.address) || !balanceMaxString) return amount
     if (new Decimal(balanceMaxString).sub(amount).gte(solReserveAmount)) return amount
     let decimal = new Decimal(amount).sub(solReserveAmount)
     if (decimal.lessThan(0)) decimal = new Decimal(0)

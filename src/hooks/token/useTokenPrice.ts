@@ -20,19 +20,25 @@ export default function useTokenPrice(props: { mintList: (string | PublicKey | u
   const [startFetch, setStartFetch] = useState(timeout === 0)
 
   const readyList = useMemo(
-    () => Array.from(new Set(mintList.filter((m) => !!m && isValidPublicKey(m)).map((m) => solToWSol(m!).toString()))),
+    () =>
+      Array.from(
+        new Set(
+          mintList
+            .filter((m) => !!m && (isValidPublicKey(m) || m === 'sol'))
+            .map((m) => {
+              const normalized = m === 'sol' ? PublicKey.default.toBase58() : m!.toString()
+              return solToWSol(normalized).toString()
+            })
+        )
+      ),
     [JSON.stringify(mintList)]
   )
 
-  const { data, isLoading, error, ...rest } = useSWR(
-    startFetch && readyList.length > 0 ? readyList : null,
-    fetcher,
-    {
-      refreshInterval,
-      dedupingInterval: refreshInterval,
-      focusThrottleInterval: refreshInterval
-    }
-  )
+  const { data, isLoading, error, ...rest } = useSWR(startFetch && readyList.length > 0 ? readyList : null, fetcher, {
+    refreshInterval,
+    dedupingInterval: refreshInterval,
+    focusThrottleInterval: refreshInterval
+  })
 
   const resData = useMemo(() => {
     const prices: Record<string, TokenPrice> = {}
@@ -41,9 +47,10 @@ export default function useTokenPrice(props: { mintList: (string | PublicKey | u
         prices[mint] = { value: price }
       })
     }
-    
+
     if (prices[NATIVE_MINT.toBase58()]) {
       prices[PublicKey.default.toBase58()] = prices[NATIVE_MINT.toBase58()]
+      prices['sol'] = prices[NATIVE_MINT.toBase58()]
     }
 
     return prices

@@ -303,8 +303,8 @@ export function SwapPanel({
     onSending()
     swapTokenAct({
       swapResponse: response as ApiSwapV1OutSuccess,
-      wrapSol: tokenInput?.address === PublicKey.default.toString(),
-      unwrapSol: tokenOutput?.address === PublicKey.default.toString(),
+      wrapSol: tokenInput?.address === PublicKey.default.toString() || tokenInput?.address === 'sol',
+      unwrapSol: tokenOutput?.address === PublicKey.default.toString() || tokenOutput?.address === 'sol',
       onCloseToast: offSending,
       onConfirmed: () => {
         // setAmountIn('')
