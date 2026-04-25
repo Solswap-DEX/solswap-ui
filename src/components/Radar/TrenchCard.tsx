@@ -75,13 +75,7 @@ const ALPHA_COLORS: Record<string, string> = {
   '🚀 GRADUATING':    '#14f195',
 }
 
-export function TrenchCard({ 
-  token, 
-  onStopLossClick 
-}: { 
-  token: RadarToken, 
-  onStopLossClick?: (token: RadarToken) => void 
-}) {
+export function TrenchCard({ token }: { token: RadarToken }) {
   const router = useRouter()
   const isRug = token.risk_level === 'RUG PROBABLE' || token.alpha_label === '☠️ RUG PROBABLE'
   const isTopAlpha = token.alpha_score > 80 && !isRug
@@ -401,17 +395,6 @@ export function TrenchCard({
                 <Text fontSize="12px" cursor="pointer" onClick={(e) => { e.stopPropagation(); window.open(token.social_website, '_blank') }}>🌐</Text>
               </Tooltip>
             )}
-            <Tooltip label="Set Stop Loss / Price Alert" fontSize="xs" hasArrow>
-              <Box 
-                as="button"
-                onClick={(e: any) => { e.stopPropagation(); onStopLossClick?.(token) }}
-                _hover={{ opacity: 0.8, transform: 'scale(1.2)' }}
-                transition="all 0.1s"
-                fontSize="12px"
-              >
-                🔔
-              </Box>
-            </Tooltip>
           </Flex>
 
           <Tooltip

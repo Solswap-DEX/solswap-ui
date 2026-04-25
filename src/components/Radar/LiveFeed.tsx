@@ -15,7 +15,6 @@ export function LiveFeed({
   alerts: RadarAlert[]
   title?: string
   color?: string
-  onStopLossClick?: (token: RadarToken) => void
 }) {
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<SortKey>('age')
@@ -58,7 +57,7 @@ export function LiveFeed({
         ) : (
           <Flex direction="column" gap={0}>
             {sorted.slice(0, 50).map((token) => (
-              <TrenchCard key={token.mint} token={token} onStopLossClick={onStopLossClick} />
+              <TrenchCard key={token.mint} token={token} />
             ))}
           </Flex>
         )}
