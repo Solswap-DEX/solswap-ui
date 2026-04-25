@@ -29,7 +29,7 @@ function formatNumber(val: number): string {
 }
 
 // ── TRIGGER REASON ENGINE ──────────────────────────────────────────────────
-function getTriggerReason(token: RadarToken): { icon: string; text: string; color: string } | null {
+function getTriggerReason(token: RadarToken): { icon: string; text: string; color: string; description: string } | null {
   const lv = token.liquidity_velocity ?? 0
   const vv = token.volume_velocity ?? 0
   const buys = token.buys_1m ?? 0
@@ -41,23 +41,23 @@ function getTriggerReason(token: RadarToken): { icon: string; text: string; colo
   const alpha = token.alpha_score
 
   if (token.is_pumpfun && bc >= 80 && !token.is_graduated)
-    return { icon: '🚀', text: 'Bonding curve near graduation', color: '#14f195' }
+    return { icon: '🚀', text: 'Bonding curve near graduation', color: '#14f195', description: 'El token está muy cerca de llegar al 100% y migrar a Raydium.' }
   if (lv > 500)
-    return { icon: '⚡', text: `Liquidity inflow +${formatVelocity(lv)} SOL`, color: '#00ff88' }
+    return { icon: '⚡', text: `Liquidity inflow +${formatVelocity(lv)} SOL`, color: '#00ff88', description: 'Están entrando cantidades masivas de liquidez nueva.' }
   if (buys > 0 && sells === 0)
-    return { icon: '📈', text: 'Pure buy pressure, no sells', color: '#00ff88' }
+    return { icon: '📈', text: 'Pure buy pressure, no sells', color: '#00ff88', description: 'Mucha presión de compra y nadie está vendiendo en el último minuto.' }
   if (buys > sells * 3 && buys >= 3)
-    return { icon: '📈', text: 'Early accumulation detected', color: '#ffd700' }
+    return { icon: '📈', text: 'Early accumulation detected', color: '#ffd700', description: 'Los compradores superan en gran número a los vendedores (ratio de 3 a 1).' }
   if (vv > 200)
-    return { icon: '⚡', text: `Volume spike +${formatVelocity(vv)}`, color: '#ffd700' }
+    return { icon: '⚡', text: `Volume spike +${formatVelocity(vv)}`, color: '#ffd700', description: 'El volumen de transacciones ha explotado repentinamente.' }
   if (top10 < 0.35 && token.holders > 30)
-    return { icon: '🧠', text: 'Distributed holder base', color: '#bf5af2' }
+    return { icon: '🧠', text: 'Distributed holder base', color: '#bf5af2', description: 'El top 10 de wallets tiene menos del 35% del total. Hay muy bajo riesgo de un volcado (dump) masivo.' }
   if (wc < 0.05 && token.holders > 20)
-    return { icon: '✨', text: 'Low whale concentration', color: '#0d9ddb' }
+    return { icon: '✨', text: 'Low whale concentration', color: '#0d9ddb', description: 'La wallet más grande tiene menos del 5%. Nadie controla el mercado.' }
   if (pc5 > 15)
-    return { icon: '📊', text: `Price +${pc5.toFixed(0)}% in 5m`, color: '#00ff88' }
+    return { icon: '📊', text: `Price +${pc5.toFixed(0)}% in 5m`, color: '#00ff88', description: 'El precio está subiendo muy rápido en el corto plazo.' }
   if (alpha > 70)
-    return { icon: '🔥', text: 'High alpha momentum', color: '#ff9500' }
+    return { icon: '🔥', text: 'High alpha momentum', color: '#ff9500', description: 'El algoritmo detecta un momento general muy alto basado en volumen, liquidez y distribución.' }
   return null
 }
 
@@ -164,7 +164,7 @@ export function TrenchCard({
         {/* LÍNEA 1: IDENTITY + VOLUME/MC */}
         <Flex justify="space-between" align="center" mb="4px">
           <Flex align="center" gap="10px" minW={0}>
-            <TokenAvatar mint={token.mint} symbol={token.symbol} size={34} />
+            <TokenAvatar mint={token.mint} symbol={token.symbol} size={34} imageUrl={token.image_url} />
             <Box minW={0}>
               <Flex align="center" gap="6px">
                 <Text fontSize="15px" fontWeight="700" color="#ffffff" lineHeight="1">
@@ -258,17 +258,20 @@ export function TrenchCard({
 
         {/* TRIGGER REASON — "por qué mirar ESTE ahora" */}
         {trigger && (
-          <Flex align="center" gap="5px" mb="6px"
-            px="6px" py="3px"
-            bg={`${trigger.color}0d`}
-            borderLeft={`2px solid ${trigger.color}`}
-            borderRadius="0 4px 4px 0"
-          >
-            <Text fontSize="10px">{trigger.icon}</Text>
-            <Text fontSize="10px" color={trigger.color} fontWeight="600" fontFamily="var(--radar-mono)">
-              {trigger.text}
-            </Text>
-          </Flex>
+          <Tooltip label={trigger.description} fontSize="xs" hasArrow placement="top-start">
+            <Flex align="center" gap="5px" mb="6px"
+              px="6px" py="3px"
+              bg={`${trigger.color}0d`}
+              borderLeft={`2px solid ${trigger.color}`}
+              borderRadius="0 4px 4px 0"
+              cursor="help"
+            >
+              <Text fontSize="10px">{trigger.icon}</Text>
+              <Text fontSize="10px" color={trigger.color} fontWeight="600" fontFamily="var(--radar-mono)">
+                {trigger.text}
+              </Text>
+            </Flex>
+          </Tooltip>
         )}
 
         {/* LÍNEA 3: INDICATORS + VELOCITY */}

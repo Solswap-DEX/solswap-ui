@@ -14,15 +14,33 @@ function getHashColor(name: string): string {
 
 export function TokenAvatar({
   symbol,
-  size = 36
+  size = 36,
+  imageUrl
 }: {
   mint: string
   symbol: string
   size?: number
   imageUrl?: string
 }) {
+  const [imgError, setImgError] = React.useState(false)
   const bgColor = getHashColor(symbol)
   const displaySymbol = symbol.slice(0, 2).toUpperCase()
+
+  if (imageUrl && !imgError) {
+    return (
+      <Box
+        as="img"
+        src={imageUrl}
+        alt={symbol}
+        w={`${size}px`}
+        h={`${size}px`}
+        borderRadius="50%"
+        objectFit="cover"
+        flexShrink={0}
+        onError={() => setImgError(true)}
+      />
+    )
+  }
 
   return (
     <Box
