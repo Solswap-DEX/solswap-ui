@@ -115,18 +115,18 @@ export function TrenchCard({ token }: { token: RadarToken }) {
       `}</style>
 
       <Box
-        bg={isRug ? 'rgba(255,59,92,0.03)' : isTopAlpha ? 'rgba(20,241,149,0.03)' : 'var(--radar-surface)'}
+        bg={isRug ? 'rgba(255,59,92,0.06)' : isTopAlpha ? 'rgba(20,241,149,0.06)' : '#0d0d0d'}
         border="1px solid"
-        borderColor={cardBorderColor}
+        borderColor={isRug ? 'rgba(255,59,92,0.6)' : isTopAlpha ? 'rgba(20,241,149,0.7)' : 'rgba(255,255,255,0.2)'}
         borderRadius="8px"
-        p="10px 12px"
+        p="8px 10px"
         mb="6px"
         transition="all 0.15s ease"
         cursor="pointer"
         boxShadow={cardBoxShadow}
         _hover={{
-          borderColor: isTopAlpha ? 'rgba(20,241,149,0.8)' : 'rgba(255,255,255,0.12)',
-          bg: isTopAlpha ? 'rgba(20,241,149,0.06)' : 'var(--radar-surface-2)',
+          borderColor: isTopAlpha ? 'rgba(20,241,149,1)' : 'rgba(255,255,255,0.4)',
+          bg: isTopAlpha ? 'rgba(20,241,149,0.1)' : '#111111',
           transform: 'translateX(2px)',
         }}
         onClick={() => router.push(`/swap?inputMint=So11111111111111111111111111111111111111112&outputMint=${token.mint}`)}
@@ -153,13 +153,13 @@ export function TrenchCard({ token }: { token: RadarToken }) {
         {/* LÍNEA 1: IDENTITY + VOLUME/MC */}
         <Flex justify="space-between" align="center" mb="4px">
           <Flex align="center" gap="10px" minW={0}>
-            <TokenAvatar mint={token.mint} symbol={token.symbol} size={32} />
+            <TokenAvatar mint={token.mint} symbol={token.symbol} size={34} />
             <Box minW={0}>
               <Flex align="center" gap="6px">
-                <Text fontSize="13px" fontWeight="700" color="white" lineHeight="1">
+                <Text fontSize="15px" fontWeight="700" color="#ffffff" lineHeight="1">
                   {token.symbol}
                 </Text>
-                <Text fontSize="11px" color="var(--radar-text-dim)" isTruncated maxW="100px" lineHeight="1">
+                <Text fontSize="12px" color="#ffffff" isTruncated maxW="100px" lineHeight="1" fontWeight="500">
                   {token.name.slice(0, 14)}{token.name.length > 14 ? '...' : ''}
                 </Text>
               </Flex>
@@ -168,12 +168,12 @@ export function TrenchCard({ token }: { token: RadarToken }) {
 
           <Flex gap="10px" align="center" flexShrink={0} fontFamily="var(--radar-mono)">
             <Flex align="baseline" gap="3px">
-              <Text fontSize="9px" color="var(--radar-text-dim)">V</Text>
-              <Text fontSize="11px" fontWeight="700" color="var(--radar-text)">{formatUsd(token.volume_1m)}</Text>
+              <Text fontSize="10px" color="#ffffff">V</Text>
+              <Text fontSize="12px" fontWeight="700" color="#ffffff">{formatUsd(token.volume_1m)}</Text>
             </Flex>
             <Flex align="baseline" gap="3px">
-              <Text fontSize="9px" color="var(--radar-text-dim)">MC</Text>
-              <Text fontSize="11px" fontWeight="700" color="var(--radar-text)">
+              <Text fontSize="10px" color="#ffffff">MC</Text>
+              <Text fontSize="12px" fontWeight="700" color="#ffffff">
                 {token.market_cap ? formatUsd(token.market_cap) : '—'}
               </Text>
             </Flex>
@@ -184,15 +184,15 @@ export function TrenchCard({ token }: { token: RadarToken }) {
         <Flex justify="space-between" align="center" mb="5px">
           <Flex align="center" gap="8px">
             <Flex align="center" gap="4px">
-              <Text fontSize="10px" color="var(--radar-text-dim)" fontFamily="var(--radar-mono)">
+              <Text fontSize="11px" color="#ffffff" fontFamily="var(--radar-mono)" fontWeight="600">
                 {formatAge(token.age_seconds)}
               </Text>
-              <Text color={(token.delta_volume ?? 0) >= 0 ? 'var(--radar-green)' : 'var(--radar-red)'} fontSize="12px">
+              <Text color={(token.delta_volume ?? 0) >= 0 ? '#00ff88' : '#ff4444'} fontSize="13px" fontWeight="bold">
                 {(token.delta_volume ?? 0) >= 0 ? '↗' : '↘'}
               </Text>
             </Flex>
             <Text
-              fontSize="9px" color="var(--radar-text-dim)"
+              fontSize="10px" color="rgba(255,255,255,0.5)"
               onClick={(e) => { e.stopPropagation(); window.open(`https://solscan.io/token/${token.mint}`, '_blank') }}
               _hover={{ color: 'white', textDecoration: 'underline' }}
               cursor="pointer"
@@ -204,9 +204,9 @@ export function TrenchCard({ token }: { token: RadarToken }) {
           <Box
             px="6px" py="1px"
             bg={isRug ? 'rgba(255,59,92,0.1)' : 'transparent'}
-            border={`1px solid ${alphaColor}`}
+            border={`1px solid ${isRug ? '#ff3b5c' : alphaColor}`}
             borderRadius="4px"
-            fontSize="9px" fontWeight="800" color={alphaColor}
+            fontSize="10px" fontWeight="800" color="#ffffff"
             textTransform="uppercase"
             letterSpacing="0.5px"
           >
@@ -234,10 +234,10 @@ export function TrenchCard({ token }: { token: RadarToken }) {
           {/* Alpha */}
           <Tooltip label="Alpha Score" fontSize="xs" hasArrow>
             <Flex align="center" gap="3px" cursor="help">
-              <Text fontSize="10px" color="var(--radar-text-dim)" fontFamily="var(--radar-mono)">α</Text>
+              <Text fontSize="11px" color="#ffffff" fontFamily="var(--radar-mono)">α</Text>
               <Text
-                fontSize="11px" fontWeight="bold"
-                color={token.alpha_score > 50 ? 'var(--radar-green)' : token.alpha_score > 20 ? 'var(--radar-yellow)' : 'var(--radar-text-dim)'}
+                fontSize="13px" fontWeight="bold"
+                color={token.alpha_score > 50 ? '#00ff88' : token.alpha_score > 20 ? '#ffd700' : '#ffffff'}
                 fontFamily="var(--radar-mono)"
               >
                 {token.alpha_score.toFixed(0)}
@@ -248,26 +248,26 @@ export function TrenchCard({ token }: { token: RadarToken }) {
           {/* Buys */}
           <Tooltip label="Buys last 5m" fontSize="xs" hasArrow>
             <Flex align="center" gap="2px" cursor="help">
-              <Text fontSize="10px" color="var(--radar-green)">@</Text>
-              <Text fontSize="11px" fontWeight="700" color="var(--radar-green)" fontFamily="var(--radar-mono)">{buys1m}</Text>
+              <Text fontSize="11px" color="#00ff88">@</Text>
+              <Text fontSize="13px" fontWeight="700" color="#00ff88" fontFamily="var(--radar-mono)">{buys1m}</Text>
             </Flex>
           </Tooltip>
 
           {/* Sells */}
           <Tooltip label="Sells last 5m" fontSize="xs" hasArrow>
             <Flex align="center" gap="2px" cursor="help">
-              <Text fontSize="10px" color="var(--radar-red)">●</Text>
-              <Text fontSize="11px" fontWeight="700" color="var(--radar-red)" fontFamily="var(--radar-mono)">{sells1m}</Text>
+              <Text fontSize="11px" color="#ff4444">●</Text>
+              <Text fontSize="13px" fontWeight="700" color="#ff4444" fontFamily="var(--radar-mono)">{sells1m}</Text>
             </Flex>
           </Tooltip>
 
           {/* Risk */}
           <Box
             px="4px" py="0px"
-            bg="rgba(255,255,255,0.04)"
-            border="1px solid var(--radar-border)"
+            bg="rgba(255,255,255,0.1)"
+            border="1px solid rgba(255,255,255,0.2)"
             borderRadius="2px"
-            fontSize="9px" fontWeight="800" color="var(--radar-text)"
+            fontSize="10px" fontWeight="800" color="#ffffff"
           >
             {token.risk_level}
           </Box>
@@ -276,10 +276,10 @@ export function TrenchCard({ token }: { token: RadarToken }) {
           {lv !== 0 && (
             <Tooltip label="Liquidity flow velocity" fontSize="xs" hasArrow>
               <Flex align="center" gap="2px" cursor="help">
-                <Text fontSize="10px" color={lv > 0 ? 'var(--radar-solana)' : 'var(--radar-red)'}>⚡</Text>
+                <Text fontSize="11px" color={lv > 0 ? '#14f195' : '#ff4444'}>⚡</Text>
                 <Text
-                  fontSize="10px" fontWeight="800" fontFamily="var(--radar-mono)"
-                  color={lv > 0 ? 'var(--radar-solana)' : 'var(--radar-red)'}
+                  fontSize="12px" fontWeight="800" fontFamily="var(--radar-mono)"
+                  color={lv > 0 ? '#14f195' : '#ff4444'}
                 >
                   {lv > 0 ? '+' : ''}{formatVelocity(lv)}
                 </Text>
@@ -289,8 +289,8 @@ export function TrenchCard({ token }: { token: RadarToken }) {
           {vv !== 0 && lv === 0 && (
             <Tooltip label="Volume velocity" fontSize="xs" hasArrow>
               <Flex align="center" gap="2px" cursor="help">
-                <Text fontSize="10px" color="var(--radar-yellow)">⚡</Text>
-                <Text fontSize="10px" fontWeight="800" fontFamily="var(--radar-mono)" color="var(--radar-yellow)">
+                <Text fontSize="11px" color="#ffd700">⚡</Text>
+                <Text fontSize="12px" fontWeight="800" fontFamily="var(--radar-mono)" color="#ffd700">
                   V{vv > 0 ? '+' : ''}{formatVelocity(vv)}
                 </Text>
               </Flex>
@@ -301,12 +301,12 @@ export function TrenchCard({ token }: { token: RadarToken }) {
         {/* LÍNEA 4: BUY/SELL BAR */}
         <Box mb="8px">
           <Flex align="center" justify="space-between">
-            <Text fontSize="9px" color="var(--radar-text-dim)" fontFamily="var(--radar-mono)">{buyPct}%</Text>
-            <Flex h="3px" flex={1} mx="8px" bg="rgba(255,255,255,0.05)" overflow="hidden" borderRadius="2px">
-              <Box w={`${buyPct}%`} bg="var(--radar-green)" h="100%" />
-              <Box w={`${sellPct}%`} bg="var(--radar-red)" h="100%" />
+            <Text fontSize="11px" color="#ffffff" fontFamily="var(--radar-mono)" fontWeight="700">{buyPct}%</Text>
+            <Flex h="4px" flex={1} mx="8px" bg="rgba(255,255,255,0.1)" overflow="hidden" borderRadius="2px">
+              <Box w={`${buyPct}%`} bg="#00cc66" h="100%" />
+              <Box w={`${sellPct}%`} bg="#ff3333" h="100%" />
             </Flex>
-            <Text fontSize="9px" color="var(--radar-text-dim)" fontFamily="var(--radar-mono)">{sellPct}%</Text>
+            <Text fontSize="11px" color="#ffffff" fontFamily="var(--radar-mono)" fontWeight="700">{sellPct}%</Text>
           </Flex>
         </Box>
 
@@ -325,14 +325,14 @@ export function TrenchCard({ token }: { token: RadarToken }) {
           >
             <Box
               px="12px" py="4px"
-              bg={isTopAlpha ? 'rgba(20,241,149,0.15)' : 'rgba(20,241,149,0.1)'}
-              border={`1px solid ${isTopAlpha ? 'rgba(20,241,149,0.8)' : 'var(--radar-solana)'}`}
+              bg={isTopAlpha ? 'rgba(0,255,136,0.2)' : 'rgba(0,255,136,0.15)'}
+              border={`1px solid ${isTopAlpha ? '#00ff88' : '#00ff88'}`}
               borderRadius="4px"
-              color="var(--radar-solana)"
-              fontSize="11px"
-              fontWeight="bold"
+              color="#ffffff"
+              fontSize="12px"
+              fontWeight="900"
               transition="all 0.2s"
-              _hover={{ bg: 'rgba(20,241,149,0.25)', transform: 'scale(1.04)' }}
+              _hover={{ bg: 'rgba(0,255,136,0.3)', transform: 'scale(1.04)' }}
               onClick={(e) => { e.stopPropagation(); router.push(`/swap?outputMint=${token.mint}`) }}
               cursor="pointer"
             >

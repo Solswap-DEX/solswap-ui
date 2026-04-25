@@ -52,7 +52,7 @@ export function LiveFeed({
           </Box>
         ) : sorted.length === 0 ? (
           <Box py={10} textAlign="center">
-            <Text color="var(--radar-text-dim)" fontSize="sm" fontFamily="var(--radar-mono)">NO MATCHES</Text>
+            <Text color="#ffffff" fontSize="sm" fontFamily="var(--radar-mono)">NO MATCHES</Text>
           </Box>
         ) : (
           <Flex direction="column" gap={0}>

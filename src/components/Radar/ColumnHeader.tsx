@@ -25,17 +25,18 @@ export function ColumnHeader({
       position="sticky"
       top={0}
       zIndex={5}
-      bg="var(--radar-bg)"
-      pb={3}
-      borderBottom="1px solid var(--radar-border)"
+      bg="rgba(255,255,255,0.05)"
+      p={3}
+      borderBottom="1px solid rgba(255,255,255,0.1)"
       mb={3}
+      borderRadius="4px 4px 0 0"
     >
       <Flex align="center" justify="space-between" mb={2}>
         <Flex align="center" gap={3}>
           <Text
-            fontSize="10px"
+            fontSize="11px"
             fontWeight="900"
-            color="var(--radar-text-dim)"
+            color="#ffffff"
             letterSpacing="2px"
             textTransform="uppercase"
           >
@@ -44,20 +45,19 @@ export function ColumnHeader({
           <Box
             px="8px"
             py="1px"
-            bg="rgba(255,255,255,0.05)"
-            border={`1px solid ${color}66`}
+            bg="rgba(255,255,255,0.1)"
+            border={`1px solid ${color}`}
             borderRadius="full"
             fontSize="10px"
             fontWeight="bold"
-            color={color}
+            color="#ffffff"
             fontFamily="var(--radar-mono)"
           >
             {count}
           </Box>
         </Flex>
         
-        {/* Minimal grid icon / placeholder */}
-        <Box color="var(--radar-text-dim)" fontSize="14px">⊞</Box>
+        <Box color="#ffffff" fontSize="14px">⊞</Box>
       </Flex>
 
       <Flex gap={2}>
@@ -66,32 +66,32 @@ export function ColumnHeader({
           value={search}
           onChange={e => onSearchChange(e.target.value)}
           size="xs"
-          bg="var(--radar-bg)"
-          border="1px solid var(--radar-border)"
-          color="var(--radar-text)"
+          bg="#0d0d0d"
+          border="1px solid rgba(255,255,255,0.3)"
+          color="#ffffff"
           borderRadius="4px"
           fontSize="11px"
           h="26px"
-          _placeholder={{ color: 'var(--radar-text-dim)' }}
-          _focus={{ border: '1px solid var(--radar-border-accent)', boxShadow: 'none' }}
+          _placeholder={{ color: 'rgba(255,255,255,0.5)' }}
+          _focus={{ border: '1px solid var(--radar-solana)', boxShadow: 'none' }}
           flex={1}
         />
         <Select
           value={sort}
           onChange={e => onSortChange(e.target.value as SortKey)}
           size="xs"
-          bg="var(--radar-bg)"
-          border="1px solid var(--radar-border)"
-          color="var(--radar-text-dim)"
+          bg="#0d0d0d"
+          border="1px solid rgba(255,255,255,0.3)"
+          color="#ffffff"
           borderRadius="4px"
           fontSize="10px"
           h="26px"
           w="100px"
           flexShrink={0}
-          _focus={{ border: '1px solid var(--radar-border-accent)', boxShadow: 'none' }}
+          _focus={{ border: '1px solid var(--radar-solana)', boxShadow: 'none' }}
           sx={{
             '& > option': {
-              bg: 'var(--radar-surface)',
+              bg: '#0d0d0d',
               color: 'white'
             }
           }}

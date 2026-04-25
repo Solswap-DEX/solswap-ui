@@ -29,7 +29,7 @@ export function TrenchesLayout({ tokens, alerts }: { tokens: RadarToken[]; alert
         {/* FRESH COLUMN */}
         <Box 
           px={3} 
-          borderRight={{ base: 'none', md: '1px solid var(--radar-border)' }}
+          borderRight={{ base: 'none', md: '1px solid rgba(255,255,255,0.15)' }}
         >
           <LiveFeed 
             tokens={freshTokens} 
@@ -43,7 +43,7 @@ export function TrenchesLayout({ tokens, alerts }: { tokens: RadarToken[]; alert
         {/* BUILDING COLUMN */}
         <Box 
           px={3} 
-          borderRight={{ base: 'none', md: '1px solid var(--radar-border)' }}
+          borderRight={{ base: 'none', md: '1px solid rgba(255,255,255,0.15)' }}
         >
           <LiveFeed 
             tokens={buildingTokens} 

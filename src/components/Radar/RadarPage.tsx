@@ -34,7 +34,7 @@ export function RadarPage() {
     return (
       <VStack py={20} justify="center" bg="#080b0f" minH="100vh">
         <Spinner size="xl" color="#14f195" thickness="3px" />
-        <Text color="#6e7681" fontFamily="monospace">INITIALIZING TERMINAL...</Text>
+        <Text color="#ffffff" fontFamily="monospace">INITIALIZING TERMINAL...</Text>
       </VStack>
     )
   }
@@ -46,13 +46,13 @@ export function RadarPage() {
       color="var(--radar-text)"
       fontFamily="var(--radar-sans)"
       sx={{
-        '--radar-bg': '#080b0f',
-        '--radar-surface': '#0d1117',
-        '--radar-surface-2': '#111820',
-        '--radar-border': 'rgba(255,255,255,0.06)',
+        '--radar-bg': '#05070a',
+        '--radar-surface': '#0d0d0d',
+        '--radar-surface-2': '#111111',
+        '--radar-border': 'rgba(255,255,255,0.12)',
         '--radar-border-accent': 'rgba(20,241,149,0.3)',
-        '--radar-text': '#c9d1d9',
-        '--radar-text-dim': '#6e7681',
+        '--radar-text': '#ffffff',
+        '--radar-text-dim': '#aab2bb',
         '--radar-text-bright': '#ffffff',
         '--radar-green': '#00ff88',
         '--radar-yellow': '#ffd700',
@@ -135,36 +135,36 @@ export function RadarPage() {
                     boxShadow="0 0 8px var(--radar-green)"
                     style={{ animation: 'livePulse 2s infinite' }}
                   />
-                  <Text fontSize="11px" fontWeight="bold" color="var(--radar-green)" letterSpacing="1px">LIVE</Text>
+                  <Text fontSize="11px" fontWeight="bold" color="#ffffff" letterSpacing="1px">LIVE</Text>
                 </Flex>
               )}
             </Flex>
             
-            <Text fontSize="11px" color="var(--radar-text-dim)" fontFamily="monospace">
+            <Text fontSize="11px" color="#ffffff" fontFamily="monospace">
               {time.toLocaleTimeString()}
             </Text>
           </Flex>
 
           <Flex justify="space-between" align="center">
             <VStack align="flex-start" spacing={0}>
-              <Text fontSize="12px" color="var(--radar-text-dim)">
+              <Text fontSize="12px" color="#ffffff" fontWeight="500">
                 Tracking early momentum across Solana
               </Text>
               {isConnected && (
-                <Text fontSize="11px" color="var(--radar-solana)" className="listening-text">
+                <Text fontSize="11px" color="#ffffff" className="listening-text" fontWeight="500">
                   Listening to Solana network...
                 </Text>
               )}
             </VStack>
 
-            <Flex gap={4} align="center" fontSize="11px" color="var(--radar-text-dim)">
-              <Text><Text as="span" color="white" fontWeight="bold">{tokenCount}</Text> tracked</Text>
-              <Text>·</Text>
+            <Flex gap={4} align="center" fontSize="11px" color="#ffffff">
+              <Text><Text as="span" color="#ffffff" fontWeight="bold">{tokenCount}</Text> tracked</Text>
+              <Text color="var(--radar-text-dim)">·</Text>
               <Text><Text as="span" color="var(--radar-red)" fontWeight="bold">{rugCount}</Text> rugs</Text>
-              <Text>·</Text>
-              <Text><Text as="span" color="white" fontWeight="bold">{alerts.length}</Text> alerts</Text>
-              <Text>·</Text>
-              <Text>updated just now</Text>
+              <Text color="var(--radar-text-dim)">·</Text>
+              <Text><Text as="span" color="#ffffff" fontWeight="bold">{alerts.length}</Text> alerts</Text>
+              <Text color="var(--radar-text-dim)">·</Text>
+              <Text color="var(--radar-text-dim)">updated just now</Text>
             </Flex>
           </Flex>
         </Box>
