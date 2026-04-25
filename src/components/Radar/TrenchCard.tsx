@@ -23,15 +23,6 @@ function formatVelocity(v: number): string {
   return `${(v * 60).toFixed(1)}/m`
 }
 
-function formatNumber(val: number): string {
-  if (val >= 1000) return `${(val / 1000).toFixed(1)}K`
-  return val.toString()
-}
-
-function formatPct(val: number): string {
-  return `${val.toFixed(1)}%`
-}
-
 // ── TRIGGER REASON ENGINE ──────────────────────────────────────────────────
 function getTriggerReason(token: RadarToken): { icon: string; text: string; color: string } | null {
   const lv = token.liquidity_velocity ?? 0
@@ -176,29 +167,16 @@ export function TrenchCard({ token }: { token: RadarToken }) {
           </Flex>
 
           <Flex gap="10px" align="center" flexShrink={0} fontFamily="var(--radar-mono)">
-            {token.price_change_5m !== undefined && (
-              <Tooltip label="Price change in last 5 minutes" fontSize="xs" hasArrow>
-                <Flex align="baseline" gap="2px">
-                  <Text fontSize="11px" fontWeight="800" color={token.price_change_5m >= 0 ? '#00ff88' : '#ff4444'}>
-                    {token.price_change_5m >= 0 ? '+' : ''}{token.price_change_5m.toFixed(1)}%
-                  </Text>
-                </Flex>
-              </Tooltip>
-            )}
-            <Tooltip label="Trading volume in the last minute" fontSize="xs" hasArrow>
-              <Flex align="baseline" gap="3px">
-                <Text fontSize="10px" color="#ffffff">V</Text>
-                <Text fontSize="12px" fontWeight="700" color="#ffffff">{formatUsd(token.volume_1m)}</Text>
-              </Flex>
-            </Tooltip>
-            <Tooltip label="Current estimated Market Cap" fontSize="xs" hasArrow>
-              <Flex align="baseline" gap="3px">
-                <Text fontSize="10px" color="#ffffff">MC</Text>
-                <Text fontSize="12px" fontWeight="700" color="#ffffff">
-                  {token.market_cap ? formatUsd(token.market_cap) : '—'}
-                </Text>
-              </Flex>
-            </Tooltip>
+            <Flex align="baseline" gap="3px">
+              <Text fontSize="10px" color="#ffffff">V</Text>
+              <Text fontSize="12px" fontWeight="700" color="#ffffff">{formatUsd(token.volume_1m)}</Text>
+            </Flex>
+            <Flex align="baseline" gap="3px">
+              <Text fontSize="10px" color="#ffffff">MC</Text>
+              <Text fontSize="12px" fontWeight="700" color="#ffffff">
+                {token.market_cap ? formatUsd(token.market_cap) : '—'}
+              </Text>
+            </Flex>
           </Flex>
         </Flex>
 
@@ -206,52 +184,34 @@ export function TrenchCard({ token }: { token: RadarToken }) {
         <Flex justify="space-between" align="center" mb="5px">
           <Flex align="center" gap="8px">
             <Flex align="center" gap="4px">
-              <Tooltip label="Time since token creation" fontSize="xs" hasArrow>
-                <Text fontSize="11px" color="#ffffff" fontFamily="var(--radar-mono)" fontWeight="600">
-                  {formatAge(token.age_seconds)}
-                </Text>
-              </Tooltip>
-              <Tooltip label="Volume momentum trend" fontSize="xs" hasArrow>
-                <Text color={(token.delta_volume ?? 0) >= 0 ? '#00ff88' : '#ff4444'} fontSize="13px" fontWeight="bold">
-                  {(token.delta_volume ?? 0) >= 0 ? '↗' : '↘'}
-                </Text>
-              </Tooltip>
-            </Flex>
-            <Tooltip label="Token mint address (Click to view on Solscan)" fontSize="xs" hasArrow>
-              <Text
-                fontSize="10px" color="rgba(255,255,255,0.5)"
-                onClick={(e) => { e.stopPropagation(); window.open(`https://solscan.io/token/${token.mint}`, '_blank') }}
-                _hover={{ color: 'white', textDecoration: 'underline' }}
-                cursor="pointer"
-              >
-                {token.mint.slice(0, 4)}...{token.mint.slice(-4)}
+              <Text fontSize="11px" color="#ffffff" fontFamily="var(--radar-mono)" fontWeight="600">
+                {formatAge(token.age_seconds)}
               </Text>
-            </Tooltip>
-            {token.holders > 0 && (
-              <Tooltip label="Total unique wallet holders" fontSize="xs" hasArrow>
-                <Flex align="center" gap="2px">
-                  <Text fontSize="10px">👥</Text>
-                  <Text fontSize="11px" color="#ffffff" fontWeight="700" fontFamily="var(--radar-mono)">
-                    {formatNumber(token.holders)}
-                  </Text>
-                </Flex>
-              </Tooltip>
-            )}
+              <Text color={(token.delta_volume ?? 0) >= 0 ? '#00ff88' : '#ff4444'} fontSize="13px" fontWeight="bold">
+                {(token.delta_volume ?? 0) >= 0 ? '↗' : '↘'}
+              </Text>
+            </Flex>
+            <Text
+              fontSize="10px" color="rgba(255,255,255,0.5)"
+              onClick={(e) => { e.stopPropagation(); window.open(`https://solscan.io/token/${token.mint}`, '_blank') }}
+              _hover={{ color: 'white', textDecoration: 'underline' }}
+              cursor="pointer"
+            >
+              {token.mint.slice(0, 4)}...{token.mint.slice(-4)}
+            </Text>
           </Flex>
 
-          <Tooltip label="Calculated alpha/priority state" fontSize="xs" hasArrow>
-            <Box
-              px="6px" py="1px"
-              bg={isRug ? 'rgba(255,59,92,0.1)' : 'transparent'}
-              border={`1px solid ${isRug ? '#ff3b5c' : alphaColor}`}
-              borderRadius="4px"
-              fontSize="10px" fontWeight="800" color="#ffffff"
-              textTransform="uppercase"
-              letterSpacing="0.5px"
-            >
-              {token.alpha_label.replace(/[^\w\s]/gi, '').trim()}
-            </Box>
-          </Tooltip>
+          <Box
+            px="6px" py="1px"
+            bg={isRug ? 'rgba(255,59,92,0.1)' : 'transparent'}
+            border={`1px solid ${isRug ? '#ff3b5c' : alphaColor}`}
+            borderRadius="4px"
+            fontSize="10px" fontWeight="800" color="#ffffff"
+            textTransform="uppercase"
+            letterSpacing="0.5px"
+          >
+            {token.alpha_label.replace(/[^\w\s]/gi, '').trim()}
+          </Box>
         </Flex>
 
         {/* TRIGGER REASON — "por qué mirar ESTE ahora" */}
@@ -272,7 +232,7 @@ export function TrenchCard({ token }: { token: RadarToken }) {
         {/* LÍNEA 3: INDICATORS + VELOCITY */}
         <Flex gap="10px" align="center" mb="7px" flexWrap="wrap">
           {/* Alpha */}
-          <Tooltip label="Overall Alpha Score (0-100)" fontSize="xs" hasArrow>
+          <Tooltip label="Alpha Score" fontSize="xs" hasArrow>
             <Flex align="center" gap="3px" cursor="help">
               <Text fontSize="11px" color="#ffffff" fontFamily="var(--radar-mono)">α</Text>
               <Text
@@ -286,7 +246,7 @@ export function TrenchCard({ token }: { token: RadarToken }) {
           </Tooltip>
 
           {/* Buys */}
-          <Tooltip label="Buys in the last minute" fontSize="xs" hasArrow>
+          <Tooltip label="Buys last 5m" fontSize="xs" hasArrow>
             <Flex align="center" gap="2px" cursor="help">
               <Text fontSize="11px" color="#00ff88">@</Text>
               <Text fontSize="13px" fontWeight="700" color="#00ff88" fontFamily="var(--radar-mono)">{buys1m}</Text>
@@ -294,62 +254,27 @@ export function TrenchCard({ token }: { token: RadarToken }) {
           </Tooltip>
 
           {/* Sells */}
-          <Tooltip label="Sells in the last minute" fontSize="xs" hasArrow>
+          <Tooltip label="Sells last 5m" fontSize="xs" hasArrow>
             <Flex align="center" gap="2px" cursor="help">
               <Text fontSize="11px" color="#ff4444">●</Text>
               <Text fontSize="13px" fontWeight="700" color="#ff4444" fontFamily="var(--radar-mono)">{sells1m}</Text>
             </Flex>
           </Tooltip>
 
-          {/* Whale Concentration */}
-          {token.top10_concentration !== undefined && (
-            <Tooltip label="Whale Concentration: Supply held by top 10 wallets" fontSize="xs" hasArrow>
-              <Flex align="center" gap="2px" cursor="help">
-                <Text fontSize="10px">🐳</Text>
-                <Text fontSize="11px" fontWeight="800" color={token.top10_concentration < 0.3 ? '#00ff88' : token.top10_concentration < 0.6 ? '#ffd700' : '#ff4444'} fontFamily="var(--radar-mono)">
-                  {(token.top10_concentration * 100).toFixed(0)}%
-                </Text>
-              </Flex>
-            </Tooltip>
-          )}
-
-          {/* Bonding Curve */}
-          {token.is_pumpfun && !token.is_graduated && token.bonding_curve_pct !== undefined && (
-            <Tooltip label="PumpFun Bonding Curve progress" fontSize="xs" hasArrow>
-              <Flex align="center" gap="2px" cursor="help">
-                <Text fontSize="10px">📈</Text>
-                <Text fontSize="11px" fontWeight="800" color="var(--radar-solana)" fontFamily="var(--radar-mono)">
-                  {token.bonding_curve_pct.toFixed(0)}%
-                </Text>
-              </Flex>
-            </Tooltip>
-          )}
-
-          {/* LP Status */}
-          <Tooltip label={token.lp_locked ? "Liquidity is BURNT or LOCKED (Safe)" : "Liquidity is UNLOCKED (Caution)"} fontSize="xs" hasArrow>
-            <Box px="4px" py="0px" bg={token.lp_locked ? "rgba(0,255,136,0.1)" : "rgba(255,59,92,0.1)"} borderRadius="2px">
-              <Text fontSize="10px" color={token.lp_locked ? "#00ff88" : "#ff3b5c"}>
-                {token.lp_locked ? "🔒 LOCKED" : "🔓 UNLOCKED"}
-              </Text>
-            </Box>
-          </Tooltip>
-
           {/* Risk */}
-          <Tooltip label="Automated risk assessment level" fontSize="xs" hasArrow>
-            <Box
-              px="4px" py="0px"
-              bg="rgba(255,255,255,0.1)"
-              border="1px solid rgba(255,255,255,0.2)"
-              borderRadius="2px"
-              fontSize="10px" fontWeight="800" color="#ffffff"
-            >
-              {token.risk_level}
-            </Box>
-          </Tooltip>
+          <Box
+            px="4px" py="0px"
+            bg="rgba(255,255,255,0.1)"
+            border="1px solid rgba(255,255,255,0.2)"
+            borderRadius="2px"
+            fontSize="10px" fontWeight="800" color="#ffffff"
+          >
+            {token.risk_level}
+          </Box>
 
-          {/* VELOCITY */}
+          {/* VELOCITY — THE EDGE */}
           {lv !== 0 && (
-            <Tooltip label="Liquidity flow velocity (SOL per minute)" fontSize="xs" hasArrow>
+            <Tooltip label="Liquidity flow velocity" fontSize="xs" hasArrow>
               <Flex align="center" gap="2px" cursor="help">
                 <Text fontSize="11px" color={lv > 0 ? '#14f195' : '#ff4444'}>⚡</Text>
                 <Text
@@ -361,40 +286,37 @@ export function TrenchCard({ token }: { token: RadarToken }) {
               </Flex>
             </Tooltip>
           )}
+          {vv !== 0 && lv === 0 && (
+            <Tooltip label="Volume velocity" fontSize="xs" hasArrow>
+              <Flex align="center" gap="2px" cursor="help">
+                <Text fontSize="11px" color="#ffd700">⚡</Text>
+                <Text fontSize="12px" fontWeight="800" fontFamily="var(--radar-mono)" color="#ffd700">
+                  V{vv > 0 ? '+' : ''}{formatVelocity(vv)}
+                </Text>
+              </Flex>
+            </Tooltip>
+          )}
         </Flex>
 
         {/* LÍNEA 4: BUY/SELL BAR */}
         <Box mb="8px">
-          <Tooltip label="Buy vs Sell volume ratio (last minute)" fontSize="xs" hasArrow>
-            <Flex align="center" justify="space-between" cursor="help">
-              <Text fontSize="11px" color="#ffffff" fontFamily="var(--radar-mono)" fontWeight="700">{buyPct}%</Text>
-              <Flex h="4px" flex={1} mx="8px" bg="rgba(255,255,255,0.1)" overflow="hidden" borderRadius="2px">
-                <Box w={`${buyPct}%`} bg="#00cc66" h="100%" />
-                <Box w={`${sellPct}%`} bg="#ff3333" h="100%" />
-              </Flex>
-              <Text fontSize="11px" color="#ffffff" fontFamily="var(--radar-mono)" fontWeight="700">{sellPct}%</Text>
+          <Flex align="center" justify="space-between">
+            <Text fontSize="11px" color="#ffffff" fontFamily="var(--radar-mono)" fontWeight="700">{buyPct}%</Text>
+            <Flex h="4px" flex={1} mx="8px" bg="rgba(255,255,255,0.1)" overflow="hidden" borderRadius="2px">
+              <Box w={`${buyPct}%`} bg="#00cc66" h="100%" />
+              <Box w={`${sellPct}%`} bg="#ff3333" h="100%" />
             </Flex>
-          </Tooltip>
+            <Text fontSize="11px" color="#ffffff" fontFamily="var(--radar-mono)" fontWeight="700">{sellPct}%</Text>
+          </Flex>
         </Box>
 
         {/* FOOTER: ALPHA SCORE + BUY BUTTON */}
         <Flex justify="space-between" align="center">
-          <Flex align="center" gap="4px">
-            {token.social_twitter && (
-              <Tooltip label="Twitter / X" fontSize="xs" hasArrow>
-                <Text fontSize="12px" cursor="pointer" onClick={(e) => { e.stopPropagation(); window.open(token.social_twitter, '_blank') }}>𝕏</Text>
-              </Tooltip>
-            )}
-            {token.social_telegram && (
-              <Tooltip label="Telegram" fontSize="xs" hasArrow>
-                <Text fontSize="12px" cursor="pointer" onClick={(e) => { e.stopPropagation(); window.open(token.social_telegram, '_blank') }}>✈</Text>
-              </Tooltip>
-            )}
-            {token.social_website && (
-              <Tooltip label="Website" fontSize="xs" hasArrow>
-                <Text fontSize="12px" cursor="pointer" onClick={(e) => { e.stopPropagation(); window.open(token.social_website, '_blank') }}>🌐</Text>
-              </Tooltip>
-            )}
+          <Flex align="center" gap="2px">
+            <Text fontSize="9px" color="var(--radar-text-dim)">α</Text>
+            <Text fontSize="14px" fontWeight="800" color={isTopAlpha ? 'var(--radar-solana)' : 'white'} fontFamily="var(--radar-mono)">
+              {token.alpha_score.toFixed(0)}
+            </Text>
           </Flex>
 
           <Tooltip
