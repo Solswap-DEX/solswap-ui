@@ -208,6 +208,34 @@ export default function SelectWalletModal({ wallets, isOpen, onSelectWallet, onC
                   ))}
                 </SimpleGrid>
 
+                {/* Phantom mobile deep-link */}
+                {isMobile && (
+                  <Box mt={4} p={3} borderRadius="md" bg="rgba(171,117,255,0.08)" border="1px solid rgba(171,117,255,0.3)">
+                    <HStack justify="space-between" align="center">
+                      <HStack gap={2}>
+                        <Image src="https://187760183-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F-MVOiF6Zqit57erp3Zyj%2Fuploads%2FHEjleywo9QOnfYDfv5wB%2FPhantom_SVG_Icon.svg?alt=media&token=71cef5e7-3ea8-4cfd-88f0-a1cad6ca2d76" w={6} h={6} />
+                        <Box>
+                          <Text fontSize="sm" fontWeight={700} color={colors.textPrimary}>Open in Phantom</Text>
+                          <Text fontSize="xs" color={colors.textSecondary}>Use Phantom's built-in browser</Text>
+                        </Box>
+                      </HStack>
+                      <Button
+                        size="sm"
+                        bg="#ab75ff"
+                        color="white"
+                        _hover={{ bg: '#9a5ef0' }}
+                        onClick={() => {
+                          const url = encodeURIComponent(window.location.href)
+                          window.location.href = `https://phantom.app/ul/browse/${url}?ref=${encodeURIComponent(window.location.origin)}`
+                        }}
+                      >
+                        Open
+                      </Button>
+                    </HStack>
+                  </Box>
+                )}
+
+
                 <Collapse in={canShowUninstalledWallets}>
                   <HStack color={colors.textSecondary} fontSize="sm" my={3}>
                     <Box flexGrow={1} height="1px" color={colors.textTertiary} bg={colors.dividerDashGradient}></Box>
