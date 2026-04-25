@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Box, Button, HStack, Text, Image, useDisclosure } from '@chakra-ui/react'
 import { Wallet, useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
@@ -33,6 +33,21 @@ export default function SolWallet() {
       localStorage.removeItem(WALLET_STORAGE_KEY)
     }, 0)
   })
+
+  // Auto-clear stuck "Connecting..." state after 5s
+  const connectingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (connecting) {
+      connectingTimerRef.current = setTimeout(() => {
+        // Clear the cached wallet so autoConnect stops looping
+        localStorage.removeItem(WALLET_STORAGE_KEY)
+        try { disconnect() } catch (_) { /* ignore */ }
+      }, 5000)
+    } else {
+      if (connectingTimerRef.current) clearTimeout(connectingTimerRef.current)
+    }
+    return () => { if (connectingTimerRef.current) clearTimeout(connectingTimerRef.current) }
+  }, [connecting])
 
   if (connected)
     return (
