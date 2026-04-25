@@ -7,6 +7,9 @@ import { LiveFeed } from './LiveFeed'
 import { HotBoard } from './HotBoard'
 import { AlertFeed } from './AlertFeed'
 import { RadarWelcomeModal } from './RadarWelcomeModal'
+import { StopLossModal } from './StopLossModal'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { RadarToken } from './radar.types'
 
 type TabKey = 'feed' | 'hot' | 'alerts'
 
@@ -21,6 +24,16 @@ export function RadarPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('feed')
   const isDesktop = useBreakpointValue({ base: false, md: true })
   const [time, setTime] = useState(new Date())
+  const { publicKey } = useWallet()
+
+  // Stop Loss State
+  const [stopLossToken, setStopLossToken] = useState<RadarToken | null>(null)
+  const [isStopLossOpen, setIsStopLossOpen] = useState(false)
+
+  const handleStopLossClick = (token: RadarToken) => {
+    setStopLossToken(token)
+    setIsStopLossOpen(true)
+  }
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
@@ -174,7 +187,11 @@ export function RadarPage() {
 
         {/* ── MAIN CONTENT ── */}
         {isDesktop ? (
-          <TrenchesLayout tokens={tokens} alerts={[]} />
+          <TrenchesLayout 
+            tokens={tokens} 
+            alerts={[]} 
+            onStopLossClick={handleStopLossClick}
+          />
         ) : (
           <>
             {/* Mobile Tabs switcher */}
@@ -202,11 +219,30 @@ export function RadarPage() {
               })}
             </Flex>
             <Box pb={24}>
-              {activeTab === 'feed' && <LiveFeed tokens={tokens} isConnected={isConnected} alerts={[]} />}
-              {activeTab === 'hot' && <HotBoard tokens={tokens} />}
+              {activeTab === 'feed' && (
+                <LiveFeed 
+                  tokens={tokens} 
+                  isConnected={isConnected} 
+                  alerts={[]} 
+                  onStopLossClick={handleStopLossClick}
+                />
+              )}
+              {activeTab === 'hot' && (
+                <HotBoard 
+                  tokens={tokens} 
+                  onStopLossClick={handleStopLossClick}
+                />
+              )}
             </Box>
           </>
         )}
+
+        <StopLossModal
+          isOpen={isStopLossOpen}
+          onClose={() => setIsStopLossOpen(false)}
+          token={stopLossToken}
+          walletAddress={publicKey?.toBase58()}
+        />
       </Box>
     </Box>
   )

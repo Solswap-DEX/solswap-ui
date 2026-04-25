@@ -7,11 +7,13 @@ import { ColumnHeader, SortKey } from './ColumnHeader'
 export function HotBoard({ 
   tokens,
   title = "HOT",
-  color = "var(--radar-red)"
+  color = "var(--radar-red)",
+  onStopLossClick
 }: { 
   tokens: RadarToken[] 
   title?: string
   color?: string
+  onStopLossClick?: (token: RadarToken) => void
 }) {
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<SortKey>('alpha')
@@ -51,7 +53,7 @@ export function HotBoard({
         ) : (
           <Flex direction="column" gap={0}>
             {sorted.map((token) => (
-              <TrenchCard key={token.mint} token={token} />
+              <TrenchCard key={token.mint} token={token} onStopLossClick={onStopLossClick} />
             ))}
           </Flex>
         )}

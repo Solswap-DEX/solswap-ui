@@ -9,7 +9,15 @@ function toMs(d: Date | string | undefined): number {
   return new Date(d).getTime()
 }
 
-export function TrenchesLayout({ tokens, alerts }: { tokens: RadarToken[]; alerts: RadarAlert[] }) {
+export function TrenchesLayout({ 
+  tokens, 
+  alerts,
+  onStopLossClick
+}: { 
+  tokens: RadarToken[]; 
+  alerts: RadarAlert[];
+  onStopLossClick?: (token: RadarToken) => void
+}) {
   // Logic to group tokens by category
   const freshTokens = tokens
     .filter(t => t.age_seconds < 300)
@@ -37,6 +45,7 @@ export function TrenchesLayout({ tokens, alerts }: { tokens: RadarToken[]; alert
             alerts={[]} 
             title="FRESH"
             color="var(--radar-solana)"
+            onStopLossClick={onStopLossClick}
           />
         </Box>
 
@@ -51,6 +60,7 @@ export function TrenchesLayout({ tokens, alerts }: { tokens: RadarToken[]; alert
             alerts={[]} 
             title="BUILDING"
             color="var(--radar-yellow)"
+            onStopLossClick={onStopLossClick}
           />
         </Box>
 
@@ -60,6 +70,7 @@ export function TrenchesLayout({ tokens, alerts }: { tokens: RadarToken[]; alert
             tokens={hotTokens} 
             title="HOT"
             color="var(--radar-red)"
+            onStopLossClick={onStopLossClick}
           />
         </Box>
       </SimpleGrid>
