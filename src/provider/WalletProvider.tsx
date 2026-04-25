@@ -113,7 +113,9 @@ const App: FC<PropsWithChildren<any>> = ({ children }) => {
       new BitgetWalletAdapter({ endpoint }),
       new ExodusWalletAdapter({ endpoint })
     ],
-    [network, endpoint]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [network] // Do NOT add 'endpoint' here — changing RPC would recreate all adapters,
+    // causing @solana/wallet-adapter-react to disconnect the active wallet (Phantom disconnect bug)
   )
 
   useEffect(() => {
