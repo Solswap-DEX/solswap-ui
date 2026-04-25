@@ -5,9 +5,9 @@ export const REVENUE_CONFIG = {
   // Fee collector — receives 0.10% on all swaps via platform fee
   feeCollector: process.env.NEXT_PUBLIC_FEE_COLLECTOR || '5KUA4a4qFusTvJeSquKsBSEPvhiVedvaj8hE8pVp2vmz',
 
-  // Fee in basis points (10 bps = 0.10%)
-  feeBps: Number(process.env.NEXT_PUBLIC_FEE_BPS || '10'),
+  // Fee in basis points (100 bps = 1.00%)
+  feeBps: Number(process.env.NEXT_PUBLIC_FEE_BPS || '100'),
 
   // Combined display percentage for UI
-  displayFee: '0.10%',
+  displayFee: '1.00%',
 }
