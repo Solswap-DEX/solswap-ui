@@ -218,7 +218,7 @@ export const useSwapStore = createStore<SwapStore>(
 
         const inputTokenAcc = await raydium.account.getCreatedTokenAccount({
           programId: new PublicKey(inputToken?.programId ?? TOKEN_PROGRAM_ID),
-          mint: new PublicKey(inputToken.address),
+          mint: new PublicKey(inputToken.address === 'sol' ? PublicKey.default.toString() : inputToken.address),
           associatedOnly: false
         })
 
@@ -229,7 +229,7 @@ export const useSwapStore = createStore<SwapStore>(
 
         const outputTokenAcc = await raydium.account.getCreatedTokenAccount({
           programId: new PublicKey(outputToken?.programId ?? TOKEN_PROGRAM_ID),
-          mint: new PublicKey(outputToken.address)
+          mint: new PublicKey(outputToken.address === 'sol' ? PublicKey.default.toString() : outputToken.address)
         })
 
         const computeData = await getSwapComputePrice()
