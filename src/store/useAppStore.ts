@@ -141,7 +141,11 @@ const appInitState = {
   isDesktop: false,
   aprMode: 'M' as 'M' | 'D',
   rpcs: [],
-  urlConfigs: API_URLS,
+  urlConfigs: {
+    ...API_URLS,
+    // Route Jupiter token list through our proxy to avoid browser-side timeouts
+    JUP_TOKEN_LIST: 'https://solswap.cloud/api/jup-lite/tokens/v2/tag?query=verified'
+  } as typeof API_URLS & { SWAP_HOST: string; SWAP_COMPUTE: string; SWAP_TX: string },
   programIdConfig: ALL_PROGRAM_ID,
   // programIdConfig: {
   //   ...ALL_PROGRAM_ID,
