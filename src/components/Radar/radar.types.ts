@@ -49,6 +49,10 @@ export interface RadarToken {
   price_change_5m?: number
   price_change_1h?: number
   pump_probability?: number
+  wallet_quality?: number
+  tx_velocity?: number
+  early_liquidity?: number
+  prepump_reason?: string
 }
 
 export interface StopLossWatch {

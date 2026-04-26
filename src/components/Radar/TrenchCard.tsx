@@ -40,6 +40,8 @@ function getTriggerReason(token: RadarToken): { icon: string; text: string; colo
   const pc5 = token.price_change_5m ?? 0
   const alpha = token.alpha_score
 
+  if (token.prepump_reason)
+    return { icon: '🎯', text: token.prepump_reason, color: '#a855f7', description: `Pre-Pump Signal. Wallet Quality: ${token.wallet_quality||0} | Velocity: ${token.tx_velocity||0}` }
   if (token.is_pumpfun && bc >= 80 && !token.is_graduated)
     return { icon: '🚀', text: 'Bonding curve near graduation', color: '#14f195', description: 'Token is very close to reaching 100% and migrating to Raydium.' }
   if (lv > 500)
@@ -276,6 +278,26 @@ export function TrenchCard({
 
         {/* LÍNEA 3: INDICATORS + VELOCITY */}
         <Flex gap="10px" align="center" mb="7px" flexWrap="wrap">
+          {/* Pump Probability */}
+          {token.pump_probability !== undefined && (
+            <Tooltip
+              label={`Wallet Quality: ${token.wallet_quality || 0} | Tx Velocity: ${token.tx_velocity || 0} | Early Liq: $${token.early_liquidity || 0}`}
+              fontSize="xs"
+              hasArrow
+            >
+              <Flex align="center" gap="3px" cursor="help">
+                <Text fontSize="11px" color="#a855f7" fontFamily="var(--radar-mono)">PROB</Text>
+                <Text
+                  fontSize="13px" fontWeight="bold"
+                  color={token.pump_probability > 70 ? '#00ff88' : '#a855f7'}
+                  fontFamily="var(--radar-mono)"
+                >
+                  {token.pump_probability.toFixed(0)}%
+                </Text>
+              </Flex>
+            </Tooltip>
+          )}
+
           {/* Alpha */}
           <Tooltip label="Overall Alpha Score (0-100)" fontSize="xs" hasArrow>
             <Flex align="center" gap="3px" cursor="help">
