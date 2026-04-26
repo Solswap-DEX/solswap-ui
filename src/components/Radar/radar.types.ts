@@ -48,6 +48,7 @@ export interface RadarToken {
   fee_ratio?: number
   price_change_5m?: number
   price_change_1h?: number
+  pump_probability?: number
 }
 
 export interface StopLossWatch {

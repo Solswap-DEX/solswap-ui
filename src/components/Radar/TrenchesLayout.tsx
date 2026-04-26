@@ -19,8 +19,13 @@ export function TrenchesLayout({
   onStopLossClick?: (token: RadarToken) => void
 }) {
   // Logic to group tokens by category
+  
+  const prePumpTokens = tokens
+    .filter(t => (t.pump_probability && t.pump_probability > 50) || t.alpha_label === '🧪 SPECULATIVE')
+    .sort((a, b) => (b.pump_probability || 0) - (a.pump_probability || 0) || toMs(b.detected_at) - toMs(a.detected_at))
+
   const freshTokens = tokens
-    .filter(t => t.age_seconds < 300)
+    .filter(t => t.age_seconds < 300 && !(t.pump_probability && t.pump_probability > 50) && t.alpha_label !== '🧪 SPECULATIVE')
     .sort((a, b) => toMs(b.detected_at) - toMs(a.detected_at))
 
   const buildingTokens = tokens
@@ -32,12 +37,29 @@ export function TrenchesLayout({
     .sort((a, b) => b.alpha_score - a.alpha_score)
 
   return (
-    <Box maxW="1600px" mx="auto">
-      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={0}>
-        {/* FRESH COLUMN */}
+    <Box maxW="1800px" mx="auto">
+      <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={0}>
+        
+        {/* PRE-PUMP COLUMN */}
         <Box 
           px={3} 
           borderRight={{ base: 'none', md: '1px solid rgba(255,255,255,0.15)' }}
+          bg="rgba(147, 51, 234, 0.05)" // Subtle purple tint to highlight the new sniper trench
+        >
+          <LiveFeed 
+            tokens={prePumpTokens} 
+            isConnected={true} 
+            alerts={alerts.filter(a => a.type === 'ALPHA_SURGE')} 
+            title="🚀 PRE-PUMP"
+            color="#a855f7" // Purple
+            onStopLossClick={onStopLossClick}
+          />
+        </Box>
+
+        {/* FRESH COLUMN */}
+        <Box 
+          px={3} 
+          borderRight={{ base: 'none', xl: '1px solid rgba(255,255,255,0.15)' }}
         >
           <LiveFeed 
             tokens={freshTokens} 
@@ -73,6 +95,7 @@ export function TrenchesLayout({
             onStopLossClick={onStopLossClick}
           />
         </Box>
+
       </SimpleGrid>
     </Box>
   )
