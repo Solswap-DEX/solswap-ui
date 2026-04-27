@@ -21,11 +21,11 @@ export function TrenchesLayout({
   // Logic to group tokens by category
   
   const prePumpTokens = tokens
-    .filter(t => (t.pump_probability && t.pump_probability > 50) || t.alpha_label === '🧪 SPECULATIVE')
+    .filter(t => t.pump_probability && t.pump_probability > 50)
     .sort((a, b) => (b.pump_probability || 0) - (a.pump_probability || 0) || toMs(b.detected_at) - toMs(a.detected_at))
 
   const freshTokens = tokens
-    .filter(t => t.age_seconds < 300 && !(t.pump_probability && t.pump_probability > 50) && t.alpha_label !== '🧪 SPECULATIVE')
+    .filter(t => (t.age_seconds < 300 || t.alpha_label === '🧪 SPECULATIVE') && !(t.pump_probability && t.pump_probability > 50))
     .sort((a, b) => toMs(b.detected_at) - toMs(a.detected_at))
 
   const buildingTokens = tokens
