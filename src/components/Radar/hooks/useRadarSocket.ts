@@ -166,6 +166,11 @@ export function useRadarSocket() {
       // Only drop IGNORE tokens that have no real enrichment data
       if (payload.alpha_label === '❌ IGNORE' && !payload.pump_probability && !payload.data_pending) return
       setTokens(prev => {
+        const existing = prev.find((t: RadarToken) => t.mint === payload.mint)
+        // Never overwrite enriched data with a skeleton — keep existing if it has real name/data
+        if (existing && !existing.data_pending && payload.data_pending) {
+          return prev
+        }
         const filtered = prev.filter((t: RadarToken) => t.mint !== payload.mint)
         return [payload, ...filtered].slice(0, 100)
       })
