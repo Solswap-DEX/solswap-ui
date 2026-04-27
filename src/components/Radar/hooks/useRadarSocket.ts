@@ -90,10 +90,12 @@ export function useRadarSocket() {
   const reconnectAttempts = useRef(0)
 
   const isEmptyToken = useCallback((token: RadarToken): boolean => {
+    // Keep tokens that have any real signal: score, liquidity, volume, or pump probability
     return (
       Number(token.alpha_score) === 0 &&
       Number(token.liquidity) === 0 &&
-      Number(token.volume_1m) === 0
+      Number(token.volume_1m) === 0 &&
+      !token.pump_probability
     )
   }, [])
 
@@ -161,10 +163,11 @@ export function useRadarSocket() {
 
     socket.on('radar:token', (payload: RadarToken) => {
       if (isEmptyToken(payload)) return
-      if (payload.alpha_label === '❌ IGNORE') return
+      // Only drop IGNORE tokens that have no real enrichment data
+      if (payload.alpha_label === '❌ IGNORE' && !payload.pump_probability && !payload.data_pending) return
       setTokens(prev => {
         const filtered = prev.filter((t: RadarToken) => t.mint !== payload.mint)
-        return [payload, ...filtered].slice(0, 50)
+        return [payload, ...filtered].slice(0, 100)
       })
     })
 
