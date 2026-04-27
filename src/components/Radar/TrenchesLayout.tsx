@@ -23,19 +23,22 @@ export function TrenchesLayout({
   const prePumpTokens = tokens
     .filter(t => t.pump_probability && t.pump_probability > 50)
     .sort((a, b) => (b.pump_probability || 0) - (a.pump_probability || 0) || toMs(b.detected_at) - toMs(a.detected_at))
+    .slice(0, 5)
 
   const freshTokens = tokens
     .filter(t => (t.age_seconds < 300 || t.alpha_label === '🧪 SPECULATIVE') && !(t.pump_probability && t.pump_probability > 50))
     .sort((a, b) => toMs(b.detected_at) - toMs(a.detected_at))
-    .slice(0, 15)
+    .slice(0, 5)
 
   const buildingTokens = tokens
     .filter(t => t.age_seconds >= 300 && t.age_seconds < 3600)
     .sort((a, b) => b.alpha_score - a.alpha_score)
+    .slice(0, 5)
 
   const hotTokens = tokens
     .filter(t => t.age_seconds >= 3600 || t.alpha_score > 70)
     .sort((a, b) => b.alpha_score - a.alpha_score)
+    .slice(0, 5)
 
   return (
     <Box w="95%" maxW="2200px" mx="auto">
