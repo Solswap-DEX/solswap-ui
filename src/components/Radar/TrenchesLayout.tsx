@@ -27,6 +27,7 @@ export function TrenchesLayout({
   const freshTokens = tokens
     .filter(t => (t.age_seconds < 300 || t.alpha_label === '🧪 SPECULATIVE') && !(t.pump_probability && t.pump_probability > 50))
     .sort((a, b) => toMs(b.detected_at) - toMs(a.detected_at))
+    .slice(0, 15)
 
   const buildingTokens = tokens
     .filter(t => t.age_seconds >= 300 && t.age_seconds < 3600)
@@ -37,8 +38,8 @@ export function TrenchesLayout({
     .sort((a, b) => b.alpha_score - a.alpha_score)
 
   return (
-    <Box maxW="1800px" mx="auto">
-      <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={0}>
+    <Box w="95%" maxW="2200px" mx="auto">
+      <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={0} minChildWidth="220px">
         
         {/* PRE-PUMP COLUMN */}
         <Box 
